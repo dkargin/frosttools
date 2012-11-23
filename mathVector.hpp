@@ -231,7 +231,7 @@ inline _Vr vecAbs(const _Vr &v)
 	_Vr res(v);
 	for(typename _Vr::size_type i = 0 ; i < _Vr::D; i++)
 		if(res[i] < 0)
-			res[i] = res[i];
+			res[i] = -res[i];
 	return res;
 }
 template <class Real>
@@ -531,7 +531,7 @@ template <class _Vr> inline float vecAngle2d(const _Vr &a, const _Vr &b)
 	float sn = ta[0]*tb[1] - ta[1]*tb[0];
 	float cs = (a&b) > 0.0f;
 
-	if(fZero(cs)) // или 90, или -90
+	if(fZero(cs)) // either 90, or -90
 		return sn> 0 ? M_PI_2 : -M_PI_2;
 
 	return cs>0? asin(sn):M_PI-asin(sn);
@@ -570,7 +570,7 @@ template <class _Vr> inline float vecAngle2d_positive(const _Vr &a, const _Vr &b
 	float sn = ta[0]*tb[1] - ta[1]*tb[0];
 	float cs = (a&b);
 
-	if(fZero(cs)) // или 90, или -90
+	if(fZero(cs)) // either 90, or -90
 		return sn>0?M_PI_2:-M_PI_2;
 	float res = cs>0.0f? asin(sn):M_PI-asin(sn);
 	if(res < 0)

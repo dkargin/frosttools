@@ -1,14 +1,19 @@
 #ifndef RASTER_HPP
 #define RASTER_HPP
+
+#include <assert.h>
+
 //////////////////////////////////////////////////////////////////
-// Класс для рисования на растре любого вида. Требуется поддержка
-// функции setPixel(x,y)
-// size_x(),size_y()
+// Implements some basic "draw"-like finctions with generic 2d image
+// 	Raster should implement following functions:
+//		setPixel(x,y)
+// 		size_x()
+//		size_y()
 //////////////////////////////////////////////////////////////////
 template< class Raster>
 class RasterDraw
 {
-	Raster &target;	// растр, в котороый рисуем
+	Raster &target;	// target image to draw
 	typedef typename Raster::value_type value_type;
 	value_type color;
 

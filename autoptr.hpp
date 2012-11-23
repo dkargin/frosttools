@@ -1,9 +1,8 @@
 #ifndef AUTOPTR_HPP
 #define AUTOPTR_HPP
 
-#include <cassert>
+#include <assert.h>
 #include <memory.h>
-#include <stddef.h>
 
 
 template<class Type> inline void DeleterEmpty(Type* ptr){}
@@ -460,5 +459,65 @@ private:
 #endif
 	}
 };
+#ifdef AUTOPTR_TESTS
+struct AutoPtrTest
+{
+	class Dummy : public Referenced
+	{
+	public:
+		std::string name;
+		int value;
+		Dummy(const char * name, int value)
+			:name(name), value(value)
+		{
+			printf("Dummy %s created\n", this->name.c_str());
+		}
+		~Dummy()
+		{
+			printf("Dummy %s is destroyed\n", name.c_str());
+		}
+	};
 
+	typedef SharedPtr<Dummy> DummyPtr;
+
+	static void testSinglePtr()
+	{
+		printf("testSinglePtr started\n");
+		{
+			DummyPtr dummy(new Dummy("d1", 1));
+		}
+		printf("testSinglePtr complete\n");
+	}
+
+	static void addDummy(std::list<DummyPtr> &data, const char * name, int val)
+	{
+		data.push_back(new Dummy(name, val));
+	}
+
+	static void testLists()
+	{
+		printf("testList started\n");
+		{
+			std::list<DummyPtr> data;
+			addDummy(data, "d1",1);
+			addDummy(data, "d2",2);
+
+			{
+				DummyPtr d = data.front();
+				data.pop_front();
+			}
+
+			printf("d1 should be dead\n");
+			DummyPtr d = data.front();
+		}
+		printf("testLists complete\n");
+	}
+
+	void testPtr()
+	{
+		testSinglePtr();
+		testLists();
+	}
+};
+#endif
 #endif

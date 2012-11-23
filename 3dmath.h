@@ -290,7 +290,7 @@ template<class Type> struct StorageDynamic
 	}
 	const Type *ptr() const
 	{
-		return data;
+		return c;
 	}
 	typedef VectorDynamic<Type> row_type;
 	typedef VectorDynamic<Type> col_type;
@@ -474,13 +474,11 @@ public:
 	/// get cos(angle)
 	float CS() const	
 	{
-		// TODO: implement sin/cos storage
 		return cosf(orientation);
 	}
 	/// get sin(angle)
 	float SN() const
 	{
-		// TODO: implement sin/cos storage
 		return sinf(orientation);
 	}
 	/// set pose direction. Equal to setting X axis
@@ -682,13 +680,11 @@ public:
 	/// get cos(angle)
 	float CS() const	
 	{
-		// TODO: implement sin/cos storage
 		return orientation.cs;
 	}
 	/// get sin(angle)
 	float SN() const
 	{
-		// TODO: implement sin/cos storage
 		return orientation.sn;
 	}
 	/// set pose direction. Equal to setting X axis

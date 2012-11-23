@@ -4,114 +4,16 @@
 #ifndef _MSC_VER
 #include <netinet/in.h>
 #include <arpa/inet.h>
-typedef int SOCKET;
+
 const int INVALID_SOCKET=-1;
 #else
 #include <ws2tcpip.h>
 #endif
-//
-//#include <process.h>
-#define FrostTools_Use_Types
-#define FrostTools_Use_System
-#define FrostTools_Use_Threads
-//#include <frosttools/frosttools.h>
-#include "ioTools.h"
+
+#include <exception>
+
+#include "threads.hpp"
 #include "logger.hpp"
-
-namespace Net
-{
-	enum NetMsgType
-	{
-		TypeHeartBeat,
-		TypeHello,	/// the first message sent by new client
-		TypeAssignID,	/// server sends it to the new client
-		TypeChat,		/// common chat
-	};
-
-
-}
-
-const int DEFAULT_BUFLEN = 32;
-const char DEFAULT_PORT[] = "2000";
-
-template<class Parent> class ScopedLock;
-
-class Lockable
-{
-    #ifdef _MSC_VER
-	CRITICAL_SECTION cs;
-	#endif
-public:
-	friend class ScopedLock<Lockable>;
-	typedef ScopedLock<Lockable> Scoped;
-
-#ifdef WINVER
-	void lock()
-	{
-		EnterCriticalSection(&cs);
-	}
-
-	void unlock()
-	{
-		LeaveCriticalSection(&cs);
-	}
-
-	Lockable()
-	{
-		InitializeCriticalSection(&cs);
-	}
-
-	virtual ~Lockable()
-	{
-		DeleteCriticalSection(&cs);
-	}
-
-	bool locked() const
-	{
-		if(TryEnterCriticalSection(const_cast<CRITICAL_SECTION*>(&cs)))
-		{
-			LeaveCriticalSection(const_cast<CRITICAL_SECTION*>(&cs));
-			return false;
-		}
-		return true;
-	}
-#else
-    void lock()
-	{
-	}
-
-	void unlock()
-	{
-	}
-
-	Lockable()
-	{
-	}
-
-	virtual ~Lockable()
-	{
-	}
-
-	bool locked() const
-	{
-		return false;
-	}
-#endif
-};
-
-template<class Parent> class ScopedLock
-{
-	Parent &parent;
-public:
-	ScopedLock(const Parent &p):parent((Parent&)p)
-	{
-		parent.lock();
-	}
-	~ScopedLock()
-	{
-		parent.unlock();
-	}
-};
 
 class Network
 {
@@ -121,8 +23,14 @@ class Network
 	#endif
 	Log * log;
 public:
+	typedef int SOCKET;
 	Network(Log * log);
-	SOCKET createSocket();
+	enum SocketType
+	{
+		SocketTCP,
+		SocketUDP,
+	};
+	SOCKET createSocket(SocketType socketType);
 	~Network();
 	Log * getLog() { return log;};
 
@@ -137,6 +45,7 @@ public:
 		InvalidSlot,
 		InvalidArgument,
 		Memory,
+		BufferOverrun,
 	};
 
 	static ErrorType getLastError();
@@ -151,50 +60,91 @@ public:
 	static void callError(ErrorType error);
 };
 
+enum SlotUpdateMode
+{
+	ModeManual,
+	ModeAsyncSimple,
+	ModeAsyncSelect,
+};
+
+int mkaddr(void *addr, int *addrlen, const char *str_addr, const char *protocol);
+
 class Peer
 {
 protected:
-	typedef Lockable::Scoped Lock;
-	Lockable baseLock;	// to lock access to peer data from child threads
+	typedef Threading::Mutex Mutex;
+	typedef Threading::ScopedLock<Mutex> Lock;
+	Mutex baseLock;
 	bool reconnect;
-	bool waitPeer;
-	IO::BufferPtr buffer;
+	char * buffer;
+	size_t bufferLength;
 	Network &network;
 	bool dying;
 public:
-    struct MessageHeader
+
+	void setBufferLength(int newLength)
 	{
-		unsigned short type;	/// message type
-		unsigned short length;	/// message length
-	};
+		if(buffer)
+		{
+			delete[] buffer;
+			buffer = NULL;
+			bufferLength = 0;
+		}
+		buffer = new char[newLength];
+		if(buffer)
+		{
+			bufferLength = newLength;
+		}
+	}
 
 	class Callback
 	{
 	public:
         friend class Peer;
+		virtual ~Callback(){}
 		// return true to accept connection
 		virtual bool onIncomingConnection(Peer * peer,  size_t listener, size_t listenerId) = 0;
 		virtual void onClosed(Peer * peer, size_t clientId) = 0;
 		virtual void onConnected(Peer * connection, size_t clientId ) = 0;
-		virtual void onRecieve(Peer * connection, size_t clientId, const void * data, size_t size, size_t pendingOffset, size_t pendingSize) = 0;
+		virtual int onRecieve(Peer * connection, size_t clientId, const void * data, size_t size) = 0;
 		//virtual void onRecieve(Peer * connection, size_t clientId, const MessageHeader & header, IO::StreamIn & stream) = 0;
 	};
 
 	Callback * listener;
 
+	enum SlotState
+	{
+		Invalid = -1,
+		Empty,
+		Accepting,	// waiting for connection
+		Connecting,	// connecting to host
+		Working,
+		Dying,
+	};
+
 	Peer(Network &net, int bufferSize);
 	virtual ~Peer();
 	// try to send, sync call
 	virtual int send(size_t peerId, const void * data, size_t size);
+	// TODO: implement
+	virtual int recv(size_t peerId, void * buffer, size_t maxLength);	/// read data from slot manually
+	// TODO: implement
 	virtual void close();
+
 	typedef bool Result;
 	size_t listen( int port );
 	size_t connect( const char * address, int port );
 	size_t getClientsUsed() const;
     /// enable blocking/unblocking socket handling
-	void setBlockingMode(size_t slotId, bool block);
-	void requestData(size_t slotId, size_t amount);
+
+	void updateSlot(size_t slotId);	/// update slot manually
+
+	void setSlotMode(size_t slotId, SlotUpdateMode mode);
 	void update(timeval &timeout);
+
+	int getDataPending(size_t slotId) const;
+	SlotState getSlotState() const;
+
 protected:
 	enum { maxClients = 8 };
 
@@ -205,37 +155,48 @@ private:
 	/// insert new socket
 	size_t addSocket( const Socket & socket);
 	/// check socket for recieving/connecting/accepting
-	void checkSockets(timeval &timeout);
+	//void checkSockets(timeval &timeout);
 	bool processAccepting(size_t i);
 	void processConnecting(size_t i);
 	void processRecieving(size_t i);
 };
 
-
-
-class TextCallback : public Peer::Callback
+enum ServiceFlags
 {
-public:
-	virtual bool onIncomingConnection(Peer * peer,  size_t listener, size_t connectionId)
-	{
-		printf("Callback::onIncomingConnection(%d,%d)\n", listener, connectionId);
-		return true;	// accept all by default
-	}
-	virtual void onClosed(Peer * peer, size_t clientId)
-	{
-		printf("Callback::onClosed(peer, %d)\n", clientId);
-	}
-	virtual void onConnected(Peer * connection, size_t clientId )
-	{
-		printf("Client connected to slot %d\n", clientId);		
-	}
-	virtual void onRecieve(Peer * connection, size_t clientId, const Peer::MessageHeader & header, IO::StreamIn & stream)
-	{
-		size_t size = stream.left();
-		char * data = new char[size+1];
-		stream.read(data, size);
-		printf("recieved message:%s fom %d\n", data,clientId);
-		delete []data;
-	}
+	ServiceFlagSameIP = 1,	/// use broadcaster's ip
 };
+
+struct ServiceDesc
+	{
+	union
+	{
+		char signature[4];
+		unsigned int signatureInt;
+	};
+	unsigned short port;
+	unsigned short flags;
+	char name[64];
+	char address[64];
+	ServiceDesc();
+	ServiceDesc(const ServiceDesc &desc);
+};
+
+#include <string>
+#include <list>
+
+struct BroadcasterData
+	{
+	std::string broadcastAddress;
+	int timeout;
+	typedef std::list<ServiceDesc> Services;
+	Services services;
+
+	BroadcasterData();
+
+	void addService(const ServiceDesc & desc);
+};
+
+void sendServiceDesc(const ServiceDesc & desc, Network::SOCKET socket, sockaddr_in & address);
+void broadcastServices(BroadcasterData::Services & services, Network::SOCKET socket, sockaddr_in & address);
+void run_broadcast(Network & network, BroadcasterData * br);
 #endif

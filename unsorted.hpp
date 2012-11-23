@@ -142,7 +142,7 @@ public:
 	}
 };
 
-
+/// K-means clusteriser
 class Clusteriser
 {
 	struct ItemDef
@@ -177,7 +177,7 @@ public:
 	void groups(std::vector<int> &group)
 	{
 		int newGroup=1;
-		// 1й проход - устанавливаем для всех пар, находятся ли они в одной группе.
+		// 1st pass - check if all pairs are inside one group
 		for(int i=0;i<count;i++)
 		{
 			group[i]=0;
@@ -186,7 +186,7 @@ public:
 			(*this)(i,j).groupFlag=1;
 			(*this)(j,i).groupFlag=1;
 		}
-		// 2й проход - собираем в группы
+		// 2nd pass - assemble in groups
 		for(int y=0;y<count;y++)
 			for(int x=0;x<count;x++)
 			{
@@ -195,7 +195,7 @@ public:
 				if((*this)(x,y).groupFlag)
 				{
 					if(group[y]==0)
-						group[y]=newGroup++;	// создаём новую группу
+						group[y]=newGroup++;	// create new group
 					if(!group[x])
 						group[x]=group[y];
 				}
@@ -332,13 +332,13 @@ public:
 	{
 		long i=-1;
 		bool flag=false;// if we  have not found this node
-		//находим положение данного узла в контейнере
+		// find node position in container
 		//if(array[node->containerID]==node)
 		//{
 		//	i=node->containerID;
 		//	flag=true;
 		//}
-		//линейный поиск элемента в массиве, если вдруг идентификатор указывает на другой узел
+		// if it failed - search through all nodes
 		//else //!!! O(n) search !!! Hash to be implemented
 			for(i=0;i<arraySize;i++)
 				if(node==array[i])
@@ -348,7 +348,7 @@ public:
 				}
 		if(!flag || !arraySize)
 			return;
-		//удаление из двоичного дерева
+		// remove from binary tree
 		unsigned int chLeft=i;
 		unsigned int chRight=i;
 		unsigned int u=i;
