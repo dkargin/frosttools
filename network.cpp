@@ -43,8 +43,8 @@ void ReportErrorWin32(int errorCode, const char *whichFunc)
 	switch(errorCode)
 	{
 	case 10014:
-	sprintf(errorMsg, "Bad address.");//
-	break;
+		sprintf(errorMsg, "Bad address.");//
+		break;
 	case 10022:
 		sprintf(errorMsg, "Invalid argument.");//
 		break;
@@ -102,31 +102,34 @@ void ReportErrorWin32(int errorCode, const char *whichFunc)
 	sprintf(caption, "Socket Error on function %s !", (char *)whichFunc);
 	MessageBoxA(NULL, errorMsg, caption, MB_OK  |  MB_ICONERROR);// show it finally
 
-//	fprintf(stderr, errorMsg);
+	//	fprintf(stderr, errorMsg);
 	return;
 };
 #endif
+
 bool IsInvalidSocket(Network::SOCKET socket)
 {
-        return socket < 0;
+	return socket < 0;
 }
 
 bool SocketError(int result)
 {
-    return result < 0;
+	return result < 0;
 }
 
 Network::Network(Log * log)
 	:/*result(NULL), */log(log)
 {
 	LogFunction(*log);
-	#ifdef _MSC_VER
+#ifdef _MSC_VER
 	// Initialize Winsock
 	int iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
 	if (iResult != 0) {
 		log->line(1, "WSAStartup failed: %d\n", iResult);
 		//return 1;
 	}
+	/*
+	/// WTF is this?
 	ZeroMemory(&hints, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
@@ -136,11 +139,11 @@ Network::Network(Log * log)
 	// Resolve the server address and port
 	iResult = getaddrinfo(NULL, DEFAULT_PORT, &hints, &result);
 	if ( iResult != 0 ) {
-		log->line(1, "getaddrinfo failed: %d\n", iResult);
-		//WSACleanup();
-		//return 1;
-	}
-	#endif
+	log->line(1, "getaddrinfo failed: %d\n", iResult);
+	//WSACleanup();
+	//return 1;
+	}*/
+#endif
 }
 
 Network::ErrorType Network::getLastError()
@@ -157,32 +160,55 @@ Network::ErrorType Network::getLastError()
 	int errcode = errno;
 	switch(errcode)
 	{
-	//case EWOULDBLOCK:
-	//break;
+		//case EWOULDBLOCK:
+		//break;
 	case EINTR:
-        result = Unknown;
-        break;
-    case EBADF:
-        result = Unknown;
-        break;
-    case EINVAL:
-        return InvalidArgument;
+		result = Unknown;
+		break;
+	case EBADF:
+		result = Unknown;
+		break;
+	case EINVAL:
+		return InvalidArgument;
 	case EAGAIN:
 		return WouldBlock;
-    break;
+		break;
 	}
 #endif
 	return result;
 }
-
-void Network::closeSocket(SOCKET socket)
-{
 #ifdef _MSC_VER
-	closesocket(socket);
-#else
-    close(socket);
-#endif
+int Network::setBlocking(Network::SOCKET s, bool value)
+{
+	/// TODO: Implement it
+	return 0;
 }
+int Network::closeSocket(SOCKET socket)
+{
+	return closesocket(socket);	
+}
+#else
+int Network::setBlocking(Network::SOCKET s, bool value)
+{
+	int oldValue = fcntl(result, F_GETFL);
+
+	if(value && fcntl(result, F_SETFL, oldValue & ~O_NONBLOCK) < 0) 
+	{		
+		printf("Network::setBlocking() : Cannot enter blocking mode\n");
+		return -1;
+	}
+	else if(!value && fcntl(result, F_SETFL, oldValue | O_NONBLOCK) < 0)
+	{
+		printf("Network::setBlocking() : Cannot enter nonblocking mode\n");
+		return -1;
+	}
+	return 0;
+}
+int Network::closeSocket(SOCKET socket)
+{
+	return close(socket);
+}
+#endif
 
 Network::SOCKET Network::createSocket(SocketType socketType)
 {
@@ -192,18 +218,12 @@ Network::SOCKET Network::createSocket(SocketType socketType)
 	{
 	case SocketTCP:
 		result = socket(AF_INET, SOCK_STREAM, 0);
-		// Put the socket in non-blocking mode:
-
-			if(fcntl(result, F_SETFL, fcntl(result, F_GETFL) | O_NONBLOCK) < 0) {
-			    // handle error
-				printf("Cannot enter nonblocking mode\n");
-			}
+		// Put the socket in non-blocking mode:		
 		break;
 	case SocketUDP:
 		result = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 		break;
 	}
-
 	return result;
 }
 
@@ -215,10 +235,10 @@ void Network::callError(Network::ErrorType error)
 Network::~Network()
 {
 	LogFunction(*log);
-	#ifdef _MSC_VER
+#ifdef _MSC_VER
 	freeaddrinfo(result);
 	WSACleanup();
-	#endif
+#endif
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct Peer::Socket
@@ -304,11 +324,11 @@ int Peer::send(size_t peerId, const void * data, size_t size)
 	Socket & s = sockets[peerId];
 	if( s.state != Working )
 		return 0;
-    int sendFlags = 0;
-    #ifdef _MSC_VER
-    #else
-    sendFlags |= MSG_NOSIGNAL;
-    #endif
+	int sendFlags = 0;
+#ifdef _MSC_VER
+#else
+	sendFlags |= MSG_NOSIGNAL;
+#endif
 
 	int bytesData = 0;
 	if( size > 0 )
@@ -384,20 +404,20 @@ void Peer::setSlotMode(size_t slot, SlotUpdateMode mode)
 #if _WIN32
 #else
 			/*
-		flags = fcntl(sockets[slot].socket,F_GETFL,0);
-		assert(flags != -1);
-		fcntl(sockets[slot].socket, F_SETFL, flags & ~O_NONBLOCK);*/
+			flags = fcntl(sockets[slot].socket,F_GETFL,0);
+			assert(flags != -1);
+			fcntl(sockets[slot].socket, F_SETFL, flags & ~O_NONBLOCK);*/
 #endif
 			break;
 		}
 		/*
-#if _MSC_VER
-#else
+		#if _MSC_VER
+		#else
 		int flags;
 		flags = fcntl(sockets[slot].socket,F_GETFL,0);
 		assert(flags != -1);
 		fcntl(sockets[slot].socket, F_SETFL, flags | O_NONBLOCK);
-#endif
+		#endif
 		*/
 		sockets[slot].mode = mode;
 	}
@@ -557,7 +577,7 @@ int Peer::recv(size_t peerId, void * buffer, size_t maxLength)
 
 	if(s.state == Working)
 	{
-		return ::recv(s.socket, buffer, maxLength, 0 );
+		return ::recv(s.socket, (char*)buffer, maxLength, 0 );
 	}//if(s.)
 	size_t dataToProcess = s.bytesRecieved;
 	if(maxLength < dataToProcess)
@@ -594,20 +614,20 @@ void Peer::processRecieving( size_t i )
 	//size_t totalData = s.bytesRecieved;
 	if( s.bufferLength >= s.bytesRecieved)
 	{
-		int bytes = ::recv( s.socket, s.buffer + s.bytesRecieved, s.bufferLength - s.bytesRecieved, 0);
+		int bytes = ::recv( s.socket, (char*)s.buffer + s.bytesRecieved, s.bufferLength - s.bytesRecieved, 0);
 		if( bytes <= 0 )
 		{
 			network.getLog()->line(0,"Peer::processRecieving( %d ) - socket was closed\n",i);
 			s.state = Dying;
 			return;
 		}
-			s.bytesRecieved += bytes;
-			}	
+		s.bytesRecieved += bytes;
+	}	
 	else
 	{
 		Network::callError(Network::BufferOverrun);
 		s.state = Dying;
-			return;
+		return;
 		//printf("No place to store data new data\n");
 	}
 
@@ -641,16 +661,16 @@ void Peer::update(timeval &timeout)
 		/*
 		if( socket.state == Socket::Connecting )
 		{
-			FD_SET(socket.socket, &writefds);
+		FD_SET(socket.socket, &writefds);
 		}*/
 	}
 	if( selectAwaits > 0 )
 		selected = select(FD_SETSIZE, &readfds, NULL, &exceptfds, &timeout);
 
 	if( selected < 0 )
-		{
-		    network.getLog()->line(0,"Select error");
-			//ReportError(network.getLastError(), "client connection failed");
+	{
+		network.getLog()->line(0,"Select error");
+		//ReportError(network.getLastError(), "client connection failed");
 		//return;
 	}
 	// 2. Process all sockets
@@ -679,89 +699,92 @@ void Peer::update(timeval &timeout)
 			case Accepting:		processAccepting(i);	break;
 			case Connecting:	processConnecting(i);	break;
 			case Working:		processRecieving(i);	break;
-	}
-}
+			}
+		}
 
 		if( s.socket == INVALID_SOCKET )
-{
-            s.state = Empty;
-        }
+		{
+			s.state = Empty;
+		}
 	}
 	// 2. Mark sockets to be ready for reading
 
 	// 2. check sockets state
 
-    // 3. process selected sockets
-	
+	// 3. process selected sockets
+
 	if( listener )
-        {
-	    for( size_t i = 0; i < socketsAllocated; i++)
-            if( sockets[i].state == Dying )
-                listener->onClosed(this, i);
+	{
+		for( size_t i = 0; i < socketsAllocated; i++)
+			if( sockets[i].state == Dying )
+				listener->onClosed(this, i);
 	}
 
 	for( size_t i = 0; i < socketsAllocated; i++)
-        {
-         if( sockets[i].state == Dying)
-			 sockets[i].state = Empty;
-        }
+	{
+		if( sockets[i].state == Dying)
+			sockets[i].state = Empty;
+	}
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* mkaddr.c
- * The mkaddr() Subroutine using inet_aton
- * Make a socket address:
- */
+* The mkaddr() Subroutine using inet_aton
+* Make a socket address:
+*/
 #include <stdio.h>
-#include <unistd.h>
+
 #include <stdlib.h>
 #include <errno.h>
 #include <ctype.h>
 #include <string.h>
 #include <sys/types.h>
+/*
 #include <sys/socket.h>
+#include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-
+*/
 /*
- * Create an AF_INET Address:
- *
- * ARGUMENTS:
- * 1. addr Ptr to area
- * where address is
- * to be placed.
- * 2. addrlen Ptr to int that
- * will hold the final
- * address length.
- * 3. str_addr The input string
- * format hostname, and
- * port.
- * 4. protocol The input string
- * indicating the
- * protocol being used.
- * NULL implies  tcp .
- * RETURNS:
- * 0 Success.
- * -1 Bad host part.
- * -2 Bad port part.
- *
- * NOTES:
- *  *  for the host portion of the
- * address implies INADDR_ANY.
- *
- *  *  for the port portion will
- * imply zero for the port (assign
- * a port number).
- *
- * EXAMPLES:
- *  www.lwn.net:80
- *  localhost:telnet
- *  *:21
- *  *:*
- *  ftp.redhat.com:ftp
- *  sunsite.unc.edu
- *  sunsite.unc.edu:*
- */
+* Create an AF_INET Address:
+*
+* ARGUMENTS:
+* 1. addr Ptr to area
+* where address is
+* to be placed.
+* 2. addrlen Ptr to int that
+* will hold the final
+* address length.
+* 3. str_addr The input string
+* format hostname, and
+* port.
+* 4. protocol The input string
+* indicating the
+* protocol being used.
+* NULL implies  tcp .
+* RETURNS:
+* 0 Success.
+* -1 Bad host part.
+* -2 Bad port part.
+*
+* NOTES:
+*  *  for the host portion of the
+* address implies INADDR_ANY.
+*
+*  *  for the port portion will
+* imply zero for the port (assign
+* a port number).
+*
+* EXAMPLES:
+*  www.lwn.net:80
+*  localhost:telnet
+*  *:21
+*  *:*
+*  ftp.redhat.com:ftp
+*  sunsite.unc.edu
+*  sunsite.unc.edu:*
+*/
 int mkaddr(void *addr, int *addrlen, const char *str_addr, const char *protocol) {
 
 	char *inp_addr = strdup(str_addr);
@@ -774,8 +797,8 @@ int mkaddr(void *addr, int *addrlen, const char *str_addr, const char *protocol)
 	long lv;
 
 	/*
-	 * Set input defaults:
-	 */
+	* Set input defaults:
+	*/
 	if (!host_part) {
 		host_part = "*";
 	}
@@ -787,31 +810,37 @@ int mkaddr(void *addr, int *addrlen, const char *str_addr, const char *protocol)
 	}
 
 	/*
-	 * Initialize the address structure:
-	 */
+	* Initialize the address structure:
+	*/
 	memset(ap, 0, *addrlen);
 	ap->sin_family = AF_INET;
 	ap->sin_port = 0;
 	ap->sin_addr.s_addr = INADDR_ANY;
 
 	/*
-	 * Fill in the host address:
-	 */
+	* Fill in the host address:
+	*/
 	if (strcmp(host_part, "*") == 0) {
 		; /* Leave as INADDR_ANY */
-	} else if (isdigit(*host_part)) {
+	} 
+	else if (isdigit(*host_part)) {
 		/*
-		 * Numeric IP address:
-		 */
+		* Numeric IP address:
+		*/
 		ap->sin_addr.s_addr = inet_addr(host_part);
-		// if ( ap->sin_addr.s_addr == INADDR_NONE ) {
+		assert( ap->sin_addr.s_addr != INADDR_NONE );
+		if( ap->sin_addr.s_addr == INADDR_NONE )
+			return -1;
+		/*
 		if (!inet_aton(host_part, &ap->sin_addr)) {
 			return -1;
-		}
-	} else {
+		}*/
+	}
+	else 
+	{
 		/*
-		 * Assume a hostname:
-		 */
+		* Assume a hostname:
+		*/
 		hp = gethostbyname(host_part);
 		if (!hp) {
 			return -1;
@@ -823,14 +852,14 @@ int mkaddr(void *addr, int *addrlen, const char *str_addr, const char *protocol)
 	}
 
 	/*
-	 * Process an optional port #:
-	 */
+	* Process an optional port #:
+	*/
 	if (!strcmp(port_part, "*")) {
 		/* Leave as wild (zero) */
 	} else if (isdigit(*port_part)) {
 		/*
-		 * Process numeric port #:
-		 */
+		* Process numeric port #:
+		*/
 		lv = strtol(port_part, &cp, 10);
 		if (cp != NULL && *cp) {
 			return -2;
@@ -841,8 +870,8 @@ int mkaddr(void *addr, int *addrlen, const char *str_addr, const char *protocol)
 		ap->sin_port = htons((short) lv);
 	} else {
 		/*
-		 * Lookup the service:
-		 */
+		* Lookup the service:
+		*/
 		sp = getservbyname(port_part, protocol);
 		if (!sp) {
 			return -2;
@@ -851,8 +880,8 @@ int mkaddr(void *addr, int *addrlen, const char *str_addr, const char *protocol)
 	}
 
 	/*
-	 * Return address length
-	 */
+	* Return address length
+	*/
 	*addrlen = sizeof *ap;
 
 	free(inp_addr);
@@ -862,41 +891,42 @@ int mkaddr(void *addr, int *addrlen, const char *str_addr, const char *protocol)
 const char msgSignature[]="SeDi";
 
 ServiceDesc::ServiceDesc()
-        {
-	bzero(this, sizeof(ServiceDesc));
+{
+	/// TODO: dinosaur can bite here
+	memset(this, sizeof(ServiceDesc), 0);
 	memcpy(this->signature, msgSignature, 4);
-        }
+}
 
 ServiceDesc::ServiceDesc(const ServiceDesc &desc)
 {
 	memcpy(this, &desc, sizeof(desc));
-    }
-	
+}
+
 
 BroadcasterData::BroadcasterData()
-	{
+{
 	broadcastAddress = "192.168.1.255:9097";
 	timeout = 1000;
-	}
+}
 
 void BroadcasterData::addService(const ServiceDesc & desc)
-	{
+{
 	services.push_back(desc);
 }
 
 void sendServiceDesc(const ServiceDesc & desc, Network::SOCKET socket, sockaddr_in & address)
-		{
+{
 	int packetLength = sizeof(ServiceDesc);
 	int addrLength = sizeof(sockaddr_in);
-	int err = sendto(socket, &desc, packetLength,0, (sockaddr*)&address, addrLength);
+	int err = sendto(socket, (const char*)&desc, packetLength,0, (sockaddr*)&address, addrLength);
 	if(err < 0)
-			{
+	{
 		err = errno;
 		//char errorBuff[255];
 		//strerror_r(err, errorBuff, sizeof(errorBuff));
 		printf("Failed to send service descriptor, err = %d, %s\n", err, strerror(err));
 	}
-			}
+}
 
 void broadcastServices(BroadcasterData::Services & services, Network::SOCKET socket, sockaddr_in & address)
 {
@@ -904,11 +934,11 @@ void broadcastServices(BroadcasterData::Services & services, Network::SOCKET soc
 	{
 		ServiceDesc & desc = *it;
 		sendServiceDesc(desc, socket, address);
-		}
 	}
+}
 
 void run_broadcast(Network & network, BroadcasterData * br)
-	{
+{
 	Network::SOCKET socket = network.createSocket(Network::SocketUDP);
 	if (socket == INVALID_SOCKET) {
 		printf("Cannot create broadcaster\n");
@@ -918,14 +948,14 @@ void run_broadcast(Network & network, BroadcasterData * br)
 	char sv_addr[128] = "127.0.0:*";
 
 	sockaddr_in broadcast_address, server_address;
-	bzero((char*) &broadcast_address, sizeof(broadcast_address));
+	memset((char*) &broadcast_address, sizeof(broadcast_address), 0);
 
 	int len_bc = sizeof broadcast_address;
 	int z = mkaddr(&broadcast_address, &len_bc, br->broadcastAddress.c_str(), "udp"); /* UDP protocol */
 	if(z == -1)
-		{
+	{
 		printf("failed to init bc_addr\n");
-		}
+	}
 
 	int len_srvr = sizeof server_address;
 	z = mkaddr(&server_address, &len_srvr, sv_addr, "udp"); /* UDP protocol */
@@ -937,26 +967,26 @@ void run_broadcast(Network & network, BroadcasterData * br)
 
 	int option = 1;
 	if ((z = setsockopt(socket, SOL_SOCKET, SO_REUSEADDR,
-			&option, sizeof option)) == -1) {
-		printf("Cannot set SO_REUSEADDR=1\n");
-		exit(0);
+		(char*)&option, sizeof option)) == -1) {
+			printf("Cannot set SO_REUSEADDR=1\n");
+			exit(0);
 	}
 	option = 1;
 	if ((z = setsockopt(socket, SOL_SOCKET, SO_BROADCAST,
-			&option, sizeof option)) == -1) {
-		printf("Cannot set broadcasting mode\n");
-		exit(0);
+		(char*)&option, sizeof option)) == -1) {
+			printf("Cannot set broadcasting mode\n");
+			exit(0);
 	}
 
 	if (bind(socket, (sockaddr*) &broadcast_address,
-			sizeof(broadcast_address)) == -1) {
-		printf("Cannot bind broadcaster\n");
-		exit(0);
+		sizeof(broadcast_address)) == -1) {
+			printf("Cannot bind broadcaster\n");
+			exit(0);
 	}
 
 	while (true)
 	{
 		broadcastServices(br->services, socket, broadcast_address);
-		usleep(br->timeout * 1000);
+		Threading::Thread::sleep(br->timeout);		
 	}
 }

@@ -15,6 +15,10 @@ const int INVALID_SOCKET=-1;
 #include "threads.hpp"
 #include "logger.hpp"
 
+/// Wraps some generic socket methods
+/// For winsock2 inits socket library
+/// Contains some error handling
+/// TODO: move all log related code to network from Peer
 class Network
 {
     #ifdef _MSC_VER
@@ -30,11 +34,15 @@ public:
 		SocketTCP,
 		SocketUDP,
 	};
+
 	SOCKET createSocket(SocketType socketType);
+	int setBlocking(SOCKET s, bool blocks);
+
 	~Network();
+
 	Log * getLog() { return log;};
 
-	static void closeSocket(SOCKET socket);
+	static int closeSocket(SOCKET socket);
 public:
 	enum ErrorType
 	{
@@ -167,7 +175,7 @@ enum ServiceFlags
 };
 
 struct ServiceDesc
-	{
+{
 	union
 	{
 		char signature[4];

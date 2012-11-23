@@ -10,6 +10,18 @@
 
 namespace Threading
 {
+	class Thread
+	{
+	public:
+		static void sleep(int msec)
+		{
+#ifdef _MSC_VER
+			Sleep(msec);
+#else
+			usleep(msec*1000);
+#endif
+		}
+	};
 	template<class Lockable>
 	class ScopedLock
 	{
@@ -44,7 +56,7 @@ namespace Threading
 			LeaveCriticalSection(&cs);
 		}
 
-		Lockable()
+		LockableCritSection()
 		{
 			InitializeCriticalSection(&cs);
 		}
@@ -103,8 +115,10 @@ namespace Threading
 			pthread_mutex_unlock (&mutex);
 		}
 	};
-#endif
+
 	typedef MutexPT Mutex;
+#endif
+	
 
 	/// Mutex without actual locking. Just a placeholder
 	class SimpleMutex
