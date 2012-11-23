@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="tests">
+      <UniqueIdentifier>{4573fe53-87f4-46df-991f-b2956b872ac8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tinyxml">
+      <UniqueIdentifier>{545b0142-a314-4cc1-9b87-fd82a6df41a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math">
+      <UniqueIdentifier>{2a34b0a9-cee8-412e-8b77-9ca34b325811}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RSDN serialiser">
+      <UniqueIdentifier>{1dbfdf4d-3c3d-4eae-b992-070649d29c74}</UniqueIdentifier>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="testClassFactory.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="testDelegate.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="testIdManagers.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="testListeners.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="testMath.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="testMultilayer.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="tinyxml.cpp">
+      <Filter>tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="tinyxmlerror.cpp">
+      <Filter>tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="tinyxmlparser.cpp">
+      <Filter>tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="Serialiser\SerializerRegistry.cpp">
+      <Filter>RSDN serialiser</Filter>
+    </ClCompile>
+    <ClCompile Include="Serialiser\SerializerUtils.cpp">
+      <Filter>RSDN serialiser</Filter>
+    </ClCompile>
+    <ClCompile Include="Serialiser\SerializerXml.cpp">
+      <Filter>RSDN serialiser</Filter>
+    </ClCompile>
+    <ClCompile Include="frostTools.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="stringTools.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="tinyxml.h">
+      <Filter>tinyxml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\3dmath.h">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mathExtensions.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mathMatrix.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mathMatrix3.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mathMatrix4.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mathMatrixNM.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mathParse.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mathPlane.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mathQuaternion.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mathSolver.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mathVector.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="Serialiser\Serializer.h">
+      <Filter>RSDN serialiser</Filter>
+    </ClInclude>
+    <ClInclude Include="Serialiser\SerializerPrim.h">
+      <Filter>RSDN serialiser</Filter>
+    </ClInclude>
+    <ClInclude Include="Serialiser\SerializerRegistry.h">
+      <Filter>RSDN serialiser</Filter>
+    </ClInclude>
+    <ClInclude Include="Serialiser\SerializerUtils.h">
+      <Filter>RSDN serialiser</Filter>
+    </ClInclude>
+    <ClInclude Include="Serialiser\SerializerXml.h">
+      <Filter>RSDN serialiser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\autoptr.hpp" />
+    <ClInclude Include="classfactory.h" />
+    <ClInclude Include="..\delegate.hpp" />
+    <ClInclude Include="..\frostTools.h" />
+    <ClInclude Include="..\raster.hpp" />
+    <ClInclude Include="..\ringbuffer.hpp" />
+    <ClInclude Include="..\serialiser.hpp" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="..\unsorted.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="objects.xml" />
+    <None Include="ReadMe.txt" />
+  </ItemGroup>
+</Project>

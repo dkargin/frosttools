@@ -1,0 +1,14 @@
+0777alpha
+1
+epsilon
+5
+gamma
+0
+lambda
+2
+omega
+3
+psi
+4
+theta
+6
