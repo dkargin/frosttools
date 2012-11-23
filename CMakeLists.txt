@@ -1,12 +1,19 @@
+cmake_minimum_required(VERSION 2.6)
 #FrostTools static library
+PROJECT(FrostTools)
 
-ADD_LIBRARY(frosttools network.cpp)
+include_directories(${PROJECT_SOURCE_DIR}/include)
+
+#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+ADD_LIBRARY(frosttools src/network.cpp src/connection.cpp)
 
 # install target
-INSTALL_TARGET(/lib frosttools)
-INSTALL_TARGET(/include/frosttools "\.hxx") 
-INSTALL_TARGET(/include/frosttools "\.hpp") 
-INSTALL_TARGET(/include/frosttools "\.h") 
+install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.hpp")
+#install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.hxx")
+
+install(TARGETS frosttools DESTINATION lib)
+#INSTALL_TARGET(/lib frosttools)
 
 # uninstall target
 configure_file(
