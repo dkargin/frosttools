@@ -1,3 +1,7 @@
 .svn
 /*/.svn
 /*/*/.svn
+
+*.user
+/*/*.user
+/*/*/*.user
