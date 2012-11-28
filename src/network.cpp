@@ -9,6 +9,8 @@
 #pragma comment(lib, "ws2_32.lib")
 #else
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -214,10 +216,19 @@ Network::SOCKET Network::createSocket(SocketType socketType)
 {
 	LogFunction(*log);
 	Network::SOCKET result = INVALID_SOCKET;
+	char flag = 0;
+	int ret = 0;
 	switch(socketType)
 	{
 	case SocketTCP:
 		result = socket(AF_INET, SOCK_STREAM, 0);
+		flag = 1;
+		// no delay for TCP
+		ret = setsockopt( result, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(flag));
+		if(ret == -1)
+		{
+			printf("Network::createSocket() cannot turn on nodelay\n");
+		}
 		// Put the socket in non-blocking mode:		
 		break;
 	case SocketUDP:
@@ -441,6 +452,7 @@ size_t Peer::connect(const char* IP, int port)
 		network.getLog()->line(0,"error at socket(): %ld", network.getLastError() );
 		return -1;
 	}
+
 	network.getLog()->line(0,"done");
 	socket.state = Connecting;
 	socket.addr.sin_family = AF_INET;
@@ -559,6 +571,13 @@ void Peer::processConnecting( size_t i )
 	{
 		s.state = Working;
 		network.getLog()->line(0,"connected");
+		// no delay for TCP
+		char flag = 1;
+		int ret = setsockopt( s.socket, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(flag));
+		if(ret == -1)
+		{
+			printf("Peer::processConnecting() cannot turn on nodelay\n");
+		}
 		if( listener )
 			listener->onConnected( this, i );
 	}
