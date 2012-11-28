@@ -150,6 +150,8 @@ public:
 	void setSlotMode(size_t slotId, SlotUpdateMode mode);
 	void update(timeval &timeout);
 
+	void setNoDelay(size_t slotId, bool value);
+
 	int getDataPending(size_t slotId) const;
 	SlotState getSlotState() const;
 

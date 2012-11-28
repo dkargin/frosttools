@@ -388,6 +388,20 @@ size_t Peer::addSocket(const Peer::Socket & s)
 	socketsAllocated = newSize;
 	return socketsAllocated - 1;
 }
+void Peer::setNoDelay(size_t slot, bool value)
+{
+	if( slot >= socketsAllocated )
+	{
+		Network::callError(Network::InvalidSlot);
+		return;
+	}
+	int flag = value ? 1: 0;
+	int ret = setsockopt( sockets[slot].socket, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(flag));
+	if(ret == -1)
+	{
+		printf("Peer::setNoDelay cannot turn on nodelay, errno=%d, err=%s\n", errno, strerror(errno));
+	}
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Peer::setSlotMode(size_t slot, SlotUpdateMode mode)
 {
@@ -572,11 +586,11 @@ void Peer::processConnecting( size_t i )
 		s.state = Working;
 		network.getLog()->line(0,"connected");
 		// no delay for TCP
-		char flag = 1;
+		int flag = 1;
 		int ret = setsockopt( s.socket, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(flag));
 		if(ret == -1)
 		{
-			printf("Peer::processConnecting() cannot turn on nodelay\n");
+			printf("Peer::processConnecting() cannot turn on nodelay, errno=%d, err=%s\n", errno, strerror(errno));
 		}
 		if( listener )
 			listener->onConnected( this, i );
