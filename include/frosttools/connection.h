@@ -42,7 +42,7 @@ public:
 	Listener * listener;
 
 	int sockfd;
-	enum{bufferSize = 4096};
+	enum{bufferSize = 0xffff};
 	char buffer[bufferSize];
 	int storedSize;
 
