@@ -209,4 +209,7 @@ struct BroadcasterData
 void sendServiceDesc(const ServiceDesc & desc, Network::SOCKET socket, sockaddr_in & address);
 void broadcastServices(BroadcasterData::Services & services, Network::SOCKET socket, sockaddr_in & address);
 void run_broadcast(Network & network, BroadcasterData * br);
+Network::SOCKET init_broadcast(Network &network, BroadcasterData *br, sockaddr_in &broadcast_address);
+void run_broadcast_once(Network::SOCKET &socket, BroadcasterData *br, sockaddr_in broadcast_address);
+
 #endif
