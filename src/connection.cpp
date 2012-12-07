@@ -15,20 +15,6 @@
 
 #include <frosttools/connection.h>
 
-
-#define  LOG_TAG    "NativeNet"
-
-#ifdef ANDROID_LOG
-#include <android/log.h>
-
-#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
-#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
-#else
-#define  LOGI(...)
-#define  LOGE(...)
-#endif
-
-
 enum {
 	CanRead = 1,
 	CanWrite = 2,
@@ -65,6 +51,7 @@ int testSocket(int sockfd, int usec)
 
 
 const int InvalidSocket = -1;
+
 Connection::Connection()
 :ring(4096)
 {
@@ -85,7 +72,7 @@ bool Connection::connect(const char *address, int port)
 {
 	if (netState == StateOffline)
 	{
-		LOGI("Got cmd connect to %s:%d from StateOffline",address, port);
+		writeLogI("Got cmd connect to %s:%d from StateOffline",address, port);
 		strncpy(connectAddress,address, sizeof(connectAddress));
 		connectPort = port;
 		newState = StateConnecting;
@@ -93,10 +80,10 @@ bool Connection::connect(const char *address, int port)
 	}
 	else if(netState == StateReady)
 	{
-		LOGI("Got cmd connect to %s:%d from StateReady",address, port);
+		writeLogI("Got cmd connect to %s:%d from StateReady",address, port);
 		return true;
 	}
-	LOGI("Got cmd connect to %s:%d from StateConnecting",address, port);
+	writeLogI("Got cmd connect to %s:%d from StateConnecting",address, port);
 	return false;
 }
 
@@ -104,8 +91,7 @@ void Connection::disconnect()
 {
 	if(netState != StateReady)
 		return;
-
-	LOGI("Got cmd disconnect from StateReady");
+	writeLogI("Got cmd disconnect from StateReady");
 	newState = StateOffline;
 }
 
@@ -117,11 +103,17 @@ int Connection::send(const void * data, int length)
 		ring.writeForce((const char*)data, length);
 		return length;
 	}
-	LOGE("Connection::send buffer overflow");
+	writeLogI("Connection::send buffer overflow");
 	newState = StateOffline;
 	return 0;
 }
 
+void Connection::processError(const char * where)
+{
+	//char message[255];
+	//snprintf(message, 255, "%s: %s", strerror(errno));
+	writeLogI("%s: %s", where, strerror(errno));
+}
 /// send all stored data
 int Connection::handleSending()
 {
@@ -145,22 +137,22 @@ int Connection::handleSending()
 			{
 				if(errno == EAGAIN)
 				{
-					LOGI("Connection::handleSending Operation to be blocked, trying after select");
+					writeLogI("Connection::handleSending Operation to be blocked, trying after select");
 					int test = testSocket(sockfd, 1000);
 					if( test & WasExcept != 0)
 					{
-						LOGE("Connection::handleSending Some exception happened");
+						writeLogE("Connection::handleSending Some exception happened");
 						break;
 					}
 					if( test & CanWrite == 0)
 					{
-						LOGE("Connection::send Cannot send data");
+						writeLogE("Connection::send Cannot send data");
 						break;
 					}
 				}
 				else
 				{
-					LOGE("Connection::handleSending Disconnected by host, err=%d,%s", errno, strerror(errno));
+					writeLogE("Connection::handleSending Disconnected by host, err=%d,%s", errno, strerror(errno));
 					disconnect();
 					break;
 				}
@@ -173,7 +165,7 @@ int Connection::handleSending()
 				}
 				else
 				{
-					LOGE("Connection::handleSending partial send %d of %d bytes", errno, strerror(errno));
+					writeLogE("Connection::handleSending partial send %d of %d bytes", errno, strerror(errno));
 					toWrite -= bytesData;
 					data += bytesData;
 				}
@@ -216,12 +208,12 @@ int Connection::handleStartConnection()
 	hostent * server = gethostbyname(connectAddress);
 	if(server == NULL)
 	{
-		LOGE("Error : cannot get server address");
+		writeLogE("Error : cannot get server address");
 		return -1;
 	}
 
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-		LOGE("Error : Could not create socket");
+		writeLogE("Error : Could not create socket");
 		sockfd = InvalidSocket;
 		return -1;
 	}
@@ -233,20 +225,20 @@ int Connection::handleStartConnection()
 	bcopy((char*)server->h_addr, (char*)&serv_addr.sin_addr.s_addr, server->h_length);
 
 	//setSocketNonblock(sockfd, 1);
-	LOGI("Trying to connect to %s:%d",connectAddress, connectPort);
+	writeLogI("Trying to connect to %s:%d",connectAddress, connectPort);
 	int result = ::connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
 	if(result < 0)
 	{
 		if(errno == EINPROGRESS || errno == EINTR )
 		{
-			LOGE("handleStartConnection Connection would be tested later");
+			writeLogE("handleStartConnection Connection would be tested later");
 			return 0;
 		}
-		LOGE("Error : Connection Failed, errno =%d", errno);
+		writeLogE("Error : Connection Failed, errno =%d", errno);
 		close(sockfd);
 		return -1;
 	}
-	LOGI("handleStartConnection Connected to %s:%d",connectAddress, connectPort);
+	writeLogI("handleStartConnection Connected to %s:%d",connectAddress, connectPort);
 	return 1;
 }
 
@@ -256,12 +248,12 @@ int Connection::handleConnect() {
 	int connected = testSocket(sockfd, 10000);
 	if(connected & CanRead != 0)
 	{
-		LOGI("handleConnect Finally connected to %s:%d",connectAddress, connectPort);
+		writeLogI("handleConnect Finally connected to %s:%d",connectAddress, connectPort);
 		return 1;
 	}
 	if(connected & WasExcept != 0)
 	{
-		LOGI("handleConnect Failed to connect to %s:%d",connectAddress, connectPort);
+		writeLogI("handleConnect Failed to connect to %s:%d",connectAddress, connectPort);
 		return -1;
 	}
 	return 0;
@@ -281,14 +273,14 @@ int Connection::handleReceiving()
 		if(newBytes == 0)
 		{
 			// seems like shutdown is here - disconnect
-			LOGI("handleReceiving got 0 bytes - disconnected", errno, strerror(errno));
+			writeLogI("handleReceiving got 0 bytes - disconnected", errno, strerror(errno));
 			return -1;
 		}
 		if(newBytes < 0) /// TODO: handle error here
 		{
 			if(errno == EWOULDBLOCK || errno == EAGAIN)
 				return 0;
-			LOGE("handleReceiving error, err=%d,%s", errno, strerror(errno));
+			writeLogE("handleReceiving error, err=%d,%s", errno, strerror(errno));
 			return -1;
 		}
 		if(newBytes > 0)
