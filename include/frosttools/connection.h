@@ -68,8 +68,8 @@ public:
 	int send(const void * data, int length);
 protected:
 	void writeLog(int level, const char * format, ...);
-	void writeLogI(const char * format, ...);
-	void writeLogE(const char * format, ...);
+	virtual void writeLogI(const char * format, ...) = 0;
+	virtual void writeLogE(const char * format, ...) = 0;
 
 	void processError(const char * where);
 	void handleStateChanged(NetworkState state);

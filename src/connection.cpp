@@ -180,6 +180,7 @@ void Connection::handleStateChanged(NetworkState state) {
 	NetworkState oldState = netState;
 	netState = state;
 	newState = state;
+	this->storedSize = 0;
 	/// TODO: call listener
 	if(listener != NULL)
 		listener->onStateChanged(state, oldState);
