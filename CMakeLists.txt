@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 2.6)
 #FrostTools static library
 PROJECT(FrostTools)
 
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ")
+
+
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 #set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
