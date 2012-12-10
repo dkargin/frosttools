@@ -474,6 +474,19 @@ size_t Peer::connect(const char* IP, int port)
 	socket.addr.sin_addr.s_addr = inet_addr(IP);
 	return addSocket(socket);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// create listening socket for incoming connection
+void Peer::disconnect(size_t slot)
+{
+	LogFunction(*network.getLog());
+	Lock lock((Mutex&)baseLock);
+	Peer::Socket & s = sockets[slot];
+
+	if(s.state != Invalid && s.state != Dying)
+		s.state = Dying;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // create listening socket for incoming connection
 size_t Peer::listen( int port )

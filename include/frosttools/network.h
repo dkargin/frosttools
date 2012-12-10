@@ -140,8 +140,11 @@ public:
 	virtual void close();
 
 	typedef bool Result;
+
+
 	size_t listen( int port );
 	size_t connect( const char * address, int port );
+	void disconnect( size_t slotId);
 	size_t getClientsUsed() const;
     /// enable blocking/unblocking socket handling
 

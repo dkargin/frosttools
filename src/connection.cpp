@@ -103,7 +103,7 @@ int Connection::send(const void * data, int length)
 		ring.writeForce((const char*)data, length);
 		return length;
 	}
-	writeLogI("Connection::send buffer overflow");
+	writeLogE("Connection::send buffer overflow");
 	newState = StateOffline;
 	return 0;
 }
@@ -112,7 +112,7 @@ void Connection::processError(const char * where)
 {
 	//char message[255];
 	//snprintf(message, 255, "%s: %s", strerror(errno));
-	writeLogI("%s: %s", where, strerror(errno));
+	writeLogE("%s: %s", where, strerror(errno));
 }
 /// send all stored data
 int Connection::handleSending()
@@ -175,12 +175,13 @@ int Connection::handleSending()
 	return 1;
 }
 
-
 void Connection::handleStateChanged(NetworkState state) {
 	NetworkState oldState = netState;
+
 	netState = state;
 	newState = state;
 	this->storedSize = 0;
+	ring.clean();
 	/// TODO: call listener
 	if(listener != NULL)
 		listener->onStateChanged(state, oldState);
