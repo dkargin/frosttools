@@ -23,6 +23,7 @@ namespace Threading
 #endif
 		}
 	};
+	
 	template<class Lockable>
 	class ScopedLock
 	{
