@@ -591,7 +591,7 @@ void Peer::processConnecting( size_t i )
 	int res = 0;
 	if (SocketError(res = ::connect( s.socket, (sockaddr*) &s.addr, sizeof(s.addr) )))
 	{
-		printf(".");
+		//printf(".");
 		//ReportError(WSAGetLastError(), "client connection failed");
 	}
 	else
@@ -695,12 +695,14 @@ void Peer::update(timeval &timeout)
 	FD_ZERO(&exceptfds);
 	int selectAwaits = 0;
 	int selected = 0;
+	int maxfds = 0;
 	// 1. Fill socket sets
 	for( size_t i = 0; i < socketsAllocated; ++i )
 	{
 		Socket & s = sockets[i];
 		if( s.mode == ModeAsyncSelect && (s.state == Accepting || s.state == Working))
 		{
+			maxfds = std::max(s.socket, maxfds);
 			FD_SET(s.socket, &readfds);
 			selectAwaits++;
 		}
@@ -710,12 +712,13 @@ void Peer::update(timeval &timeout)
 		FD_SET(socket.socket, &writefds);
 		}*/
 	}
+
 	if( selectAwaits > 0 )
-		selected = select(FD_SETSIZE, &readfds, NULL, &exceptfds, &timeout);
+		selected = select(maxfds+1, &readfds, NULL, &exceptfds, &timeout);
 
 	if( selected < 0 )
 	{
-		network.getLog()->line(0,"Select error");
+		network.getLog()->line(0,"Select error %d, %s", errno, strerror(errno));
 		//ReportError(network.getLastError(), "client connection failed");
 		//return;
 	}
