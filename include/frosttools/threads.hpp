@@ -3,14 +3,13 @@
 
 
 #ifdef WIN32
-#include <windows.h>
+#include "win32/threads_impl.hpp"
 #else
-#include <pthread.h>
-#include <unistd.h>
+#include "linux/threads_impl.hpp"
 #endif
 
 namespace Threading
-{
+{/*
 	class Thread
 	{
 	public:
@@ -22,7 +21,7 @@ namespace Threading
 			usleep(msec*1000);
 #endif
 		}
-	};
+	};*/
 	
 	template<class Lockable>
 	class ScopedLock
@@ -120,8 +119,6 @@ namespace Threading
 
 	typedef MutexPT Mutex;
 #endif
-	
-
 	/// Mutex without actual locking. Just a placeholder
 	class SimpleMutex
 	{
@@ -144,37 +141,5 @@ namespace Threading
 			counter--;
 		}
 	};
-	/*
-	template<class Type, class Lockable> class SharedValue : public Lockable
-	{
-		Type value;
-	public:
-		explicit SharedValue(const Type & value)
-		{
-			this->lock();
-			this->value = value;
-			this->unlock();
-		}
-		~SharedValue()
-		{
-			if(this->locked())
-				throw(std::exception("~SharedValue locked"));
-			ScopedLock<Lockable> s(*this);
-		}
-		operator Type()
-		{
-			this->lock();
-			Type result = value;
-			this->unlock();
-			return value;
-		}
-		SharedValue & operator = (const Type & v)
-		{
-			ScopedLock<Lockable> s(*this);
-			value = v;
-			return *this;
-		}
-	};
-	*/
 };
 #endif
