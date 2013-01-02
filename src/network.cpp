@@ -834,8 +834,8 @@ void Peer::update(timeval &timeout)
 int mkaddr(void *addr, int *addrlen, const char *str_addr, const char *protocol) {
 
 	char *inp_addr = strdup(str_addr);
-	char *host_part = strtok(inp_addr, ":");
-	char *port_part = strtok(NULL, "\n");
+	const char *host_part = strtok(inp_addr, ":");
+	const char *port_part = strtok(NULL, "\n");
 	struct sockaddr_in *ap = (struct sockaddr_in *) addr;
 	struct hostent *hp = NULL;
 	struct servent *sp = NULL;
@@ -1033,7 +1033,7 @@ void run_broadcast(Network & network, BroadcasterData * br)
 	while (true)
 	{
 		broadcastServices(br->services, socket, broadcast_address);
-		Threading::Thread::sleep(br->timeout);		
+		Threading::sleep(br->timeout);
 	}
 }
 

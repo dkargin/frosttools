@@ -28,21 +28,39 @@ public:
 
 class Timer
 {
+	int t_start, t_current;
 public:
-	double interval;
-	int ticks;
-	void Start()
+	Timer()
 	{
-		interval = 0;
-		ticks = GetTickCount();
+		t_start = 0;
+		t_current = 0;
 	}
-	void Stop()
+	void start()
 	{
-		interval = (GetTickCount() - ticks)*0.001f;
+		t_start = GetTickCount();
+		check();
 	}
-	double Interval() const
+
+	void check()
 	{
-		return interval;
+		t_current = GetTickCount();
+	}
+
+	void stop()
+	{
+		check();
+		t_start = t_current;
+	}
+
+	double lastTime() const
+	{
+		return (t_current - t_start)*0.001f;
+	}
+
+	double currentTime()
+	{
+		check();
+		return lastTime();
 	}
 };
 #endif
