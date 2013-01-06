@@ -11,6 +11,19 @@
 #include <frosttools/ringbuffer.hpp>
 #include <frosttools/threads.hpp>
 
+/*
+
+#ifdef ANDROID_LOG
+#include <android/log.h>
+#define  LOG_TAG    "NativeNet"
+#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
+#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
+#elif CONNECTION_NOLOG
+#define  LOGI(...)
+#define  LOGE(...)
+#endif
+*/
+
 class Connection {
 public:
 	RingBuffer ring;
@@ -54,6 +67,11 @@ public:
 
 	int send(const void * data, int length);
 protected:
+	void writeLog(int level, const char * format, ...);
+	virtual void writeLogI(const char * format, ...) = 0;
+	virtual void writeLogE(const char * format, ...) = 0;
+
+	void processError(const char * where);
 	void handleStateChanged(NetworkState state);
 	/// -1 = failed
 	/// 0 = continue

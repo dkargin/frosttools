@@ -15,6 +15,13 @@ class SysModule
 
 	inline void processError()
 	{
+		char *c = dlerror();
+		if (c != NULL) {
+			printf("linx/module_impl.h:SysModule Dlopen error = %s \n", c);
+		} else {
+			printf("linx/module_impl.h:SysModule Dlopen error = NULL \n");
+		}
+
 		/*
 		lastErrorCode = GetLastError();
 		FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM |FORMAT_MESSAGE_IGNORE_INSERTS,

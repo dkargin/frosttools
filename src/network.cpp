@@ -474,6 +474,19 @@ size_t Peer::connect(const char* IP, int port)
 	socket.addr.sin_addr.s_addr = inet_addr(IP);
 	return addSocket(socket);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// create listening socket for incoming connection
+void Peer::disconnect(size_t slot)
+{
+	LogFunction(*network.getLog());
+	Lock lock((Mutex&)baseLock);
+	Peer::Socket & s = sockets[slot];
+
+	if(s.state != Invalid && s.state != Dying)
+		s.state = Dying;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // create listening socket for incoming connection
 size_t Peer::listen( int port )
@@ -578,7 +591,7 @@ void Peer::processConnecting( size_t i )
 	int res = 0;
 	if (SocketError(res = ::connect( s.socket, (sockaddr*) &s.addr, sizeof(s.addr) )))
 	{
-		printf(".");
+		//printf(".");
 		//ReportError(WSAGetLastError(), "client connection failed");
 	}
 	else
@@ -682,12 +695,14 @@ void Peer::update(timeval &timeout)
 	FD_ZERO(&exceptfds);
 	int selectAwaits = 0;
 	int selected = 0;
+	int maxfds = 0;
 	// 1. Fill socket sets
 	for( size_t i = 0; i < socketsAllocated; ++i )
 	{
 		Socket & s = sockets[i];
 		if( s.mode == ModeAsyncSelect && (s.state == Accepting || s.state == Working))
 		{
+			maxfds = std::max(s.socket, maxfds);
 			FD_SET(s.socket, &readfds);
 			selectAwaits++;
 		}
@@ -697,12 +712,13 @@ void Peer::update(timeval &timeout)
 		FD_SET(socket.socket, &writefds);
 		}*/
 	}
+
 	if( selectAwaits > 0 )
-		selected = select(FD_SETSIZE, &readfds, NULL, &exceptfds, &timeout);
+		selected = select(maxfds+1, &readfds, NULL, &exceptfds, &timeout);
 
 	if( selected < 0 )
 	{
-		network.getLog()->line(0,"Select error");
+		network.getLog()->line(0,"Select error %d, %s", errno, strerror(errno));
 		//ReportError(network.getLastError(), "client connection failed");
 		//return;
 	}
@@ -821,8 +837,8 @@ void Peer::update(timeval &timeout)
 int mkaddr(void *addr, int *addrlen, const char *str_addr, const char *protocol) {
 
 	char *inp_addr = strdup(str_addr);
-	char *host_part = strtok(inp_addr, ":");
-	char *port_part = strtok(NULL, "\n");
+	const char *host_part = strtok(inp_addr, ":");
+	const char *port_part = strtok(NULL, "\n");
 	struct sockaddr_in *ap = (struct sockaddr_in *) addr;
 	struct hostent *hp = NULL;
 	struct servent *sp = NULL;
@@ -1020,6 +1036,62 @@ void run_broadcast(Network & network, BroadcasterData * br)
 	while (true)
 	{
 		broadcastServices(br->services, socket, broadcast_address);
-		Threading::Thread::sleep(br->timeout);		
+		Threading::sleep(br->timeout);
+	}
+}
+
+Network::SOCKET init_broadcast(Network &network, BroadcasterData *br, sockaddr_in &broadcast_address)
+{
+	Network::SOCKET socket = network.createSocket(Network::SocketUDP);
+	if (socket == INVALID_SOCKET) {
+		printf("Cannot create broadcaster\n");
+		return INVALID_SOCKET; //exit(0);
+	}
+
+	char sv_addr[128] = "127.0.0:*";
+
+	//sockaddr_in broadcast_address, server_address;
+	memset((char*) &broadcast_address, sizeof(broadcast_address), 0);
+
+	int len_bc = sizeof broadcast_address;
+	int z = mkaddr(&broadcast_address, &len_bc, br->broadcastAddress.c_str(), "udp"); /* UDP protocol */
+	if(z == -1)
+	{
+		printf("failed to init bc_addr\n");
+	}
+
+	/*int len_srvr = sizeof server_address;
+	z = mkaddr(&server_address, &len_srvr, sv_addr, "udp"); //* UDP protocol * /
+	if(z == -1)
+	{
+		printf("failed to init sv_addr\n");
+	}*/
+
+	int option = 1;
+	if ((z = setsockopt(socket, SOL_SOCKET, SO_REUSEADDR,
+		(char*)&option, sizeof option)) == -1) {
+			printf("Cannot set SO_REUSEADDR=1\n");
+			return INVALID_SOCKET; //exit(0);
+	}
+	option = 1;
+	if ((z = setsockopt(socket, SOL_SOCKET, SO_BROADCAST,
+		(char*)&option, sizeof option)) == -1) {
+			printf("Cannot set broadcasting mode\n");
+			return INVALID_SOCKET; //exit(0);
+	}
+
+	if (bind(socket, (sockaddr*) &broadcast_address,
+		sizeof(broadcast_address)) == -1) {
+			printf("Cannot bind broadcaster\n");
+			return INVALID_SOCKET; //exit(0);
+	}
+	return socket;
+}
+
+void run_broadcast_once(Network::SOCKET &socket, BroadcasterData *br, sockaddr_in broadcast_address) {
+	//while (true)
+	{
+		broadcastServices(br->services, socket, broadcast_address);
+		//Threading::Thread::sleep(br->timeout);
 	}
 }

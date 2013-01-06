@@ -1,6 +1,7 @@
 #ifndef _FT_THREADS_IMPL_HPP_
 #define _FT_THREADS_IMPL_HPP_
 
+#include <unistd.h>
 #include <pthread.h>
 
 namespace Threading

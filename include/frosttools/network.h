@@ -140,8 +140,11 @@ public:
 	virtual void close();
 
 	typedef bool Result;
+
+
 	size_t listen( int port );
 	size_t connect( const char * address, int port );
+	void disconnect( size_t slotId);
 	size_t getClientsUsed() const;
     /// enable blocking/unblocking socket handling
 
@@ -209,4 +212,7 @@ struct BroadcasterData
 void sendServiceDesc(const ServiceDesc & desc, Network::SOCKET socket, sockaddr_in & address);
 void broadcastServices(BroadcasterData::Services & services, Network::SOCKET socket, sockaddr_in & address);
 void run_broadcast(Network & network, BroadcasterData * br);
+Network::SOCKET init_broadcast(Network &network, BroadcasterData *br, sockaddr_in &broadcast_address);
+void run_broadcast_once(Network::SOCKET &socket, BroadcasterData *br, sockaddr_in broadcast_address);
+
 #endif

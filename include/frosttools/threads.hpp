@@ -3,14 +3,13 @@
 
 
 #ifdef WIN32
-#include <windows.h>
+#include "win32/threads_impl.hpp"
 #else
-#include <pthread.h>
-#include <unistd.h>
+#include "linux/threads_impl.hpp"
 #endif
 
 namespace Threading
-{
+{/*
 	class Thread
 	{
 	public:
@@ -22,7 +21,8 @@ namespace Threading
 			usleep(msec*1000);
 #endif
 		}
-	};
+	};*/
+	
 	template<class Lockable>
 	class ScopedLock
 	{
@@ -38,88 +38,6 @@ namespace Threading
 			mutex.unlock();
 		}
 	};
-
-#ifdef WIN32
-	class LockableCritSection
-	{
-		CRITICAL_SECTION cs;
-	public:
-
-		friend class ScopedLock<LockableCritSection>;
-
-		void lock()
-		{
-			EnterCriticalSection(&cs);
-		}
-
-		void unlock()
-		{
-			LeaveCriticalSection(&cs);
-		}
-
-		LockableCritSection()
-		{
-			InitializeCriticalSection(&cs);
-		}
-
-		virtual ~LockableCritSection()
-		{
-			DeleteCriticalSection(&cs);
-		}
-
-		bool locked() const
-		{
-			if(TryEnterCriticalSection(const_cast<CRITICAL_SECTION*>(&cs)))
-			{
-				LeaveCriticalSection(const_cast<CRITICAL_SECTION*>(&cs));
-				return false;
-			}
-			return true;
-		}
-	};
-	typedef LockableCritSection Mutex;
-#else
-
-	/// pthreads mutex wrapper
-	class MutexPT
-	{
-	public:
-		pthread_mutex_t mutex;
-
-		MutexPT()
-		{
-			pthread_mutex_init(&mutex, NULL);
-		}
-		~MutexPT()
-		{
-			pthread_mutex_destroy(&mutex);
-		}
-
-		bool locked() const
-		{
-			pthread_mutex_t* m = (pthread_mutex_t*)&mutex;
-			if(pthread_mutex_trylock((pthread_mutex_t*)&m))
-			{
-				pthread_mutex_unlock((pthread_mutex_t*)&m);
-				return true;
-			}
-			return false;
-		}
-
-		void lock()
-		{
-			pthread_mutex_lock (&mutex);
-		}
-
-		void unlock()
-		{
-			pthread_mutex_unlock (&mutex);
-		}
-	};
-
-	typedef MutexPT Mutex;
-#endif
-	
 
 	/// Mutex without actual locking. Just a placeholder
 	class SimpleMutex
@@ -143,37 +61,5 @@ namespace Threading
 			counter--;
 		}
 	};
-	/*
-	template<class Type, class Lockable> class SharedValue : public Lockable
-	{
-		Type value;
-	public:
-		explicit SharedValue(const Type & value)
-		{
-			this->lock();
-			this->value = value;
-			this->unlock();
-		}
-		~SharedValue()
-		{
-			if(this->locked())
-				throw(std::exception("~SharedValue locked"));
-			ScopedLock<Lockable> s(*this);
-		}
-		operator Type()
-		{
-			this->lock();
-			Type result = value;
-			this->unlock();
-			return value;
-		}
-		SharedValue & operator = (const Type & v)
-		{
-			ScopedLock<Lockable> s(*this);
-			value = v;
-			return *this;
-		}
-	};
-	*/
 };
 #endif
