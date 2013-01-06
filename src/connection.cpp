@@ -186,6 +186,11 @@ int Connection::handleSending()
 
 void Connection::handleStateChanged(NetworkState state) {
 	NetworkState oldState = netState;
+	if(state == StateOffline)
+	{
+		storedSize = 0;
+		ring.clean();
+	}
 	netState = state;
 	newState = state;
 	/// TODO: call listener
