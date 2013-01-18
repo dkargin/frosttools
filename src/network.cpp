@@ -721,7 +721,7 @@ void Peer::update(timeval &timeout)
 
 	if( selected < 0 )
 	{
-		network.getLog()->line(0,"Select error %d, %s", errno, strerror(errno));
+		network.getLog()->line(0,"Select error %d, %s in Peer::update", errno, strerror(errno));
 		//ReportError(network.getLastError(), "client connection failed");
 		//return;
 	}
