@@ -713,8 +713,11 @@ void Peer::update(timeval &timeout)
 		}*/
 	}
 
-	if( selectAwaits > 0 )
-		selected = select(maxfds+1, &readfds, NULL, &exceptfds, &timeout);
+	if( selectAwaits > 0 ) {
+		do {
+			selected = select(maxfds+1, &readfds, NULL, &exceptfds, &timeout);
+		} while ((selected < 0) && (errno == EINTR));
+	}
 
 	if( selected < 0 )
 	{
