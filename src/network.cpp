@@ -714,11 +714,13 @@ void Peer::update(timeval &timeout)
 	}
 
 	if( selectAwaits > 0 ) {
+		int numoftries = 0;
 		do {
 			selected = select(maxfds+1, &readfds, NULL, &exceptfds, &timeout);
+			numoftries += 1;
 			if( selected < 0 )
 			{
-				network.getLog()->line(0,"Select error %d, %s in Peer::update in a select<0 loop", errno, strerror(errno));
+				network.getLog()->line(0,"Select error %d, %s in Peer::update in a select<0 loop iteration number = %d", errno, strerror(errno), numoftries);
 			}
 		} while ((selected < 0) && (errno == EINTR));
 	}
