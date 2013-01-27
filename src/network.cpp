@@ -1,11 +1,6 @@
 //#include "stdafx.h"
-#include <frosttools/network.h>
-
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-
 #ifdef _MSC_VER
+#define NOMINMAX
 #pragma comment(lib, "ws2_32.lib")
 #else
 #include <sys/socket.h>
@@ -15,6 +10,14 @@
 #include <errno.h>
 #include <fcntl.h>
 #endif
+
+#include <frosttools/network.h>
+
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+
+
 
 const size_t DEFAULT_BUFLEN = 0xffff;
 
