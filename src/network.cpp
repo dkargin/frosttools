@@ -348,10 +348,15 @@ int Peer::send(size_t peerId, const void * data, size_t size)
 	if( size > 0 )
 	{
 		int flags = fcntl(s.socket, F_GETFL, 0);
+		if (flags < 0) {
+			printf("Error getting socket flags < 0 \n");
+		}
 		if ((flags & O_NONBLOCK) == 0) {
 			printf("Blocking socket found in Peer::send !! \n");
 			flags = flags & O_NONBLOCK;
-			fcntl(s.socket, F_SETFL, flags);
+			if (fcntl(s.socket, F_SETFL, flags)  < 0) {
+				printf("Error setting socket flags retval < 0 \n");
+			}
 		}
 		bytesData = ::send(s.socket, (const char*)data, size, sendFlags );
 		if( bytesData <= 0 )
