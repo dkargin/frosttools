@@ -344,6 +344,10 @@ int Peer::send(size_t peerId, const void * data, size_t size)
 	int bytesData = 0;
 	if( size > 0 )
 	{
+		int flags = fcntl(s.socket, F_GETFL, 0);
+		if ((flags & O_NONBLOCK) == 0) {
+			printf("Blocking socket found in Peer::send !! \n");
+		}
 		bytesData = ::send(s.socket, (const char*)data, size, sendFlags );
 		if( bytesData <= 0 )
 		{
@@ -354,6 +358,8 @@ int Peer::send(size_t peerId, const void * data, size_t size)
 				return -1;
 			}
 			//network.getLog()->line(0,"General net: ERROR sending to invalid connection\n");
+		} else if (bytesData != size) {
+			printf("bytesData != size !! %d %d \n", bytesData, size);
 		}
 		//else
 		//	network.getLog()->line(0,"Sent %d bytes of data\n", bytesData);
