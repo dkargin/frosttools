@@ -353,7 +353,7 @@ int Peer::send(size_t peerId, const void * data, size_t size)
 		}
 		if ((flags & O_NONBLOCK) == 0) {
 			printf("Blocking socket found in Peer::send !! \n");
-			flags = flags & O_NONBLOCK;
+			flags = flags | O_NONBLOCK;
 			if (fcntl(s.socket, F_SETFL, flags)  < 0) {
 				printf("Error setting socket flags retval < 0 \n");
 			}
@@ -734,7 +734,7 @@ void Peer::update(timeval &timeout)
 		do {
 			selected = select(maxfds+1, &readfds, NULL, &exceptfds, &timeout);
 			numoftries += 1;
-			if( selected < 0 )
+			if( selected < 0 && numoftries > 1)
 			{
 				network.getLog()->line(0,"Select error %d, %s in Peer::update in a select<0 loop iteration number = %d", errno, strerror(errno), numoftries);
 			}
