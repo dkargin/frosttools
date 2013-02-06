@@ -1,5 +1,5 @@
-#ifndef _FT_THREADS_HPP_
-#define _FT_THREADS_HPP_
+#ifndef _FT_THREADS_IMPL_HPP_
+#define _FT_THREADS_IMPL_HPP_
 
 #include <windows.h>
 
@@ -15,7 +15,7 @@ namespace Threading
 		CRITICAL_SECTION cs;
 	public:
 
-		friend class ScopedLock<LockableCritSection>;
+		//friend class ScopedLock<LockableCritSection>;
 
 		void lock()
 		{

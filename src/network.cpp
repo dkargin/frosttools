@@ -1,11 +1,6 @@
 //#include "stdafx.h"
-#include <frosttools/network.h>
-
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-
 #ifdef _MSC_VER
+#define NOMINMAX
 #pragma comment(lib, "ws2_32.lib")
 #else
 #include <sys/socket.h>
@@ -15,6 +10,14 @@
 #include <errno.h>
 #include <fcntl.h>
 #endif
+
+#include <frosttools/network.h>
+
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+
+
 
 const size_t DEFAULT_BUFLEN = 0xffff;
 
@@ -344,6 +347,17 @@ int Peer::send(size_t peerId, const void * data, size_t size)
 	int bytesData = 0;
 	if( size > 0 )
 	{
+		int flags = fcntl(s.socket, F_GETFL, 0);
+		if (flags < 0) {
+			printf("Error getting socket flags < 0 \n");
+		}
+		if ((flags & O_NONBLOCK) == 0) {
+			printf("Blocking socket found in Peer::send !! \n");
+			flags = flags | O_NONBLOCK;
+			if (fcntl(s.socket, F_SETFL, flags)  < 0) {
+				printf("Error setting socket flags retval < 0 \n");
+			}
+		}
 		bytesData = ::send(s.socket, (const char*)data, size, sendFlags );
 		if( bytesData <= 0 )
 		{
@@ -354,6 +368,8 @@ int Peer::send(size_t peerId, const void * data, size_t size)
 				return -1;
 			}
 			//network.getLog()->line(0,"General net: ERROR sending to invalid connection\n");
+		} else if (bytesData != size) {
+			printf("bytesData != size !! %d %d \n", bytesData, size);
 		}
 		//else
 		//	network.getLog()->line(0,"Sent %d bytes of data\n", bytesData);
@@ -713,12 +729,21 @@ void Peer::update(timeval &timeout)
 		}*/
 	}
 
-	if( selectAwaits > 0 )
-		selected = select(maxfds+1, &readfds, NULL, &exceptfds, &timeout);
+	if( selectAwaits > 0 ) {
+		int numoftries = 0;
+		do {
+			selected = select(maxfds+1, &readfds, NULL, &exceptfds, &timeout);
+			numoftries += 1;
+			if( selected < 0 && numoftries > 1)
+			{
+				network.getLog()->line(0,"Select error %d, %s in Peer::update in a select<0 loop iteration number = %d", errno, strerror(errno), numoftries);
+			}
+		} while ((selected < 0) && (errno == EINTR));
+	}
 
 	if( selected < 0 )
 	{
-		network.getLog()->line(0,"Select error %d, %s", errno, strerror(errno));
+		network.getLog()->line(0,"Select error %d, %s in Peer::update", errno, strerror(errno));
 		//ReportError(network.getLastError(), "client connection failed");
 		//return;
 	}
