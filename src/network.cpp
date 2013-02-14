@@ -362,8 +362,9 @@ int Peer::send(size_t peerId, const void * data, size_t size)
 		if( bytesData <= 0 )
 		{
 			Network::ErrorType err = Network::getLastError();
-			s.state = Dying;
-			if( err == Network::ConnectionClosed )
+			if( err != Network::WouldBlock)
+				s.state = Dying;
+			else if( err == Network::ConnectionClosed )
 			{
 				return -1;
 			}
@@ -444,10 +445,10 @@ void Peer::setSlotMode(size_t slot, SlotUpdateMode mode)
 		case ModeAsyncSelect:
 #if _WIN32
 #else
-			/*
+
 			flags = fcntl(sockets[slot].socket,F_GETFL,0);
 			assert(flags != -1);
-			fcntl(sockets[slot].socket, F_SETFL, flags & ~O_NONBLOCK);*/
+			fcntl(sockets[slot].socket, F_SETFL, flags & ~O_NONBLOCK);
 #endif
 			break;
 		}
