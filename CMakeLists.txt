@@ -19,7 +19,8 @@ install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN 
 install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.hpp")
 #install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.hxx")
 
-install(TARGETS frosttools DESTINATION lib)
+install(TARGETS frosttools DESTINATION lib/frosttools)
+install(FILES FrostToolsConfig.cmake DESTINATION lib/frosttools)
 #INSTALL_TARGET(/lib frosttools)
 
 # uninstall target
