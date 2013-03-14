@@ -8,27 +8,71 @@ namespace Threading
 		/// Wraps function with 1 argument
 		template<class Arg0> struct FnWrapper1
 		{
-			void (*func)(Arg0 *);
-			Arg0 * arg0;
-			void * __cdecl operator()()
+			typedef void (*fnptr)(Arg0 );
+			fnptr func;
+			Arg0 arg0;
+			typedef FnWrapper1<Arg0> wrap_type;
+
+			/// create wrapper
+			static wrap_type * create(fnptr fn, Arg0 arg0)
 			{
-				func(arg0);
-				return NULL;
+				wrap_type * result = new wrap_type;
+				result->arg0 = arg0;
+				result->func = fn;
+				return result;
+			}
+
+			static void * run(void *data)
+			{
+				wrap_type * f = (wrap_type*)data;
+				f->func(f->arg0);
+				delete f;
+			}
+		protected:
+			~FnWrapper1()
+			{
 			}
 		};
 		/// Wraps function with 2 arguments
 		template<class Arg0, class Arg1>	struct FnWrapper2
 		{
-			void (*func)(Arg0 *, Arg1 *);
-			Arg0 * arg0;
-			Arg1 * arg1;
-			void * __cdecl operator()()
+			typedef void (*fnptr)(Arg0 , Arg1 );
+			fnptr func;
+			Arg0 arg0;
+			Arg1 arg1;
+
+			typedef FnWrapper2<Arg0, Arg1> wrap_type;
+
+			static wrap_type * create(fnptr fn, Arg0 arg0, Arg1 arg1)
 			{
-				func(arg0, arg1);
-				return NULL;
+				wrap_type * result = new wrap_type;
+				result->arg0 = arg0;
+				result->arg1 = arg1;
+				result->func = fn;
+				return result;
+			}
+
+			static void * run(void *data)
+			{
+				wrap_type * f = (wrap_type*)data;
+				f->func(f->arg0, f->arg1);
+				delete f;
+			}
+		protected:
+			~FnWrapper2()
+			{
 			}
 		};
+
+
 	};
+
+	/// helper to call functor
+	template<class Function> void functor_runner(Function * own)
+	{
+		Function tmpfn = *own;
+		tmpfn();
+	}
 }
 
 #ifdef WIN32
@@ -38,20 +82,7 @@ namespace Threading
 #endif
 
 namespace Threading
-{/*
-	class Thread
-	{
-	public:
-		static void sleep(int msec)
-		{
-#ifdef _MSC_VER
-			Sleep(msec);
-#else
-			usleep(msec*1000);
-#endif
-		}
-	};*/
-	
+{
 	template<class Lockable>
 	class ScopedLock
 	{

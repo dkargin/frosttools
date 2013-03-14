@@ -31,17 +31,22 @@ namespace Threading
 			pthread_join(id, &result);
 		}
 
+		typedef void *(*thread_fn) (void *);
+
 		template<class Function> void run(Function fn)
 		{
 			assert(id == 0);
-			pthread_create(&id, NULL, (void*(*)(void*))&s_run<Function>, &fn);
+			pthread_create(&id, NULL, (thread_fn)&functor_runner<Function>, &fn);
+		}
+
+		template<class Arg> void run(void (*func)(Arg ), Arg arg)
+		{
+			typedef _thread_helper::FnWrapper1<Arg> wrapper;
+			wrapper * w = wrapper::create(func, arg);
+			pthread_create(&id, NULL, wrapper::run, w);
 		}
 	protected:
-		template<class Function> static void s_run(Function * own)
-		{
-			Function tmpfn = *own;
-			tmpfn();
-		}
+
 	};
 
 	inline void sleep(int msec)
