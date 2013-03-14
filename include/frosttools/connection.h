@@ -3,11 +3,16 @@
 
 #include <stdio.h>
 #include <sys/types.h>
+
+
+#ifdef _MSC_VER
+#include <winsock.h>
+#else
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netinet/in.h>
 #include <netdb.h>
-
+#endif
 #include <frosttools/ringbuffer.hpp>
 #include <frosttools/threads.hpp>
 

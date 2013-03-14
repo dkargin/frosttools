@@ -8,7 +8,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ")
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-#ADD_LIBRARY(frosttools STATIC src/network.cpp src/connection.cpp)
+#ADD_LIBRARY(frosttools STATIC src/network.cpp)
 
 include(CPack)
 
