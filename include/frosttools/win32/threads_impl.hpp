@@ -24,24 +24,34 @@ namespace Threading
 			run(fn);
 		}
 
+		typedef unsigned int (__stdcall* thread_fn)(void*);
 		void join()
 		{
 			void * result = NULL;
 			WaitForSingleObject(hThread, INFINITE);
 		}
+		/*
+		template<class Function> void run(Function fn)
+		{
+			assert(id == 0);
+			pthread_create(&id, NULL, (thread_fn)&functor_runner<Function>, &fn);
+		}*/
 
+		template<class Arg> void run(void (*func)(Arg ), Arg arg)
+		{
+			typedef _thread_helper::FnWrapper1<Arg> wrapper;
+			wrapper * w = wrapper::create(func, arg);
+			///pthread_create(&id, NULL, wrapper::run, w);
+			assert(hThread == 0);
+			hThread = (HANDLE)_beginthreadex( NULL, 0, (thread_fn)wrapper::run, w, 0, &threadID );
+		}
 		template<class Function> void run(Function fn)
 		{
 			assert(hThread == 0);
-			hThread = (HANDLE)_beginthreadex( NULL, 0, (unsigned int (__stdcall*)(void*))&s_run<Function>, &fn, 0, &threadID );
+			hThread = (HANDLE)_beginthreadex( NULL, 0, (thread_fn)&functor_runner<Function>, &fn, 0, &threadID );
 			//pthread_create(&id, NULL, (void*(*)(void*))&s_run<Function>, &fn);
-		}
+		}	
 		
-		template<class Arg> void run(void (*func)(Arg *), Arg * arg)
-		{
-			typename _thread_helper::FnWrapper1<Arg> wrapper = {func, arg};
-			run(wrapper);
-		}
 	protected:
 		template<class Function> static void s_run(Function * own)
 		{

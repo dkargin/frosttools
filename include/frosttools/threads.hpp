@@ -27,6 +27,7 @@ namespace Threading
 				wrap_type * f = (wrap_type*)data;
 				f->func(f->arg0);
 				delete f;
+				return NULL;
 			}
 		protected:
 			~FnWrapper1()
@@ -57,6 +58,7 @@ namespace Threading
 				wrap_type * f = (wrap_type*)data;
 				f->func(f->arg0, f->arg1);
 				delete f;
+				return NULL;
 			}
 		protected:
 			~FnWrapper2()
