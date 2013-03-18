@@ -347,6 +347,8 @@ int Peer::send(size_t peerId, const void * data, size_t size)
 	int bytesData = 0;
 	if( size > 0 )
 	{
+#ifdef _MSC_VER
+#else
 		int flags = fcntl(s.socket, F_GETFL, 0);
 		if (flags < 0) {
 			printf("Error getting socket flags < 0 \n");
@@ -358,12 +360,14 @@ int Peer::send(size_t peerId, const void * data, size_t size)
 				printf("Error setting socket flags retval < 0 \n");
 			}
 		}
+#endif
 		bytesData = ::send(s.socket, (const char*)data, size, sendFlags );
 		if( bytesData <= 0 )
 		{
 			Network::ErrorType err = Network::getLastError();
-			s.state = Dying;
-			if( err == Network::ConnectionClosed )
+			if( err != Network::WouldBlock)
+				s.state = Dying;
+			else if( err == Network::ConnectionClosed )
 			{
 				return -1;
 			}
@@ -444,10 +448,10 @@ void Peer::setSlotMode(size_t slot, SlotUpdateMode mode)
 		case ModeAsyncSelect:
 #if _WIN32
 #else
-			/*
+
 			flags = fcntl(sockets[slot].socket,F_GETFL,0);
 			assert(flags != -1);
-			fcntl(sockets[slot].socket, F_SETFL, flags & ~O_NONBLOCK);*/
+			fcntl(sockets[slot].socket, F_SETFL, flags & ~O_NONBLOCK);
 #endif
 			break;
 		}

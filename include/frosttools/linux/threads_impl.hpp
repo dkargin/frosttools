@@ -13,79 +13,45 @@ namespace Threading
 	class thread
 	{
 		pthread_t id;
+		pthread_attr_t attr;
+		
 	public:
 		thread()
 		{
 			id = 0;
-		}
-
-		template<class Holder> thread(Holder * holder, void (Holder::*method)(void))
-		{
-			id = 0;
-			MethodHolder<Holder> h;
-			h.holder = holder;
-			h.method = method;
-			assert(id == 0);
-			pthread_attr_t attr;
 			pthread_attr_init(&attr);
 			pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE);
-			pthread_create(&id, &attr, &MethodHolder<Holder>::run, &h);
 		}
 
 		template<class Function> thread(Function fn)
 		{
 			id = 0;
-			run_fn(fn);
+			run(fn);
 		}
-
 
 		void join()
 		{
 			void * result = NULL;
 			pthread_join(id, &result);
 		}
-	protected:
-		template<class Holder> struct MethodHolder
-		{
-			Holder * holder;
-			void (Holder::*method)(void);
-			MethodHolder()
-			{
-				holder = NULL;
-				method = NULL;
-			}
-			MethodHolder(const MethodHolder &mh)
-			:holder(mh.holder), method(mh.method)
-			{
-			}
 
-			void operator()()
-			{
-				(holder->*method)();
-			}
+		typedef void *(*thread_fn) (void *);
 
-			static void * run(void*data)
-			{
-				MethodHolder * mh = (MethodHolder*)data;
-				(*mh)();
-				pthread_exit(NULL);
-				return NULL;
-			}
-		};
-		template<class Function> void run_fn(Function fn)
+		template<class Function> void run(Function fn)
 		{
 			assert(id == 0);
-			pthread_attr_t attr;
-			pthread_attr_init(&attr);
-			pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE);
-			pthread_create(&id, &attr, (void*(*)(void*))&(s_run_fn<Function>), &fn);
+
+			pthread_create(&id, &attr, (thread_fn)&functor_runner<Function>, &fn);
 		}
-		template<class Function> static void * s_run_fn(Function * fn)
+
+		template<class Arg> void run(void (*func)(Arg ), Arg arg)
 		{
-			(*fn)();
-			pthread_exit(NULL);
-			return NULL;
+			typedef _thread_helper::FnWrapper1<Arg> wrapper;
+			wrapper * w = wrapper::create(func, arg);
+			pthread_create(&id, &attr, wrapper::run, w);
 		}
+	protected:
+
 	};
 
 	inline void sleep(int msec)
