@@ -19,28 +19,72 @@ namespace Threading
 			id = 0;
 		}
 
+		template<class Holder> thread(Holder * holder, void (Holder::*method)(void))
+		{
+			id = 0;
+			MethodHolder<Holder> h;
+			h.holder = holder;
+			h.method = method;
+			assert(id == 0);
+			pthread_attr_t attr;
+			pthread_attr_init(&attr);
+			pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE);
+			pthread_create(&id, &attr, &MethodHolder<Holder>::run, &h);
+		}
+
 		template<class Function> thread(Function fn)
 		{
 			id = 0;
-			run(fn);
+			run_fn(fn);
 		}
+
 
 		void join()
 		{
 			void * result = NULL;
 			pthread_join(id, &result);
 		}
+	protected:
+		template<class Holder> struct MethodHolder
+		{
+			Holder * holder;
+			void (Holder::*method)(void);
+			MethodHolder()
+			{
+				holder = NULL;
+				method = NULL;
+			}
+			MethodHolder(const MethodHolder &mh)
+			:holder(mh.holder), method(mh.method)
+			{
+			}
 
-		template<class Function> void run(Function fn)
+			void operator()()
+			{
+				(holder->*method)();
+			}
+
+			static void * run(void*data)
+			{
+				MethodHolder * mh = (MethodHolder*)data;
+				(*mh)();
+				pthread_exit(NULL);
+				return NULL;
+			}
+		};
+		template<class Function> void run_fn(Function fn)
 		{
 			assert(id == 0);
-			pthread_create(&id, NULL, (void*(*)(void*))&s_run<Function>, &fn);
+			pthread_attr_t attr;
+			pthread_attr_init(&attr);
+			pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE);
+			pthread_create(&id, &attr, (void*(*)(void*))&(s_run_fn<Function>), &fn);
 		}
-	protected:
-		template<class Function> static void s_run(Function * own)
+		template<class Function> static void * s_run_fn(Function * fn)
 		{
-			Function tmpfn = *own;
-			tmpfn();
+			(*fn)();
+			pthread_exit(NULL);
+			return NULL;
 		}
 	};
 
