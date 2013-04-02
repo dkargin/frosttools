@@ -37,11 +37,12 @@ namespace Threading
 
 		typedef void *(*thread_fn) (void *);
 
-		template<class Function> void run(Function fn)
+		template<class Function> void run(Function & fn)
 		{
 			assert(id == 0);
-
-			pthread_create(&id, &attr, (thread_fn)&functor_runner<Function>, &fn);
+			typedef FunctionWrapper<Function> wrapper;
+			wrapper * w = wrapper::create(fn);
+			pthread_create(&id, &attr, wrapper::run, w);
 		}
 
 		template<class Arg> void run(void (*func)(Arg ), Arg arg)
@@ -72,6 +73,11 @@ namespace Threading
 		~MutexPT()
 		{
 			pthread_mutex_destroy(&mutex);
+		}
+
+		bool trylock()
+		{
+			return pthread_mutex_trylock(&mutex) != 0;
 		}
 
 		bool locked() const

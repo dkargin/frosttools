@@ -27,7 +27,7 @@ namespace Threading
 				wrap_type * f = (wrap_type*)data;
 				f->func(f->arg0);
 				delete f;
-				return NULL;
+				return 0;
 			}
 		protected:
 			~FnWrapper1()
@@ -58,23 +58,43 @@ namespace Threading
 				wrap_type * f = (wrap_type*)data;
 				f->func(f->arg0, f->arg1);
 				delete f;
-				return NULL;
+				return 0;
 			}
 		protected:
 			~FnWrapper2()
 			{
 			}
 		};
-
-
 	};
 
 	/// helper to call functor
-	template<class Function> void functor_runner(Function * own)
+	template<class Function> inline void functor_runner(Function * own)
 	{
 		Function tmpfn = *own;
 		tmpfn();
 	}
+
+	template<class Function> struct FunctionWrapper
+	{
+		Function * func;
+
+		typedef FunctionWrapper<Function> wrap_type;
+
+		static wrap_type * create(Function &fn)
+		{
+			wrap_type * result = new wrap_type;
+			result->func = &fn;
+			return result;
+		}
+
+		static void * run(void * data)
+		{
+			wrap_type * f = (wrap_type*)data;
+			(*f->func)();
+			delete f;
+			return 0;
+		}
+	};
 }
 
 #ifdef WIN32
