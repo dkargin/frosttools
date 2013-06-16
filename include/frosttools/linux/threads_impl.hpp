@@ -102,6 +102,37 @@ namespace Threading
 		}
 	};
 
+
 	typedef MutexPT Mutex;
+
+	class ConditionVariable
+	{
+		pthread_cond_t cv;
+	public:
+		ConditionVariable()
+		{
+			pthread_cond_init(&cv, NULL);
+		}
+
+		~ConditionVariable()
+		{
+			pthread_cond_destroy(&cv);
+		}
+
+		void wait(Mutex &mutex)
+		{
+			pthread_cond_wait(&cv, &mutex.mutex);
+		}
+
+		void notify_one()
+		{
+			pthread_cond_signal(&cv);
+		}
+
+		void notify_all()
+		{
+			pthread_cond_broadcast(&cv);
+		}
+	};
 };
 #endif

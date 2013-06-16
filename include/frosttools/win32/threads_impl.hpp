@@ -103,6 +103,37 @@ namespace Threading
 		}
 	};
 
+	class ConditionVariable
+		{
+			pthread_cond_t cv;
+		public:
+			ConditionVariable()
+			{
+				pthread_cond_init(&cv, NULL);
+			}
+
+			~ConditionVariable()
+			{
+				pthread_cond_destroy(&cv);
+			}
+
+			void wait(mutex &mutex)
+			{
+				HANDLE mHandle = mutex.getHandle();
+				pthread_cond_wait(&cv, &mHandle);
+			}
+
+			void notify_one()
+			{
+				pthread_cond_signal(&cv);
+			}
+
+			void notify_all()
+			{
+				pthread_cond_broadcast(&cv);
+			}
+		};
+
 	typedef LockableCritSection Mutex;
 };
 #endif
