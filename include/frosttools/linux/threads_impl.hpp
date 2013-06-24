@@ -4,6 +4,11 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <assert.h>
+
+// for error reporting
+#include <string.h>
+#include <stdio.h>
+#include <errno.h>
 /*
  * PThreads based implementation
  */
@@ -60,7 +65,7 @@ namespace Threading
 		usleep(msec*1000);
 	}
 	/// pthread mutex wrapper	
-	class MutexPT
+	class MutexPT : public BaseLockable
 	{
 	public:
 		pthread_mutex_t mutex;
@@ -77,7 +82,8 @@ namespace Threading
 
 		bool trylock()
 		{
-			return pthread_mutex_trylock(&mutex) != 0;
+			int result = pthread_mutex_trylock(&mutex);
+			return result == 0;
 		}
 
 		bool locked() const
@@ -91,14 +97,24 @@ namespace Threading
 			return false;
 		}
 
+		void reportError(const char * where)
+		{
+			int err = errno;
+			fprintf(stderr, "%s: error errno=%d, %s", where, err, strerror(err));
+		}
+
 		void lock()
 		{
-			pthread_mutex_lock (&mutex);
+			int result = pthread_mutex_lock (&mutex);
+			if(result < 0)
+				reportError("Mutex::lock()");
 		}
 
 		void unlock()
 		{
-			pthread_mutex_unlock (&mutex);
+			int result = pthread_mutex_unlock (&mutex);
+			if(result < 0)
+				reportError("Mutex::lock()");
 		}
 	};
 

@@ -3,6 +3,14 @@
 
 namespace Threading
 {
+	class BaseLockable
+	{
+	public:
+		virtual void lock() = 0;
+		virtual void unlock() = 0;
+
+	};
+
 	struct _thread_helper
 	{
 		/// Wraps function with 1 argument
@@ -105,7 +113,7 @@ namespace Threading
 
 namespace Threading
 {
-	template<class Lockable>
+	template<class Lockable = BaseLockable>
 	class ScopedLock
 	{
 	public:
@@ -122,7 +130,7 @@ namespace Threading
 	};
 
 	/// Mutex without actual locking. Just a placeholder
-	class SimpleMutex
+	class SimpleMutex : public BaseLockable
 	{
 	public:
 		int counter;
