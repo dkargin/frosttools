@@ -140,6 +140,14 @@ namespace Threading
 			pthread_cond_wait(&cv, &mutex.mutex);
 		}
 
+		int wait_for(Mutex & mutex, int timeMS)
+		{
+			timespec time;
+			time.tv_sec = timeMS / 1000;
+			time.tv_nsec = timeMS / 1000000;
+			return pthread_cond_timedwait(&cv, &mutex.mutex, &time);
+		}
+
 		void notify_one()
 		{
 			pthread_cond_signal(&cv);

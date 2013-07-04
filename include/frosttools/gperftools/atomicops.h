@@ -66,7 +66,7 @@
 #ifndef THREAD_ATOMICOPS_H_
 #define THREAD_ATOMICOPS_H_
 
-#include <config.h>
+//#include <config.h>
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
@@ -86,27 +86,27 @@
 // TODO(csilvers): figure out ARCH_PIII/ARCH_K8 (perhaps via ./configure?)
 // ------------------------------------------------------------------------
 
-#include "base/arm_instruction_set_select.h"
+#include "arm_instruction_set_select.h"
 
 // TODO(csilvers): match piii, not just __i386.  Also, match k8
 #if defined(__MACH__) && defined(__APPLE__)
-#include "base/atomicops-internals-macosx.h"
+#include "atomicops-internals-macosx.h"
 #elif defined(__GNUC__) && defined(ARMV6)
-#include "base/atomicops-internals-arm-v6plus.h"
+#include "atomicops-internals-arm-v6plus.h"
 #elif defined(ARMV3)
-#include "base/atomicops-internals-arm-generic.h"
+#include "atomicops-internals-arm-generic.h"
 #elif defined(_WIN32)
-#include "base/atomicops-internals-windows.h"
+#include "atomicops-internals-windows.h"
 #elif defined(__GNUC__) && (defined(__i386) || defined(__x86_64__))
-#include "base/atomicops-internals-x86.h"
+#include "atomicops-internals-x86.h"
 #elif defined(__linux__) && defined(__PPC__)
-#include "base/atomicops-internals-linuxppc.h"
+#include "atomicops-internals-linuxppc.h"
 #else
 // Assume x86 for now.  If you need to support a new architecture and
 // don't know how to implement atomic ops, you can probably get away
 // with using pthreads, since atomicops is only used by spinlock.h/cc
 //#error You need to implement atomic operations for this architecture
-#include "base/atomicops-internals-x86.h"
+#include "atomicops-internals-x86.h"
 #endif
 
 // Signed type that can hold a pointer and supports the atomic ops below, as
