@@ -35,9 +35,20 @@ public:
 		t_start = t_current;
 	}
 
+	long lastTimeMS() const
+	{
+		return (t_current - t_start);
+	}
+
 	double lastTime() const
 	{
 		return (t_current - t_start)*0.001f;
+	}
+
+	long currentTimeMS()
+	{
+		check();
+		return lastTimeMS();
 	}
 
 	double currentTime()

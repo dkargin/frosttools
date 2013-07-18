@@ -309,7 +309,5 @@ namespace Threading
 			pthread_cond_broadcast(&cv);
 		}
 	};
-
-	//typedef LockableCritSection Mutex;
 };
 #endif
