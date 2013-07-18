@@ -12,7 +12,9 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 include(CPack)
 
-ADD_LIBRARY(frosttools src/network.cpp src/connection.cpp)
+add_subdirectory(tests)
+
+ADD_LIBRARY(frosttools src/network.cpp)
 
 # install target
 install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.h")

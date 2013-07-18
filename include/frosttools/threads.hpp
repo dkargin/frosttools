@@ -1,6 +1,9 @@
 #ifndef _FT_THREADS_HPP_
 #define _FT_THREADS_HPP_
 
+#include <stdlib.h>
+#include <assert.h>
+
 namespace Threading
 {
 	struct _thread_helper
