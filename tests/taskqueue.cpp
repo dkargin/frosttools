@@ -5,13 +5,13 @@
 int main(int argc, char* argv[])
 {
 	{
-		TaskMaster<std::function<void(void)>> manager(2);
+		Threading::TaskMaster<std::function<void(void)>> manager(2);
 		printf("Before start\n");
 		Threading::sleep(2000);
 		for(int i = 0; i < 10; i++)
 		{
 			printf("Adding task #%d\n", i);
-			manager.addTask([i]()
+			manager.schedule([i]()
 			{
 				printf("[Task%d] begin\n",i);
 				Threading::sleep(1000);
@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
 		}
 
 		printf("Waiting for all tasks...\n");
-		manager.waitUntilDone();
+		manager.wait();
 		printf("All tasks are done!\n");
 	}
 
