@@ -120,6 +120,7 @@ namespace Threading
 
 
 	typedef MutexPT Mutex;
+	typedef Mutex mutex;
 
 	class ConditionVariable
 	{
