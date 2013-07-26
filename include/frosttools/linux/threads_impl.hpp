@@ -121,41 +121,70 @@ namespace Threading
 
 	typedef MutexPT Mutex;
 
+	//! Wrapper around pthreads condition variable construct. Mimics std::condition_variable
 	class ConditionVariable
 	{
 		pthread_cond_t cv;
 	public:
+		//! Constructor
 		ConditionVariable()
 		{
 			pthread_cond_init(&cv, NULL);
 		}
-
+		//! Destructor
 		~ConditionVariable()
 		{
 			pthread_cond_destroy(&cv);
 		}
 
+		//! Wait until notification
 		void wait(Mutex &mutex)
 		{
-			pthread_cond_wait(&cv, &mutex.mutex);
+			int result = pthread_cond_wait(&cv, &mutex.mutex);
+			if(result != 0)
+				reportError(result);
 		}
 
-		int wait_for(Mutex & mutex, int timeMS)
+		//! Wait until notification or timeout
+		/*! Wait for specified time, in milliseconds.
+		 * Returns cv status after completion
+		*/
+		CvStatus wait_for(Mutex & mutex, int timeMS)
 		{
+			if(timeMS <= 0)
+				return cvError;
 			timespec time;
 			time.tv_sec = timeMS / 1000;
 			time.tv_nsec = timeMS / 1000000;
-			return pthread_cond_timedwait(&cv, &mutex.mutex, &time);
+			int result = pthread_cond_timedwait(&cv, &mutex.mutex, &time);
+			if( result != 0 && result != ETIMEDOUT)
+			{
+				reportError(result);
+				return cvError;
+			}
+			if(result == ETIMEDOUT)
+				return cvTimeout;
+			return cvNoTimeout;
 		}
 
+		//! Signal one thread waiting for this CV
 		void notify_one()
 		{
-			pthread_cond_signal(&cv);
+			int result = pthread_cond_signal(&cv);
+			if( result != 0)
+				reportError(result);
 		}
-
+		//! Signal every thread waiting for this CV
 		void notify_all()
 		{
-			pthread_cond_broadcast(&cv);
+			int result = pthread_cond_broadcast(&cv);
+			if( result != 0)
+				reportError(result);
+		}
+protected:
+		//! Used as error reporting
+		static void reportError(int errcode)
+		{
 		}
 	};
 };

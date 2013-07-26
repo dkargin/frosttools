@@ -3,17 +3,18 @@
 
 namespace Threading
 {
+	//! Base class for any lockable construct
 	class BaseLockable
 	{
 	public:
 		virtual void lock() = 0;
 		virtual void unlock() = 0;
-
 	};
 
+	//! Local helper
 	struct _thread_helper
 	{
-		/// Wraps function with 1 argument
+		//! Wraps function with 1 argument
 		template<class Arg0> struct FnWrapper1
 		{
 			typedef void (*fnptr)(Arg0 );
@@ -75,7 +76,7 @@ namespace Threading
 		};
 	};
 
-	/// helper to call functor
+	//! helper to call functor
 	template<class Function> inline void functor_runner(Function * own)
 	{
 		Function tmpfn = *own;
@@ -102,6 +103,14 @@ namespace Threading
 			delete f;
 			return 0;
 		}
+	};
+
+	//! Return status for condition variable. Returned by CV::wait_for
+	enum CvStatus
+	{
+		cvError,
+		cvNoTimeout,
+		cvTimeout,
 	};
 }
 
