@@ -120,6 +120,7 @@ namespace Threading
 
 
 	typedef MutexPT Mutex;
+	typedef Mutex mutex;
 
 	//! Wrapper around pthreads condition variable construct. Mimics std::condition_variable
 	class ConditionVariable

@@ -7,6 +7,7 @@
 
 const int INVALID_SOCKET=-1;
 #else
+#include <WinSock2.h>
 #include <ws2tcpip.h>
 #endif
 
@@ -80,7 +81,7 @@ int mkaddr(void *addr, int *addrlen, const char *str_addr, const char *protocol)
 class Peer
 {
 protected:
-	typedef Threading::Mutex Mutex;
+	typedef Threading::mutex Mutex;
 	typedef Threading::ScopedLock<Mutex> Lock;
 	Mutex baseLock;
 	bool reconnect;

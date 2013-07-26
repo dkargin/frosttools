@@ -8,18 +8,21 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ")
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-#ADD_LIBRARY(frosttools STATIC src/network.cpp src/connection.cpp)
+#ADD_LIBRARY(frosttools STATIC src/network.cpp)
 
 include(CPack)
 
-ADD_LIBRARY(frosttools src/network.cpp src/connection.cpp)
+add_subdirectory(tests)
+
+ADD_LIBRARY(frosttools src/network.cpp)
 
 # install target
 install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.hpp")
 #install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.hxx")
 
-install(TARGETS frosttools DESTINATION lib)
+install(TARGETS frosttools DESTINATION lib/frosttools)
+install(FILES FrostToolsConfig.cmake DESTINATION lib/frosttools)
 #INSTALL_TARGET(/lib frosttools)
 
 # uninstall target
@@ -30,4 +33,3 @@ configure_file(
 
 add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
-
