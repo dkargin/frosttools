@@ -5,3 +5,5 @@
 *.user
 /*/*.user
 /*/*/*.user
+/build
+/lib

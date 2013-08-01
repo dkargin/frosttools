@@ -1,8 +1,7 @@
-#include "stdafx.h"
-#include "../3dmath.h"
-
-#include "../ringbuffer.hpp"
+#include "frosttools/3dmath.h"
+#include "frosttools/ringbuffer.hpp"
 #include <vector>
+
 namespace Test
 {
 // solve square equation a*x^2+b*x+c=0
@@ -60,7 +59,7 @@ vec3 getWeaponTarget(const Geom::Edge &edge,const vec3 &pos,float v1)
 		float time=impactTime[res-1];	// если 2 корня, берём impactTime[1], если один корень - impactTime[0]
 		float vx=h;						// скорость в направлении, перпендикулярном траектории
 		float vy=v0*time-l;				// скорость в направлении, параллельном траектории
-		result=pos+(normalise(H)*vx+edge.direction()*vy);
+		result=pos+(vecNormalise(H)*vx+edge.direction()*vy);
 	}
 	return result;
 }
@@ -85,6 +84,8 @@ float testAiming(const Geom::Edge &edge,const vec3 &source,float velocity)
 	printf("-calculation error=%g\n",error);
 	return error;
 }
+
+/*
 void testRingBuffer()
 {
 	Ring<float,3> ring;
@@ -95,7 +96,8 @@ void testRingBuffer()
 	float val[3];
 	for(int i=0;i<ring.size();i++)
 		val[i]=ring[i];
-}
+}*/
+
 void testSphereIntersection()
 {
 	Geom::_Sphere<vec2f> s0(vec2f(100,0),100),s1(vec2f(230,0),50);
@@ -212,4 +214,9 @@ void testMath()
 	//	printf("-test failed\n");
 	system("pause");
 }
+}
+int main()
+{
+	Test::testMath();
+	return 0;
 }

@@ -117,7 +117,7 @@ namespace Threading
 	};
 }
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #include "win32/threads_impl.hpp"
 #else
 #include "linux/threads_impl.hpp"

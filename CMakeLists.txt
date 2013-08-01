@@ -12,7 +12,22 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 include(CPack)
 
-add_subdirectory(tests)
+set(FROSTTOOLS_HEADERS 
+	include/frosttools/lockfree.hpp 
+	include/logger.hpp 
+	include/modile.hpp 
+	include/ringbuffer.hpp
+	include/threads.hpp
+	include/time.hpp
+	include/delegate.hpp
+	include/autoptr.hpp)
+
+option(BUILD_TESTS "Build tests" OFF)
+
+if(BUILD_TESTS)
+	add_subdirectory(tests)
+endif(BUILD_TESTS)
+
 
 ADD_LIBRARY(frosttools src/network.cpp)
 

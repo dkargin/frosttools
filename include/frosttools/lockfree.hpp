@@ -7,19 +7,36 @@
 
 namespace LockFree
 {
+#ifdef _MSC_VER
+	inline int32_t InterlockedEX(volatile int32_t * ptr, int32_t val)
+	{	
+		base::subtle::FastInterlockedExchange(ptr, val);
+	}
+
+	//inline int32_t InterlockedCAS
+#else
+	inline int32_t InterlockedEX(volatile int32_t * ptr, int32_t val)
+	{		
+		// gcc atomic, cast to void to prevent "value computed is not used"
+		
+		asm volatile("" ::: "memory");              // prevend compiler reordering
+		return __sync_lock_test_and_set(ptr, val);
+	}
+#endif
+
 	// This queue uses extarnal type with pointer "next"
-	template <typename Node, typename _Alloc = std::allocator<Node> >
+	template <typename Node/*, typename _Alloc = std::allocator<Node>*/ >
 	class BaseQueue
 	{
 	  private:
 		typedef Node * NodePtr;
-		Node* first;			                                     // for producer only
-		Node* divider;                                               // shared
-		Node* last;                                                  // shared
+		volatile Node* first;			                                     // for producer only
+		volatile Node* divider;                                               // shared
+		volatile Node* last;                                                  // shared
 	  public:
 		BaseQueue()
 		{
-		  first = _Alloc::construct();
+		  first = new Node();//_Alloc::construct();
 		  divider = first;
 		  last = first;
 		}
@@ -34,12 +51,19 @@ namespace LockFree
 		  }
 		}
 
+		bool empty() const
+		{
+			return first == divider;
+		}
+
 		void produce(Node * node)
 		{
 		  last->next = node;                              // add the new item
-		  asm volatile("" ::: "memory");              // prevend compiler reordering
-				 // gcc atomic, cast to void to prevent "value computed is not used"
-		  (void)__sync_lock_test_and_set(&last, last->next);
+		  InterlockedEX(&last, last->next);
+		  //asm volatile("" ::: "memory");              // prevend compiler reordering
+			// gcc atomic, cast to void to prevent "value computed is not used"
+		  
+		  //(void)__sync_lock_test_and_set(&last, last->next);
 		  while(first != divider)                               // trim unused nodes
 		  {
 			Node* tmp = first;
@@ -52,9 +76,13 @@ namespace LockFree
 		  if(divider != last)                                // if queue is nonempty
 		  {
 			result = divider->next; 	                      // C: copy it back
+			InterlockedEX(&divider, divider->next);
+			/*
 			asm volatile("" ::: "memory");            // prevend compiler reordering
 				 // gcc atomic, cast to void to prevent "value computed is not used"
+			
 			(void)__sync_lock_test_and_set(&divider, divider->next);
+			*/
 			return true;          	                           // and report success
 		  }
 		  return false;           	                            // else report empty

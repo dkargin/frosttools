@@ -18,6 +18,8 @@
 #include	<math.h>
 #include	<assert.h>
 
+#include <stdlib.h>	// For NULL
+
 #pragma warning(disable:4244)
 #pragma warning(disable:4305)
 const float PI_180=57.295779513082320876798154814105f;
@@ -266,7 +268,7 @@ template<class Type> struct StorageDynamic
 	int size_x;
 	int size_y;
 	StorageDynamic()
-		:c(NULL),size_x(0),size_y(0)
+		:c(0),size_x(0),size_y(0)
 	{}
 	~StorageDynamic()
 	{
@@ -332,7 +334,7 @@ protected:
 		if(c)
 		{
 			delete []c;
-			c=NULL;
+			c = NULL;
 		}
 		size_x=0;
 		size_y=0;
