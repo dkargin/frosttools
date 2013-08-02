@@ -2,6 +2,7 @@
 #define FROSTTOOLS_LOCKFREE
 #include <memory>
 
+#include <frosttools/threads.hpp>
 #include "frosttools/gperftools/atomicops.h"
 
 
@@ -24,15 +25,77 @@ namespace LockFree
 	}
 #endif
 
+	//! Double-lock FIFO queue implementation
+	//! Should be empty before being destroyed, or you've get an assert
+	//! Element should have a default constructor and 'next' pointer
+	template <typename Node>
+	class DLockQueue
+	{
+	  private:
+		typedef Node * NodePtr;
+		Node dummyNode;				//!< Dummy node for the head
+		Node* head;
+		Node* tail;
+		Threading::mutex headLock, tailLock;
+	  public:
+
+		//! Constructor
+		DLockQueue()
+		{
+			dummyNode.next = NULL;
+			head = &dummyNode;
+			tail = &dummyNode;
+		}
+
+		//! Destructor. Queue must be empty here to prevent memory leaks
+		~DLockQueue()
+		{
+			assert(empty() == true);
+		}
+
+		bool empty() const
+		{
+			return head == tail;
+		}
+
+		//! Push new node to the list
+		void push(Node * node)
+		{
+			node->next = NULL;
+			tailLock.lock();
+			tail->next = node;
+			tail = node;
+			tailLock.unlock();
+		}
+
+		//! Try to pop value from list
+		//! Returns true if successful, false otherwise
+		bool pop(NodePtr& result)
+		{
+			Node * ptr = NULL;
+			headLock.lock();
+			ptr = head;
+			Node * new_head = ptr->next;
+			if(new_head == NULL)	// list is already empty
+			{
+				headLock.unlock();
+				return false;
+			}
+			result = head;
+			head = new_head;
+			headLock.unlock();
+		}
+	};
+
 	// This queue uses extarnal type with pointer "next"
 	template <typename Node/*, typename _Alloc = std::allocator<Node>*/ >
 	class BaseQueue
 	{
 	  private:
 		typedef Node * NodePtr;
-		volatile Node* first;			                                     // for producer only
-		volatile Node* divider;                                               // shared
-		volatile Node* last;                                                  // shared
+		Node* first;			                                     // for producer only
+		Node* divider;                                               // shared
+		Node* last;                                                  // shared
 	  public:
 		BaseQueue()
 		{
