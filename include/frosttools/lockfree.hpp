@@ -74,16 +74,18 @@ namespace LockFree
 		{
 			Node * ptr = NULL;
 			headLock.lock();
-			ptr = head;
-			Node * new_head = ptr->next;
-			if(new_head == NULL)	// list is already empty
+			ptr = head->next;
+			Node * new_next = ptr->next;
+			if(ptr == NULL)	// list is already empty
 			{
 				headLock.unlock();
 				return false;
 			}
-			result = head;
-			head = new_head;
+			head->next = new_next;
 			headLock.unlock();
+			ptr->next = NULL;
+			result = ptr;
+			return true;
 		}
 	};
 
