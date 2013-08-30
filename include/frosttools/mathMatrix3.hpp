@@ -12,10 +12,11 @@ public:
 	typedef Matrix3<Real,row_order> my_type;
 	typedef MatrixSquare<Real,3,row_order> parent_type;
 	typedef typename parent_type::value_type value_type;
+
 	Matrix3 () {}
-	Matrix3 (const matrix_type &m)		
+	Matrix3 (const my_type &m)
 	{
-		assign((const typename matrix_type::value_type*)m);
+		assign((const typename my_type::value_type*)m);
 	}
 
 	static my_type rotateX ( float angle );
@@ -45,6 +46,7 @@ Matrix3<Real,order>	Matrix3<Real,order>::rotateX ( float angle )
 
 	return res;
 }
+
 template<typename Real,bool order>
 Matrix3<Real,order>	Matrix3<Real,order>::rotateY ( float angle )
 {
@@ -59,6 +61,7 @@ Matrix3<Real,order>	Matrix3<Real,order>::rotateY ( float angle )
 
 	return res;
 }
+
 template<typename Real,bool order>
 Matrix3<Real,order>	Matrix3<Real,order>::rotateZ ( float angle )
 {

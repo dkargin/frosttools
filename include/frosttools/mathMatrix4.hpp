@@ -28,9 +28,9 @@ public:
 	inline void axisX(vec3 v)
 	{
 	    value_type *c=(value_type*)this;
-		set(0,0,v[0]);
-		set(0,1,v[1]);
-		set(0,2,v[2]);
+		this->set(0,0,v[0]);
+		this->set(0,1,v[1]);
+		this->set(0,2,v[2]);
 		//c[0]=v[0];
 		//c[4]=v[1];
 		//c[8]=v[2];
@@ -42,9 +42,9 @@ public:
 	inline void axisY(vec3 v)
 	{
 	    value_type *c=(value_type*)this;
-		set(1,0,v[0]);
-		set(1,1,v[1]);
-		set(1,2,v[2]);
+	    this->set(1,0,v[0]);
+	    this->set(1,1,v[1]);
+	    this->set(1,2,v[2]);
 	}
 	inline void axisY(Real x,Real y,Real z)
 	{
@@ -53,9 +53,9 @@ public:
 	inline void axisZ(vec3 v)
 	{
 	    value_type *c=(value_type*)this;
-		set(2,0,v[0]);
-		set(2,1,v[1]);
-		set(2,2,v[2]);
+	    this->set(2,0,v[0]);
+		this->set(2,1,v[1]);
+		this->set(2,2,v[2]);
 	}
 	inline void axisZ(Real x,Real y,Real z)
 	{
@@ -64,9 +64,9 @@ public:
 	inline void origin(const vec3 &v)
 	{
 	    value_type *c=(value_type*)this;
-		set(3,0,v[0]);
-		set(3,1,v[1]);
-		set(3,2,v[2]);
+	    this->set(3,0,v[0]);
+	    this->set(3,1,v[1]);
+	    this->set(3,2,v[2]);
 	}
 	inline void yaw(float ang)//around y axis
 	{
@@ -84,22 +84,22 @@ public:
 	inline vec3 axisX() const
 	{
 	    const value_type *c=(const value_type*)this;
-		return vec3(get(0,0),get(0,1),get(0,2));
+		return vec3(this->get(0,0),this->get(0,1),this->get(0,2));
 	}
 	inline vec3 axisY() const
 	{
 	    const value_type *c=(const value_type*)this;
-		return vec3(get(1,0),get(1,1),get(1,2));
+		return vec3(this->get(1,0),this->get(1,1),this->get(1,2));
 	}
 	inline vec3 axisZ() const
 	{
 	    const value_type *c=(const value_type*)this;
-		return vec3(get(2,0),get(2,1),get(2,2));
+		return vec3(this->get(2,0),this->get(2,1),this->get(2,2));
 	}
 	inline vec3 origin() const
 	{
 	    const value_type *c=(const value_type*)this;
-		return vec3(get(3,0),get(3,1),get(3,2));
+		return vec3(this->get(3,0),this->get(3,1),this->get(3,2));
 	}
 	inline vec3 project(const vec3 &a)const//returns a coordinates in this system
 	{
@@ -122,7 +122,7 @@ public:
 	static my_type	translate ( const vec3& );
 	static my_type  translate (Real x,Real y,Real z)
 	{
-		my_type	res=Mt4x4::identity();
+		my_type	res = Matrix4::identity();
 		res.origin(x,y,z);
 		return res;
 	}
@@ -149,7 +149,7 @@ public:
 	my_type &setInverseRotationDegrees( const float *angles );
 	my_type &operator=(const parent_type &m)
 	{
-		for(int i=0;i<cols()*rows();i++)
+		for(int i=0;i< this->cols()*this->rows();i++)
 			(*this)[i]=m[i];
 		return *this;
 	}
@@ -200,14 +200,14 @@ Matrix4<Real> setRotation(Matrix4<Real,false> mt4,Matrix3<Real,true> rot)
 */
 template<typename Real,bool order> Matrix4<Real,order> Matrix4<Real,order>::translate ( const vec3& loc )
 {
-	Matrix4<Real,order>	res=identity();
+	Matrix4<Real,order> res = my_type::identity();
 
 	res.origin(loc);
 	return res;
 }
 template<typename Real,bool order> Matrix4<Real,order>	Matrix4<Real,order>::scale ( float x, float y, float z)
 {
-	Matrix4<Real,order>	res=identity();
+	Matrix4<Real,order> res = my_type::identity();
 
 	res(0,0) = x;
 	res(1,1) = y;
@@ -218,7 +218,7 @@ template<typename Real,bool order> Matrix4<Real,order>	Matrix4<Real,order>::scal
 
 template<typename Real,bool order> Matrix4<Real,order>	Matrix4<Real,order>::scale ( const vec3& v )
 {
-	Matrix4<Real,order>	res=identity();
+	Matrix4<Real,order> res = my_type::identity();
 
 	res(0,0) = v[0];
 	res(1,1) = v[1];
@@ -229,7 +229,7 @@ template<typename Real,bool order> Matrix4<Real,order>	Matrix4<Real,order>::scal
 template<typename Real,bool order>
 Matrix4<Real,order>	Matrix4<Real,order>::rotateX ( float angle )
 {
-	my_type res=my_type::identity();
+	my_type res = my_type::identity();
 	float  cosine = cos ( angle );
 	float  sine   = sin ( angle );
 
@@ -416,7 +416,8 @@ Matrix4<Real,order> &Matrix4<Real,order>::setRotationRadians( const float *angle
 template<class Real,bool order>
 Matrix4<Real,order>& Matrix4<Real,order>::setInverseRotationRadians( const float *angles )
 {
-	_CrtDbgBreak();// no column order
+	assert(false);// no column order
+	//_CrtDbgBreak();
 	//Matrix4<Real> m_matrix;
 	value_type *c=(value_type*)this;
 	float cr = cos( angles[0] );

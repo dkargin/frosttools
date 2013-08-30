@@ -119,82 +119,86 @@ public:
 	}	
 	value_type & operator()(size_type x,size_type y)
 	{
-		return Order::get(c,cols(),rows(),x,y);
+		return Order::get(this->c,Storage::cols(),Storage::rows(),x,y);
 	}
 	const value_type & operator()(size_type x,size_type y) const
 	{
-		return Order::get(c,cols(),rows(),x,y);
+		return Order::get(this->c,Storage::cols(),Storage::rows(),x,y);
 	}
 	value_type get(size_type x,size_type y) const
 	{
-		return Order::get(c,cols(),rows(),x,y);
+		return Order::get(this->c,Storage::cols(),Storage::rows(),x,y);
 	}
 	void set(size_type x,size_type y,const value_type &r)
 	{
-		Order::get(c,cols(),rows(),x,y)=r;
+		Order::get(this->c,Storage::cols(),Storage::rows(),x,y)=r;
 	}
 	// for NxM matrix compatibility
 	template<class R>inline void getCol(int i,R *res) const
 	{
-		Order::getCol(c,cols(),rows(),i,res);
+		Order::getCol(this->c,Storage::cols(),Storage::rows(),i,res);
 	}
 	template<class R>inline void setCol(int i,const R *vec)
 	{
-		Order::setCol(c,cols(),rows(),i,vec);
+		Order::setCol(this->c,Storage::cols(),Storage::rows(),i,vec);
 	}
 	col_type col(int i) const
 	{		
-		col_type res=make_col();
-		Order::getCol(c,cols(),rows(),i,(value_type*)res);
+		col_type res = Storage::make_col();
+		Order::getCol(this->c,Storage::cols(),Storage::rows(),i,(value_type*)res);
 		return res;
 	}	
 	template<class tVector>	void col(int i,const tVector &vec)
 	{		
-		Order::setCol(c,cols(),rows(),i,(const value_type*)vec);
+		Order::setCol(this->c,Storage::cols(),Storage::rows(),i,(const value_type*)vec);
 	}
 	template<class R> void getRow(int i,R *res) const
 	{
-		Order::getRow(c,cols(),rows(),i,res);
+		Order::getRow(this->c,Storage::cols(),Storage::rows(),i,res);
 	}
 	template<class R> void setRow(int i,const R *res)
 	{
-		Order::setRow(c,cols(),rows(),i,res);
+		Order::setRow(this->c,Storage::cols(),Storage::rows(),i,res);
 	}
 	row_type row(int i) const
 	{
-		row_type res=make_row();
-		Order::getRow(c,cols(),rows(),i,(value_type*)res);
+		row_type res = Storage::make_row();
+		Order::getRow(this->c,Storage::cols(),Storage::rows(),i,(value_type*)res);
 		return res;
 	}
 	template<class tVector> void row(int i,const tVector &vec)
 	{		
-		Order::setRow(c,cols(),rows(),i,(const value_type*)vec);
+		Order::setRow(this->c,Storage::cols(),Storage::rows(),i,(const value_type*)vec);
 	}
 	operator value_type *()
 	{
-		return ptr();
+		return Storage::ptr();
 	}
 	operator const value_type *() const
 	{
-		return ptr();
+		return Storage::ptr();
 	}
 	value_type det() const
 	{
-		if(rows()!=cols())
+		const int ncols = Storage::cols();
+		const int nrows = Storage::rows();
+
+		if(nrows != ncols)
 			return 0;
 	    //const Real *c=(const Real*)this;
-		const int x=;
-		const int y=rows();
-		
+
 		value_type result(0);
-		for(int i=0;i<cols();i++)
+
+		for(int i=0; i < ncols; i++)
 		{
 			value_type pos,neg;
 			neg=pos=row(0,i);
-			for(int j=1,p=i+i,n=i-1;j<rows();j++,p++)
+			for(int j=1,p=i+i,n=i-1;j < nrows;j++,p++)
 			{
-				if(p>=cols())p=0;
-				if(n<0)n=cols()-1;
+				if(p >= ncols)
+					p=0;
+				if(n < 0)
+					n = ncols - 1;
 				neg*=get(n,j);
 				pos*=get(p,j);
 			}
@@ -204,9 +208,9 @@ public:
 	}	
 	void swapRows(int a,int b)
 	{
-		assert(a<rows() && b<rows());
-		row_type tmp=make_row();
-		row_type r=make_row();
+		assert(a<Storage::rows() && b<Storage::rows());
+		row_type tmp = Storage::make_row();
+		row_type r = Storage::make_row();
 		getRow(a,(value_type*)tmp);
 		getRow(b,(value_type*)r);
 		setRow(a,(value_type*)r);
@@ -214,13 +218,13 @@ public:
 	}
 	void swapCols(int a,int b)
 	{
-		assert(a<cols() && b<cols());
-		col_type tmp=make_col();
-		col_type r=make_col();
+		assert(a<Storage::cols() && b<Storage::cols());
+		col_type tmp = Storage::make_col();
+		col_type r = Storage::make_col();
 		getCol(a,(value_type*)tmp);
 		getCol(b,(value_type*)r);
 		setCol(a,(value_type*)r);
-		setcol(b,(value_type*),tmp);
+		setcol(b,(value_type*)tmp);
 	}
 };
 
@@ -252,7 +256,7 @@ public:
 ////////////////////////////////////////////////////////
 // Constant size matrix
 ////////////////////////////////////////////////////////
-// интересно, на кой чёрт мне делать вариант для column-order?
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ column-order?
 template<class Real,int _X,int _Y,bool order>
 class Matrix: public MatrixBase<StorageStatic<Real,_X,_Y>,order>
 {
@@ -293,10 +297,12 @@ class MatrixSquare: public Matrix<Real,N,N,order>
 public:
 	typedef MatrixSquare<Real,N,order> my_type;
 	typedef my_type transposed_type;
+
 	static my_type identity(Real v=Real(1))
 	{	
 		my_type res;
-		for ( size_type i = 0, ind = 0; i < res.size(); i++)
+		int size_x = N;
+		for ( int i = 0, ind = 0; i < res.size(); i++)
 			if(i==ind)
 			{
 				res.c[i]=v;
@@ -306,11 +312,12 @@ public:
 				res.c[i]=Real(0);
 		return res;
 	}
-	inline col_type project(const row_type &a)const//returns a coordinates in this system
+
+	inline typename my_type::col_type project(const typename my_type::row_type &a)const//returns a coordinates in this system
 	{
-		col_type res;
-		for(int i=0;i<cols();i++)
-			res[i]=::vecProjectLen(a,col(i));
+		typename my_type::col_type res;
+		for(int i = 0; i < this->cols(); i++)
+			res[i]=::vecProjectLen(a, this->col(i));
 		return res;
 //		return vec3(::vecProjectLen(a-origin(),col(0)),
 //					::vecProjectLen(a-origin(),axisY()),
@@ -318,10 +325,12 @@ public:
 	}
 	my_type & operator *=(const my_type &b)
 	{
+		const int X = this->cols();
+		const int Y = this->rows();
 		my_type res;
-		for(int i=0;i<X;i++)
-			for(int j=0;j<Y;j++)
-				res(i,j)=row(j)&b.col(i);
+		for(int i=0;i < X;i++)
+			for(int j=0;j < Y;j++)
+				res(i,j)=this->row(j)&b.col(i);
 		*this=res;
 		return *this;
 	}
@@ -335,7 +344,7 @@ template<class _Matrix> _Matrix reduceToTriangle(const _Matrix &source,int *orde
 	/// no row swapping?
 	/// 
 	/*
-	берём 1ю строчку, вычитаем из других таким образом, чтобы остальные 1е коэффициенты = 0
+	пїЅпїЅпїЅпїЅ 1пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 1пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ = 0
 	*/
 	int x,y;
 	int i=0;
@@ -407,13 +416,13 @@ template<class _Matrix> _Matrix orthonormalise(const _Matrix &source)
 	_Matrix result(source);
 	const int size=source.cols();
 	// normalise all columns
-	typename _Matrix::col_type axis=::normalise(result.col(0));
+	typename _Matrix::col_type axis = vecNormalise(result.col(0));
 	result.col(0,axis);
 	// then we compute orthogonal axes.
 	for(int i=0;i<size-1;i++)
 	{
 		typename _Matrix::col_type proj=vecProject(result.col(i+1),result.col(i));
-		result.col(i+1,::normalise(result.col(i+1)-proj));
+		result.col(i+1,vecNormalise(result.col(i+1)-proj));
 	}
 	return result;
 }
@@ -423,6 +432,8 @@ template<class _Matrix> _Matrix orthonormalise(const _Matrix &source)
 template<class _Matrix> _Matrix &rotate(const _Matrix &src,bool dir=true)
 {
 	assert(src.cols()==src.rows());	// only square matrices allowed
+	int size_x = src.cols();
+	int size_y = src.rows();
 	_Matrix tmp;
 	if(dir)
 		for(int y=0,i=0;y<src.rows();y++)
@@ -434,10 +445,10 @@ template<class _Matrix> _Matrix &rotate(const _Matrix &src,bool dir=true)
 			}
 	else
 		for(int y=0,i=0;y<src.rows();y++)
-			for(int x=0;x<cols;x++,i++)
+			for(int x=0;x<src.cols();x++,i++)
 			{
 				int x1=y;
-				int y1=size-x-1;
+				int y1=size_x-x-1;
 				tmp[x1+y1*size_x]=src.c[i];
 			}
 	return tmp;
@@ -463,12 +474,12 @@ template<class _Matrix> _Matrix invert (const _Matrix &source)
 			}
 		}
 
-		// перебираем строки, ищем ненулевой элемент
-		for ( int j = 0; j < size; j++ )  // j- строка
-			if ( j != i && tmp(i,j) != 0.0)	// ищем ненулевой недиагональный элемент
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+		for ( int j = 0; j < size; j++ )  // j- пїЅпїЅпїЅпїЅпїЅпїЅ
+			if ( j != i && tmp(i,j) != 0.0)	// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			{
 				float	mulBy =  tmp(i,j);
-				// вычитаем iю строчку из всех остальных
+				// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ iпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				for ( int k = 0; k < size; k++ )
 				{
 					tmp(k,j) -= mulBy * tmp(k,i);
@@ -478,6 +489,8 @@ template<class _Matrix> _Matrix invert (const _Matrix &source)
 	}
 	return out;
 }
+
+// Seems to be not completed
 template<class _Matrix> _Matrix pseudoinvert (const _Matrix &source)
 {
 	int r=rank(source);
@@ -542,7 +555,7 @@ template<class Real,int X,int Y,int Z,bool order> Matrix<Real,X,Z,order> operato
 ////	return res;
 //}
 //
-// умножаем матрицу на вектор-столбец.
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
 template<typename Real,int N,int M,bool row_order>
 typename Matrix<Real,N,M,row_order>::col_type operator * ( const Matrix<Real,N,M,row_order>& m, const typename Matrix<Real,N,M,row_order>::row_type & v )
 {

@@ -20,8 +20,11 @@
 
 #include <stdlib.h>	// For NULL
 
+#ifdef _MSC_VER
 #pragma warning(disable:4244)
 #pragma warning(disable:4305)
+#endif
+
 const float PI_180=57.295779513082320876798154814105f;
 const float M_2PI=(float)2.0f*M_PI;
 
@@ -130,6 +133,7 @@ template<class Real> struct MathTypes
 {
 	typedef int size_type;
 };
+
 #include "mathVector.hpp"
 template<class Type,int X,int Y> struct StorageStatic:public Vector<Type,X*Y>
 {
@@ -172,7 +176,7 @@ protected:
 	template<class R>void assign(const R *data)
 	{
 		for(int i=0;i<size();i++)
-			c[i]=data[i];
+			this->c[i]=data[i];
 	}
 };
 
@@ -348,6 +352,7 @@ protected:
 //#include "mathSolver.hpp"
 //#include "mathQuaternion.hpp"
 #include "mathExtensions.hpp"
+
 template<typename Real,bool order>
 Vector3D<Real> transform3 ( const Matrix4<Real,order>& m, const Vector3D<Real>& v )
 {	
@@ -359,11 +364,14 @@ Vector3D<Real> transform( const Matrix4<Real,order>& m, const Vector3D<Real>& v 
 {
 	return Vector3D<Real>((Real*)Vector<Real,4>(m.col(0)*v[0]+m.col(1)*v[1]+m.col(2)*v[2]+m.col(3)));
 }
+
+
 template<class Real>
 Vector3D<Real> getVec3(const Vector<Real,4> &v)
 {
 	return vec3(v);
 }
+
 template<class Real>
 Vector3D<Real> inverseRotateVect( const Matrix4<Real,true>& m, const Vector3D<Real>& v  )
 {
@@ -429,12 +437,12 @@ public:
 	rot orientation;		/// object global orientation. For 2d pose it's scalar angle(rad). For 3d - quaternion
 	typedef Pose2z pose_type;
 
-	pose_type():position(0.0f),orientation(0.0) {}
-	pose_type(float x,float y,float rot = 0.f, float z = 0.f):position(x,y,z),orientation(rot) {}
+	Pose2z():position(0.0f),orientation(0.0) {}
+	Pose2z(float x,float y,float rot = 0.f, float z = 0.f):position(x,y,z),orientation(rot) {}
 	
-	pose_type(const pose_type &pose):position(pose.position),orientation(pose.orientation){}
-	pose_type(const pose_type::pos &p,const pose_type::rot &r):position(p[0],p[1],0),orientation(r) {}
-	pose_type(const pose_type::pos3 &p,const pose_type::rot &r):position(p),orientation(r) {}
+	Pose2z(const pose_type &pose):position(pose.position),orientation(pose.orientation){}
+	Pose2z(const pose_type::pos &p,const pose_type::rot &r):position(p[0],p[1],0),orientation(r) {}
+	Pose2z(const pose_type::pos3 &p,const pose_type::rot &r):position(p),orientation(r) {}
 
 	const pos &getPosition() const
 	{
@@ -458,8 +466,8 @@ public:
 	/// returns object direction. Equal to X axis
 	dir getDirection() const
 	{
-		float cs = CS();
-		float sn = SN();
+		//float cs = CS();
+		//float sn = SN();
 		return axisX();
 	}
 
@@ -488,10 +496,11 @@ public:
 	{
 		orientation = atan2(d[1],d[0]);
 	}
+/*
 	/// convert to matrix form
 	mat getMat() const
 	{
-		mat res=mat::identity();
+		mat res(mat::identity());
 		float cs = CS();
 		float sn = SN();
 		res(0,0)=cs;res(1,0)=-sn;res(2,0)=position[0];
@@ -499,6 +508,7 @@ public:
 		res(2,2) = position[2];
 		return res;
 	}
+	*/
 	/// get X axis orth in world frame
 	inline vec axisX() const
 	{
@@ -626,7 +636,6 @@ struct FastAngle
 	}
 };
 
-
 /// Handles local coordinate system, in form of position+rotation
 class Pose2
 {
@@ -634,18 +643,18 @@ public:
 	typedef vec2f pos;		/// describes "position" type
 	typedef vec2f vec;		/// describes "vector" type
 	typedef vec dir;		/// describes "direction" type. Actually is syninonim to "vector"
-	typedef FastAngle rot;		/// describes "rotation" type.
+	typedef FastAngle rot;	/// describes "rotation" type.
 	typedef Mt3x3 mat;		/// describes "matrix" type
 
-	rot orientation;	/// cos(orientation), sin(orientation)
+	rot orientation;		/// cos(orientation), sin(orientation)
 	pos position;			/// object global position
 
 	typedef Pose2 pose_type;
-	pose_type():position(0.0f),orientation(1.0,0.0){}
-	pose_type(float x,float y,float r = 0.f):position(x,y),orientation(FastAngle::FromRAD(r)){}
+	Pose2():orientation(1.0,0.0), position(0.0f) {}
+	Pose2(float x,float y,float r = 0.f):orientation(FastAngle::FromRAD(r)), position(x,y){}
 	
-	pose_type(const pose_type &pose):position(pose.position),orientation(pose.orientation){}
-	pose_type(const pose_type::pos &p,const pose_type::rot &r):position(p), orientation(r){}
+	Pose2(const pose_type &pose):orientation(pose.orientation), position(pose.position){}
+	Pose2(const pose_type::pos &p,const pose_type::rot &r):orientation(r), position(p){}
 
 	static pose_type zero()
 	{
@@ -674,8 +683,8 @@ public:
 	/// returns object direction. Equal to X axis
 	dir getDirection() const
 	{
-		float cs = CS();
-		float sn = SN();
+		//float cs = CS();
+		//float sn = SN();
 		return axisX();
 	}
 
@@ -697,17 +706,18 @@ public:
 		orientation.sn = d[1] / len;
 		//orientation = atan2(d[1],d[0]);
 	}
+/*
 	/// convert to matrix form
 	mat getMat() const
 	{
-		mat res=mat::identity();
+		mat res(mat::identity());
 		float cs = CS();
 		float sn = SN();
 		res(0,0)=cs;res(1,0)=-sn;res(2,0)=position[0];
 		res(0,1)=sn;res(1,1)= cs;res(2,1)=position[1];	
 		res(2,2) = position[2];
 		return res;
-	}
+	}*/
 	/// get X axis orth in world frame
 	inline vec axisX() const
 	{
@@ -773,8 +783,8 @@ public:
 
 inline Pose2 operator * (const Pose2 &a,const Pose2 &b)
 {
-	float cs = a.CS() * b.CS() - a.SN() * b.SN();
-	float sn = a.CS() * b.SN() + a.SN() * b.CS();
+	//float cs = a.CS() * b.CS() - a.SN() * b.SN();
+	//float sn = a.CS() * b.SN() + a.SN() * b.CS();
 	vec2f pos = a.transformPos(b.position);
 	return Pose2(pos, a.orientation + b.orientation);
 }

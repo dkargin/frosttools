@@ -96,6 +96,7 @@ template<> struct StrUtils<char>
 		return dst;
 	}
 };
+#ifdef FROSTTOOLS_WCHAR
 template<> struct StrUtils<wchar_t>
 {
 	wchar_t *sprintf(wchar_t *dst,wchar_t*format,...)
@@ -115,125 +116,7 @@ template<> struct StrUtils<wchar_t>
 		return dst;
 	}*/
 };
-
-class TimeManager
-{
-public:
-	typedef size_t Time;
-	typedef long unsigned int TimeAccumulator;
-
-	class Action
-	{
-	public:		
-		virtual ~Action() {}
-		virtual bool IsDestructible() const {return true;}
-		virtual void Execute() = 0;
-	};
-
-	struct Timer
-	{
-		Action * action;
-		Time time;
-	};
-
-	void add(Action * action, Time delay);
-	virtual void update(Time dt);
-
-	TimeManager();
-	~TimeManager();
-
-	void clear();					// clear timeline
-	void resetTime();				// reset accumulated time
-protected:
-	TimeAccumulator totalTime;
-	std::vector<Timer> timeLine;
-
-	void destroy(Timer & timer);	// destroy specific timer
-};
-
-#define TimeManager_impl FrostTools_Impl
-
-TimeManager_impl TimeManager::TimeManager()
-	:totalTime(0)
-{}
-
-TimeManager_impl TimeManager::~TimeManager()
-{
-	clear();
-}
-// destroy specific timer
-TimeManager_impl void TimeManager::destroy(Timer & timer)
-{
-	if(timer.action != NULL && timer.action->IsDestructible())
-	{
-		delete timer.action;
-	}
-	timer.action = NULL;
-	timer.time = 0;
-}
-// reset accumulated time
-TimeManager_impl void TimeManager::resetTime()
-{
-	for( size_t i = 0; i < timeLine.size(); ++i)
-	{
-		Timer & timer = timeLine[i];
-		timer.time -= totalTime;
-	}
-	totalTime = 0;
-}
-// clear timeline
-TimeManager_impl void TimeManager::clear()
-{
-	for( size_t i = 0; i < timeLine.size(); ++i)
-	{
-		Timer & timer = timeLine[i];
-		destroy(timer);		
-	}
-	timeLine.clear();
-}
-// add new events
-TimeManager_impl void TimeManager::add(TimeManager::Action * action, TimeManager::Time delay)
-{
-	Timer timer = {action, delay + totalTime};
-	timeLine.push_back(timer);
-
-	struct Helper
-	{
-		static int Comparator(const void * pa, const void *pb)
-		{
-			return ((Timer*)pa)->time < ((Timer*)pb)->time;
-		}
-	};
-	::qsort(&timeLine.front(), timeLine.size(), sizeof(Timer), &Helper::Comparator);
-}
-// update timeline
-TimeManager_impl void TimeManager::update(TimeManager::Time dt)
-{
-	// do not accumulate time if timeline is empty
-	if( timeLine.empty() )
-		return;
-
-	totalTime += dt;	
-	size_t newSize = timeLine.size();
-	Timer * start = &timeLine.front();
-	// check timeline events
-	for(Timer * current = &timeLine.back();	; --current)
-	{		
-		// if event is occured
-		if( current->time <= totalTime )
-		{
-			current->action->Execute();
-			newSize--;
-			destroy(*current);
-		}
-		else
-			break;
-		// have iterated through all events
-		if( current == start )
-			break;
-	}
-	timeLine.resize(newSize); 
-}
+#endif
 
 template<class T, int MaxSize>
 class StaticArray
@@ -284,6 +167,7 @@ public:
 			return ptr;
 		}
 	};
+
 	template<class Base> struct _iterator_base: public Base
 	{
 		typedef std::random_access_iterator_tag iterator_category;
@@ -292,36 +176,36 @@ public:
 
 		_iterator_base(container_type * container, value_type * data)
 		{
-			ptr = data;
+			this->ptr = data;
 		}
 		_iterator_base(const my_type &it)
 		{
-			ptr = it.ptr;
+			this->ptr = it.ptr;
 		}
 		bool operator == (const my_type & t) const
 		{
-			return t.ptr == ptr;
+			return t.ptr == this->ptr;
 		}
 		bool operator != (const my_type &t) const
 		{
-			return t.ptr != ptr;
+			return t.ptr != this->ptr;
 		}
 		bool operator < (const my_type &t) const
 		{
-			return ptr < t.ptr;
+			return this->ptr < t.ptr;
 		}
 		bool operator > (const my_type &t) const
 		{
-			return ptr > t.ptr;
+			return this->ptr > t.ptr;
 		}
 		my_type & operator++()
 		{
-			ptr++;
+			this->ptr++;
 			return *this;
 		}
 		my_type & operator--()
 		{
-			ptr--;
+			this->ptr--;
 			return *this;
 		}
 	};
@@ -374,7 +258,7 @@ public:
 		}
 		else
 		{
-			std::_Xoverflow_error("Array: maximum size exceeded");
+			std::exception("Array: maximum size exceeded");
 		}
 	}
 	bool empty() const

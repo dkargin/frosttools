@@ -105,18 +105,22 @@ public:
 	{
 		return (v&normal)-d;
 	}
+
 	vector_type project(const vector_type &v) const
 	{
 		return v-normal*((v&normal)-d);
 	}
+
 	vector_type projectDir(const vector_type &v) const
 	{
 		return v-vecProject(v,normal);
 	}
+
 	_Edge<vector_type> project(const _Edge<vector_type> &edge)
 	{
 		return _Edge<vector_type>(project(edge.start),project(edge.end));
 	}
+
 	int classify(const vector_type &v) const
 	{
 		register float res=(v&normal)-d;
@@ -126,6 +130,7 @@ public:
 			return prBack;
 		return prIntersect;
 	}
+
 	int classify(const vector_type &a, const vector_type &b) const
 	{
 		register float resa=(a&normal)-d;
@@ -136,6 +141,7 @@ public:
 			return prBack;
 		return prFront;
 	}
+
 	int intersectEdge(const vector_type &a, const vector_type &b, vector_type &result) const
 	{
 		register float resa=(a&normal)-d;
@@ -150,16 +156,17 @@ public:
 			return prBack;
 		return prFront;
 	}
+
 	int intersectRay(const vector_type &a, const vector_type &dir, vector_type &result) const
 	{
 		register float resa=(a&normal)-d;
 		register float resb=(dir&normal);
 
 		/*
-		1. спереди (resa>0), направление от плоскости (resb>0) - сзади
-		2. сзади, (resa<0)направление от плоскости (resb<0)	- сзади
-		3. спереди, resa>0, направление к плоскости, resb<0
-		4. сзади, resa<0, направление к плоскости, resb>0
+		1. пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (resa>0), пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (resb>0) - пїЅпїЅпїЅпїЅпїЅ
+		2. пїЅпїЅпїЅпїЅпїЅ, (resa<0)пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (resb<0)	- пїЅпїЅпїЅпїЅпїЅ
+		3. пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, resa>0, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, resb<0
+		4. пїЅпїЅпїЅпїЅпїЅ, resa<0, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, resb>0
 		*/
 
 		int res=classify(a);
@@ -174,6 +181,7 @@ public:
 		return prIntersect;
 	}
 };
+
 template<class Vector> _Plane<Vector> planeFromPointDir(const Vector &pt,const Vector &dir)
 {
 	_Plane<Vector> res;
@@ -181,6 +189,7 @@ template<class Vector> _Plane<Vector> planeFromPointDir(const Vector &pt,const V
 	res.d=pt&dir;
 	return res;
 }
+
 template<class Vector> _Plane<Vector> planeFromEdgeStart(const _Edge<Vector> &edge)
 {
 	_Plane<Vector> res;
@@ -214,6 +223,7 @@ public:
 	typedef typename _Vector::value_type value_type;
 	typedef typename _Vector::size_type size_type;
 	typedef _AABB<_Vector> my_type;
+	typedef _Vector vector_t;
 	enum {D=_Vector::D};
 	_Vector center;
 	_Vector dimensions;
@@ -245,7 +255,7 @@ public:
 	{
 		bool flag=true;
 
-		for(int i=0;i<Vector::D;i++)
+		for(int i=0;i < D; i++)
 			if(v[i]<(center[i]-dimensions[i]))
 			{
 				flag=false;
@@ -287,7 +297,7 @@ public:
 	// get face centers
 	int getCenters(_Vector *vertices) const
 	{
-		const typename _Vector::size_type max=Vector::N;
+		const typename _Vector::size_type max = D;
 		for(typename _Vector::size_type i=0,j=0;i<max;i++)
 		{
 			_Vector offs(_Vector::value_type(0));
@@ -301,11 +311,11 @@ public:
 	// get box corners
 	int getCorners(_Vector *vertices) const
 	{
-		const typename _Vector::size_type max=2<<(Vector::D-1);
+		const typename _Vector::size_type max=2<<(D-1);
 		for(typename _Vector::size_type i=0;i<max;i++)
 		{
 			_Vector offs(dimensions);
-			for(typename _Vector::size_type j=0;j<Vector::D;j++)
+			for(typename _Vector::size_type j=0;j<D;j++)
 				offs[j]=(i&(1<<j))?dimensions[j]:-dimensions[j];
 			vertices[i]=center+offs;
 		}
@@ -316,7 +326,7 @@ public:
 	{
 		_Vector lmin=min();
 		_Vector lmax=max();
-		for(typename _Vector::size_type j=0;j<_Vector::D;j++)
+		for(int j=0;j<D;j++)
 		{
 			if(lmin[j]>v[j])
 				lmin[j]=v[j];
@@ -333,7 +343,7 @@ public:
 		_Vector lmax=max();
 		Vec bmin = box.min();
 		Vec bmax = box.max();
-		for(typename _Vector::size_type j=0;j<_Vector::D;j++)
+		for(int j=0;j<D;j++)
 		{
 			if(lmin[j]>bmin[j])
 				lmin[j]=bmin[j];
@@ -349,22 +359,24 @@ public:
 template<class _Iter> _AABB<typename _Iter::value_type> make_box(const _Iter &begin,const _Iter &end)
 {
 	assert(begin!=end);
-	typedef _Iter::value_type Vector;		
-	Vector min=*begin,max=*begin;
+	typedef typename _Iter::value_type Vector;
+	typedef typename Vector::value_type value_type;
+
+	Vector vmin=*begin,vmax=*begin;
 	for(_Iter i=begin;i!=end;i++)
 	{
-		for(size_type j=0;j<D;j++)
+		for(int j=0;j<_AABB<typename _Iter::value_type>::D;j++)
 		{
 			value_type val=(*i)[j];
-			if(val<min[j])
-				min[j]=val;
-			if(val>max[j])
-				max[j]=val;
+			if(val<vmin[j])
+				vmin[j]=val;
+			if(val>vmax[j])
+				vmax[j]=val;
 		}
 	}
 	_AABB<Vector> res;
-	res.center=(max+min)*0.5;
-	res.dimensions=(max-min)*0.5;
+	res.center=(vmax+vmin)*0.5;
+	res.dimensions=(vmax-vmin)*0.5;
 	return res;
 }
 template<class Vector> _AABB<Vector> make_rect(const Vector &s,const Vector &e)
@@ -408,7 +420,7 @@ int intersection(const _Edge<_Vr> &edge,const _AABB<_Vr> &box,_Vr *res_v=NULL,ty
 	typedef typename _Vr::value_type value_type;
 	Vector<char,2*_Vr::N> hit_found(char(0));
 	int res=0;
-	for(typename _Vr::size_type i=0,j=0;i<_Vr::N;i++)
+	for(int i=0,j=0;i<_Vr::N;i++)
 	{
 		_Vr offs(_Vr::value_type(0));
 		Plane plane;
@@ -422,7 +434,7 @@ int intersection(const _Edge<_Vr> &edge,const _AABB<_Vr> &box,_Vr *res_v=NULL,ty
 		{
 			// 3. check if intersection point belongs to box
 			bool flag=true;
-			for(typename _Vr::size_type j=0;j<_Vr::D;j++)
+			for(int j=0;j<_Vr::D;j++)
 			{
 				if(i==j)
 					continue;
@@ -454,7 +466,7 @@ int intersection(const _Edge<_Vr> &edge,const _AABB<_Vr> &box,_Vr *res_v=NULL,ty
 		{
 			// 3. check if intersection point belongs to box
 			bool flag=true;
-			for(typename _Vr::size_type j=0;j<_Vr::D;j++)
+			for(int j=0;j<_Vr::D;j++)
 			{
 				if(i==j)
 					continue;
@@ -664,10 +676,12 @@ int intersection(const _Edge<Vector> &edge,const _Sphere<Vector> &sphere,Vector 
 	}
 	return 0;
 }
+
 template<typename _Vector> float getPolarAngle(const _Vector &a)
 {
 	return atan2(a[1],a[0]);
 }
+
 template<typename _Vector> int compareVec2d_polar(const _Vector &a,const _Vector &b,const _Vector &c=_Vector(0.0f))
 {
 	_Vector va=a-c;

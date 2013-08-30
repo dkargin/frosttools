@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _MATH_VECTOR_HPP_
+#define _MATH_VECTOR_HPP_
 
 template <typename Real,int _D>
 class Vector
@@ -150,7 +151,7 @@ public:
 	inline int operator == ( const Vector<Real,_D>& v ) const
 	{
 		for(size_type i = 0; i < _D; i++)
-			if(!(c[i] == v[i]))
+			if(!(this->c[i] == v.c[i]))
 				return false;
 		return true;
 	}
@@ -158,7 +159,7 @@ public:
 	inline int operator != ( const Vector<Real,_D>& v ) const
 	{
 		for(size_type i = 0; i < _D;i++)
-			if(c[i] == v[i])
+			if(this->c[i] == v[i])
 				return false;
 		return true;
 	}
@@ -234,6 +235,7 @@ inline _Vr vecAbs(const _Vr &v)
 			res[i] = -res[i];
 	return res;
 }
+
 template <class Real>
 class	Vector2D: public Vector<Real,2>
 {
@@ -279,7 +281,7 @@ public:
 
 	float angle() const
 	{
-		return atan2f(c[1], c[0]);
+		return atan2f(this->c[1], this->c[0]);
 	}
 };
 
@@ -468,6 +470,25 @@ public:
 	}
 };
 
+typedef Vector4D<int> vec4i;
+typedef const vec4i & crvec4i;
+typedef Vector4D<float> vec4f;
+typedef const vec4f & crvec4f;
+
+typedef Vector3D<float> vec3f;
+typedef const vec3f & crvec3f;
+typedef vec3f vec3;				// Most polular type. Just for faster typing.
+typedef crvec3f crvec3;
+typedef Vector3D<signed int> vec3i;
+typedef const vec3i & crvec3i;
+typedef Vector3D<unsigned char> vec3ub;
+typedef const vec3ub & crvec3ub;
+
+typedef Vector2D<short signed int> vec2i;
+typedef const vec2i & crvec2i;
+typedef Vector2D<float> vec2f;
+typedef const vec2f & crvec2f;
+
 template <typename _Vr> inline _Vr vecNormalise(const _Vr &v)
 {
 	_Vr res = v;
@@ -476,7 +497,7 @@ template <typename _Vr> inline _Vr vecNormalise(const _Vr &v)
 
 template <typename _Vr> inline _Vr vecNormalise_s(const _Vr &v)
 {
-	_Vr::value_type len = v.length();
+	typename _Vr::value_type len = v.length();
 	return len>0.f?v/len:_Vr::zero();
 }
 
@@ -494,10 +515,10 @@ inline _Vr vecProject(const _Vr &a,const _Vr &b)
 
 template <class _Vr> inline typename _Vr::value_type vecSqrDistance(const _Vr &a, const _Vr &b)
 {
-	_Vr::value_type result = 0.f;
+	typename _Vr::value_type result = 0.f;
 	for(typename _Vr::size_type i = 0 ; i < _Vr::D; i++)
 	{
-		_Vr::value_type delta = a[i] - b[i];
+		typename _Vr::value_type delta = a[i] - b[i];
 		result+= (delta*delta);
 	}
 	return result;
@@ -505,10 +526,10 @@ template <class _Vr> inline typename _Vr::value_type vecSqrDistance(const _Vr &a
 
 template <class _Vr> inline typename _Vr::value_type vecDistance(const _Vr &a, const _Vr &b)
 {
-	_Vr::value_type result = 0.f;
+	typename _Vr::value_type result = 0.f;
 	for(typename _Vr::size_type i = 0 ; i < _Vr::D; i++)
 	{
-		_Vr::value_type delta = a[i] - b[i];
+		typename _Vr::value_type delta = a[i] - b[i];
 		result+= (delta*delta);
 	}
 	return sqrt(result);
@@ -598,7 +619,7 @@ template <class _Vr> inline float vecAngle(const _Vr &a, const _Vr &b, const _Vr
 {
 	vec3 va = a - vecProject(a,up);
 	vec3 vb = b - vecProject(b,up);
-	vec3 left = up^va;
+	vec3 left = crossProduct(up , va);
 
 	float y = vecAngle(va,vb);
 	if((left&vb) >= 0.0f)
@@ -638,25 +659,6 @@ template<class _Vr> signed int pointInEdge(const _Vr &start, const _Vr &end, con
 	return 0;
 }
 
-typedef Vector4D<int> vec4i;
-typedef const vec4i & crvec4i;
-typedef Vector4D<float> vec4f;
-typedef const vec4f & crvec4f;
-
-typedef Vector3D<float> vec3f;
-typedef const vec3f & crvec3f;
-typedef vec3f vec3;				// Most polular type. Just for faster typing.
-typedef crvec3f crvec3;			
-typedef Vector3D<signed int> vec3i;
-typedef const vec3i & crvec3i;
-typedef Vector3D<unsigned char> vec3ub;
-typedef const vec3ub & crvec3ub;
-
-typedef Vector2D<short signed int> vec2i;
-typedef const vec2i & crvec2i;
-typedef Vector2D<float> vec2f;
-typedef const vec2f & crvec2f;
-
 template <> inline float vecDistance<vec2f>(const vec2f &a, const vec2f &b)
 {	
 	return sqrt((a[0]-b[0])*(a[0]-b[0]) + (a[1] - b[1])*(a[1] - b[1]));
@@ -687,3 +689,5 @@ template <> inline float vecDotProduct<vec3>(const vec3 &a, const vec3 &b)
 {	
 	return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
 }
+
+#endif
