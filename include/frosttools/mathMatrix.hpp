@@ -272,7 +272,7 @@ public:
 
 	my_type & operator = (const my_type &m)
 	{
-		assign((const value_type*)m);
+		this->assign((const value_type*)m);
 		return *this;
 	}	
 	
@@ -366,7 +366,10 @@ swap:
 		{
 			result.swapRows(i,y);
 			if(order)
-				std::swap(order[i],order[y]);
+			{
+				int tmp = order[i]; order[i] = order[y]; order[y] = tmp;
+				//std::swap(order[i],order[y]);
+			}
 		}
 		i=x;
 		for(y=i+1;y<source.rows();y++)

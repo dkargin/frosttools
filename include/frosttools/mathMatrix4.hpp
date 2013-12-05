@@ -14,7 +14,7 @@ public:
 	// copy constructor
 	Matrix4 (const Matrix<Real,4,4,row_order> &m)
 	{
-		assign((const Real*)m);
+		this->assign((const Real*)m);
 	}
 	template<class R> inline Matrix4(const Vector<R,4*4> &m)
 	{
@@ -63,7 +63,7 @@ public:
 	}
 	inline void origin(const vec3 &v)
 	{
-	    value_type *c=(value_type*)this;
+	    //value_type *c=(value_type*)this;
 	    this->set(3,0,v[0]);
 	    this->set(3,1,v[1]);
 	    this->set(3,2,v[2]);
@@ -78,27 +78,27 @@ public:
 	}
 	inline void origin(Real x,Real y,Real z)
 	{
-	    value_type *c=(value_type*)this;
+	    //value_type *c=(value_type*)this;
 		origin(vec3(x,y,z));
 	}
 	inline vec3 axisX() const
 	{
-	    const value_type *c=(const value_type*)this;
+	    //const value_type *c=(const value_type*)this;
 		return vec3(this->get(0,0),this->get(0,1),this->get(0,2));
 	}
 	inline vec3 axisY() const
 	{
-	    const value_type *c=(const value_type*)this;
+	    //const value_type *c=(const value_type*)this;
 		return vec3(this->get(1,0),this->get(1,1),this->get(1,2));
 	}
 	inline vec3 axisZ() const
 	{
-	    const value_type *c=(const value_type*)this;
+	    //const value_type *c=(const value_type*)this;
 		return vec3(this->get(2,0),this->get(2,1),this->get(2,2));
 	}
 	inline vec3 origin() const
 	{
-	    const value_type *c=(const value_type*)this;
+	    //const value_type *c=(const value_type*)this;
 		return vec3(this->get(3,0),this->get(3,1),this->get(3,2));
 	}
 	inline vec3 project(const vec3 &a)const//returns a coordinates in this system

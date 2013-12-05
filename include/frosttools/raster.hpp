@@ -121,7 +121,7 @@ public:
 	typedef Raster2D<Pixel> my_type;
 
 	Raster2D(Pixel *nData,int nWidth,int nHeight)
- 		:iExtern(true),data(nData),width(nWidth),height(nHeight),pixelSize(sizeof(Pixel)),zero(0)
+ 		:iExtern(true),data(nData),width(nWidth),height(nHeight),pixelSize(sizeof(Pixel))
 	{}
 	Raster2D(int nWidth,int nHeight)
 		:iExtern(false),width(nWidth),height(nHeight),pixelSize(sizeof(Pixel))
@@ -192,11 +192,15 @@ public:
 	{
 		return data;
 	}
+	class _XBounds
+	{
+
+	};
 protected:
 	void _xbounds(int x, int y) const
 	{
-		_CrtDbgBreak();
-		throw std::exception("Raster2D::point is out of bounds");
+		//_CrtDbgBreak();
+		throw _XBounds();
 	}
 };
 

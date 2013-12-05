@@ -2,6 +2,8 @@
 #define _FT_TIME_IMPL_HPP_
 
 #include <sys/time.h>
+namespace frosttools
+{
 
 class Timer
 {
@@ -57,5 +59,5 @@ public:
 		return lastTime();
 	}
 };
-
+}
 #endif

@@ -1,7 +1,7 @@
 #ifndef MULTILAYER
 #define MULTILAYER
 #include <vector>
-
+#include "string.h" // for memcpy
 // make size_type and difference_type <long> instead if <int>
 template<class Ty>
 class LongAlloc: public std::allocator<Ty>
@@ -12,15 +12,15 @@ public:
 };
 
 class Multilayer
-{	
-	class _Layer
+{
+public:
+	struct _Layer
 	{
-	public:
 		int size;
 		int offset;
 		int stride;
 		bool enabled;
-		uint8 *data;
+		unsigned char *data;
 
 		_Layer()
 			:size(0),offset(0),enabled(false),data(NULL)
@@ -82,7 +82,7 @@ private:
 	}
 	void check(size_t id) const
 	{
-		_ASSERT(id < layers.size());		
+		assert(id < layers.size());
 		//_ASSERT(id<layersCount);		
 	}
 public:	
@@ -180,7 +180,7 @@ public:
 	template<class Type>
 	void writeLayer(int n,Type *data)
 	{	
-		_ASSERT(sizeof(Type)==layers[n].size);		
+		assert(sizeof(Type)==layers[n].size);
 		register Type *ptr=(Type*)getLayerPointer(n);
 		Type *end=(Type*)(nodeLast+layers[n].offset);		
 		
@@ -192,7 +192,7 @@ public:
 	template<class Type>
 	void readLayer(int n,Type *data) const
 	{		
-		_ASSERT(sizeof(Type)==layers[n].size);
+		assert(sizeof(Type)==layers[n].size);
 		register Type *ptr=(Type*)getLayerPointer(n);
 		Type *end=(Type*)(nodeLast+layers[n].offset);		
 		
@@ -204,7 +204,7 @@ public:
 	{
 		int sa=sizeof(Type);
 		int sb=layers[n].size;
-		_ASSERT(sizeof(Type)==layers[n].size);
+		assert(sizeof(Type)==layers[n].size);
 		register Type *ptr=(Type*)getLayerPointer(n);
 		Type *end=(Type*)(nodeLast+layers[n].offset);		
 		

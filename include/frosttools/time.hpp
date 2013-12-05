@@ -7,6 +7,8 @@
 #include "linux/time_impl.hpp"
 #endif
 
+namespace frosttools
+{
 //! Manager for timed events
 //! Not sure if anyone needs it
 class TimeManager
@@ -131,5 +133,5 @@ TimeManager_impl void TimeManager::update(TimeManager::Time dt)
 	}
 	timeLine.resize(newSize);
 }
-
+}
 #endif

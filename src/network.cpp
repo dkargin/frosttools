@@ -349,6 +349,7 @@ int Peer::send(size_t peerId, const void * data, size_t size)
 	{
 #ifdef _MSC_VER
 #else
+		/*
 		int flags = fcntl(s.socket, F_GETFL, 0);
 		if (flags < 0) {
 			printf("Error getting socket flags < 0 \n");
@@ -359,7 +360,7 @@ int Peer::send(size_t peerId, const void * data, size_t size)
 			if (fcntl(s.socket, F_SETFL, flags)  < 0) {
 				printf("Error setting socket flags retval < 0 \n");
 			}
-		}
+		}*/
 #endif
 		bytesData = ::send(s.socket, (const char*)data, size, sendFlags );
 		if( bytesData <= 0 )

@@ -639,10 +639,10 @@ int intersection(const _Edge<Vector> &edge,const _Sphere<Vector> &sphere,Vector 
 	// solve this equation
 	typename Vector::value_type t;
 	Vector r;
-	if(a!=Vector::value_type(0))
+	if(a!=typename Vector::value_type(0))
 	{
 		typename Vector::value_type D=b*b-c*a;
-		if(D>Vector::value_type(0))
+		if(D> typename Vector::value_type(0))
 		{
 			t=(-b-sqrt(D))/a;
 			if(res_t)res_t[0]=t;
@@ -652,7 +652,7 @@ int intersection(const _Edge<Vector> &edge,const _Sphere<Vector> &sphere,Vector 
 			if(res_v)res_v[1]=edge(t);
 			return 2;
 		}
-		else if(D==Vector::value_type(0))
+		else if(D== typename Vector::value_type(0))
 		{
 			t=-b/a;
 			if(res_t)res_t[0]=t;

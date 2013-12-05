@@ -91,7 +91,7 @@ template<class _Type> struct BaseObjectInfo
     bool instance;
     int flags;
 #endif
-    BaseObjectInfo() : refCounter(0), ptrCounter(0), data( NULL )
+    BaseObjectInfo() : data( NULL ), refCounter(0), ptrCounter(0)
     {
 #ifdef _SHARED_PROTOTYPE
         flags = 0;
