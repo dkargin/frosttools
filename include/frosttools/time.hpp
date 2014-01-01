@@ -7,6 +7,8 @@
 #include "linux/time_impl.hpp"
 #endif
 
+#include <vector>	// for timeline
+
 namespace frosttools
 {
 //! Manager for timed events
@@ -90,6 +92,7 @@ TimeManager_impl void TimeManager::clear()
 	}
 	timeLine.clear();
 }
+
 // add new events
 TimeManager_impl void TimeManager::add(TimeManager::Action * action, TimeManager::Time delay)
 {

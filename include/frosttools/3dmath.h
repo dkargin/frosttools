@@ -687,7 +687,11 @@ public:
 		//float sn = SN();
 		return axisX();
 	}
-
+	/// return local angle, in radians
+	float getAngle() const
+	{
+		return orientation.RAD();
+	}
 	/// get cos(angle)
 	float CS() const	
 	{
