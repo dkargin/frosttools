@@ -2,7 +2,8 @@
 #define _FT_TIME_IMPL_HPP_
 
 #include <windows.h>
-
+namespace frosttools
+{
 class TimerAccurate
 {
 	LARGE_INTEGER freq, start, end;
@@ -63,4 +64,6 @@ public:
 		return lastTime();
 	}
 };
+
+}
 #endif
