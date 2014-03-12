@@ -2,25 +2,31 @@ cmake_minimum_required(VERSION 2.6)
 #FrostTools static library
 PROJECT(FrostTools)
 
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ")
+set(FROSTTOOLS_MAJOR_VERSION 0)
+set(FROSTTOOLS_MINOR_VERSION 9)
+set(FROSTTOOLS_PATCH_VERSION 0)
+set(FROSTTOOLS_VERSION ${FROSTTOOLS_MAJOR_VERSION}.${FROSTTOOLS_MINOR_VERSION}.${FROSTTOOLS_PATCH_VERSION})
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
+if(WIN32 AND NOT CYGWIN)
+  set(DEF_INSTALL_CMAKE_DIR CMake)
+else()
+  set(DEF_INSTALL_CMAKE_DIR lib/cmake/FrostTools)
+endif()
 
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-#ADD_LIBRARY(frosttools STATIC src/network.cpp)
+set(INSTALL_LIB_DIR lib)# CACHE PATH "Installation directory for libraries")
+set(INSTALL_BIN_DIR bin)# CACHE PATH "Installation directory for executables")
+set(INSTALL_INCLUDE_DIR include)# CACHE PATH "Installation directory for header files")
+set(INSTALL_CMAKE_DIR ${DEF_INSTALL_CMAKE_DIR})# CACHE PATH "Installation directory for CMake files")
 
-include(CPack)
+# Make relative paths absolute (needed later on)
+foreach(p LIB BIN INCLUDE CMAKE)
+  set(var INSTALL_${p}_DIR)
+  if(NOT IS_ABSOLUTE "${${var}}")
+    set(${var} "${CMAKE_INSTALL_PREFIX}/${${var}}")
+  endif()
+endforeach()
 
-set(FROSTTOOLS_HEADERS 
-	include/frosttools/lockfree.hpp 
-	include/logger.hpp 
-	include/modile.hpp 
-	include/ringbuffer.hpp
-	include/threads.hpp
-	include/time.hpp
-	include/delegate.hpp
-	include/autoptr.hpp)
+add_subdirectory(src)
 
 option(BUILD_TESTS "Build tests" OFF)
 
@@ -29,15 +35,48 @@ if(BUILD_TESTS)
 endif(BUILD_TESTS)
 
 
-ADD_LIBRARY(frosttools src/network.cpp)
+# The interesting stuff goes here
+# ===============================
+ 
+# Add all targets to the build-tree export set
+export(TARGETS frosttools FILE "${PROJECT_BINARY_DIR}/FrostToolsTargets.cmake") 
+# Export the package for use from the build-tree
+# (this registers the build-tree with a global CMake-registry)
+export(PACKAGE FrostTools)
+ 
+# Create the FrostToolsConfig.cmake and FrostToolsConfigVersion files
+file(RELATIVE_PATH REL_INCLUDE_DIR "${INSTALL_CMAKE_DIR}" "${INSTALL_INCLUDE_DIR}")
+# ... for the build tree
+set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
+configure_file(FrostToolsConfig.cmake.in "${PROJECT_BINARY_DIR}/FrostToolsConfig.cmake" @ONLY)
+# ... for the install tree
+set(CONF_INCLUDE_DIRS "\${FROSTTOOLS_CMAKE_DIR}/${REL_INCLUDE_DIR}")
+configure_file(FrostToolsConfig.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/FrostToolsConfig.cmake" @ONLY)
+# ... for both
+configure_file(FrostToolsConfigVersion.cmake.in "${PROJECT_BINARY_DIR}/FrostToolsConfigVersion.cmake" @ONLY)
+ 
+# Install the FrostToolsConfig.cmake and FrostToolsConfigVersion.cmake
+install(FILES
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/FrostToolsConfig.cmake"
+  "${PROJECT_BINARY_DIR}/FrostToolsConfigVersion.cmake"
+  DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
 
-# install target
+# Install the export set for use with the install-tree
+install(EXPORT FrostToolsTargets DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
 install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.hpp")
+
+#####################################################
+#include(CPack)
+
+
+# install target
+#install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.h")
+#install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.hpp")
 #install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.hxx")
 
-install(TARGETS frosttools DESTINATION lib/frosttools)
-install(FILES FrostToolsConfig.cmake DESTINATION lib/frosttools)
+#install(TARGETS frosttools DESTINATION lib/frosttools)
+#install(FILES FrostToolsConfig.cmake DESTINATION lib/frosttools)
 #INSTALL_TARGET(/lib frosttools)
 
 # uninstall target

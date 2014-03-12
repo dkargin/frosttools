@@ -1,0 +1,18 @@
+# Config for FrostTools package
+# FROSTTOOLS_FOUND
+# FROSTTOOLS_INCLUDE_DIRS
+# FROSTTOOLS_LIBRARY_DIRS
+# FROSTTOOLS_LIBRARIES
+# FROSTTOOLS_DEFINITIONS
+
+# Compute paths
+get_filename_component(FROSTTOOLS_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+set(FROSTTOOLS_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
+ 
+# Our library dependencies (contains definitions for IMPORTED targets)
+if(NOT TARGET frosttools AND NOT FrostTools_BINARY_DIR)
+  include("${FROSTTOOLS_CMAKE_DIR}/FrostToolsTargets.cmake")
+endif()
+ 
+# These are IMPORTED targets created by FooBarTargets.cmake
+set(FROSTTOOLS_LIBRARIES frosttools)
