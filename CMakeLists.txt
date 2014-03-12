@@ -66,19 +66,6 @@ install(EXPORT FrostToolsTargets DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT de
 install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.hpp")
 
-#####################################################
-#include(CPack)
-
-
-# install target
-#install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.h")
-#install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.hpp")
-#install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.hxx")
-
-#install(TARGETS frosttools DESTINATION lib/frosttools)
-#install(FILES FrostToolsConfig.cmake DESTINATION lib/frosttools)
-#INSTALL_TARGET(/lib frosttools)
-
 # uninstall target
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
