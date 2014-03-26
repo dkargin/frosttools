@@ -18,11 +18,11 @@ public:
 	}
 	template<class R> inline Matrix4(const Vector<R,4*4> &m)
 	{
-		assign((const R*)m);
+		this->assign((const R*)m);
 	}
 	template<class R>Matrix4(const R *m)
 	{
-		assign(m);
+		this->assign(m);
 	}
 
 	inline void axisX(vec3 v)
@@ -52,14 +52,14 @@ public:
 	}
 	inline void axisZ(vec3 v)
 	{
-	    value_type *c=(value_type*)this;
-	    this->set(2,0,v[0]);
+		value_type *c=(value_type*)this;
+		this->set(2,0,v[0]);
 		this->set(2,1,v[1]);
 		this->set(2,2,v[2]);
 	}
 	inline void axisZ(Real x,Real y,Real z)
 	{
-		axisZ(vec3(x,y,z));
+		this->axisZ(vec3(x,y,z));
 	}
 	inline void origin(const vec3 &v)
 	{
@@ -79,7 +79,7 @@ public:
 	inline void origin(Real x,Real y,Real z)
 	{
 	    //value_type *c=(value_type*)this;
-		origin(vec3(x,y,z));
+		this->origin(vec3(x,y,z));
 	}
 	inline vec3 axisX() const
 	{
