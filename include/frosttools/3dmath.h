@@ -612,10 +612,32 @@ struct FastAngle
 		sn = angle.sn;
 		return *this;
 	}	
+
+	/// Create zero angle
+	static FastAngle zero()
+	{
+		return FastAngle(1.0f, 0.f);
+	}
+
+	/// Create angle from vector direction
+	static FastAngle FromDirection(const vec2f & dir)
+	{
+		float len = dir.length();
+		if (len == 0.f)
+			return zero();
+		return FastAngle(dir[0]/len, dir[1]/len);
+	}
+	
 	static FastAngle FromRAD(float angle)
 	{
 		return FastAngle(cosf(angle), sinf(angle));
 	}
+
+	static FastAngle FromDEG(float angle)
+	{
+		return FromRAD(DEG2RAD(angle));
+	}
+	
 	inline FastAngle operator - () const
 	{
 		return FastAngle(cs, -sn);
@@ -625,6 +647,12 @@ struct FastAngle
 	{
 		return atan2(sn, cs);
 	}
+
+	float DEG() const
+	{
+		return RAD2DEG(RAD());
+	}
+
 	friend FastAngle operator + ( const FastAngle & a, const FastAngle &b)
 	{
 		return FastAngle(a.cs * b.cs - a.sn * b.sn, a.cs * b.sn + a.sn * b.cs);
@@ -691,6 +719,11 @@ public:
 	float getAngle() const
 	{
 		return orientation.RAD();
+	}
+	/// return local angle, in degrees
+	float getAngleDEG() const
+	{
+		return orientation.DEG();
 	}
 	/// get cos(angle)
 	float CS() const	
