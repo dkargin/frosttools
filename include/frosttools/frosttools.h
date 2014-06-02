@@ -1,11 +1,24 @@
 #pragma once
 
+//////////////////////////////////////////////////////////////////////
+/// FrostHand's ToolBox. Different utilitary functions
+/// v0.5 WIP
+//////////////////////////////////////////////////////////////////////
+/*! \page page1 A documentation page
+  \tableofcontents
+  Leading text.
+  \section sec An example section
+  This page contains the subsections \ref subsection1 and \ref subsection2.
+  For more info see page \ref page2.
+  \subsection subsection1 The first subsection
+  Text.
+  \subsection subsection2 The second subsection
+  More text.
+*/
 
-//////////////////////////////////////////////////////////////////////
-// FrostHand's ToolBox. Different utilitary functions
-// v0.4
-//
-//////////////////////////////////////////////////////////////////////
+/*! \page page2 Another page
+  Even more info.
+*/
 
 #include <fstream>
 #include <list>
@@ -46,6 +59,9 @@
 #pragma warning(disable:4996) // This function or variable may be unsafe.
 #endif
 
+/// Root namespace for all library classes
+namespace frosttools
+{
 #ifdef FrostTools_Use_Types
 typedef unsigned int uint;
 typedef unsigned char uint8;
@@ -69,13 +85,6 @@ typedef std::basic_string<TCHAR> tstring;
 
 #include <stdarg.h>
 
-FrostTools_Impl float clampf(float value,float max)
-{
-	signed int n=(int)floor(value/max);
-	return value-max*n;
-}
-
-
 template <typename Char> struct StrUtils {};
 template<> struct StrUtils<char>
 {
@@ -96,6 +105,7 @@ template<> struct StrUtils<char>
 		return dst;
 	}
 };
+
 #ifdef FROSTTOOLS_WCHAR
 template<> struct StrUtils<wchar_t>
 {
@@ -118,6 +128,10 @@ template<> struct StrUtils<wchar_t>
 };
 #endif
 
+/// Static array for specified type.
+/**
+ * 	Provides some bounds checking
+ */
 template<class T, int MaxSize>
 class StaticArray
 {
@@ -220,6 +234,7 @@ protected:
 	};
 	Dummy data[MaxSize];
 	size_t currentSize;
+
 	void remove(Dummy * dummy)
 	{
 		//value_type * ptr = static_cast<value_type*>(dummy);
@@ -279,8 +294,10 @@ public:
 		return (value_type*) data;
 	}
 };
-
 #endif
+/// @}
+} // namespace frosttools
+
 #ifdef FrostTools_Use_AutoPtr
 #include "autoptr.hpp"
 #endif
@@ -325,16 +342,32 @@ public:
 
 #include "logger.hpp"
 
+namespace frosttools
+{
+
+//\addtogroup Containers
+//@{
+
+/// Intrusive tree node
+/**
+ * 	Each node can have several children.
+ *	Children are stored in double-linked list
+ */
 template<class Type> class TreeNode
 {
 protected:
 	typedef TreeNode<Type> node_type;
-	Type * parent;
-	Type * next, *prev, *head, *tail;
+	Type *parent;						///< Pointer to parent node
+	Type *next, *prev;					///< Pointer to adjacent nodes
+	Type *head, *tail;					///< Pointer to head/tail child nodes
 
+	/// Called when node is attached
 	virtual void onAttach( Type * object ) = 0;
+	/// Called when node is detached
 	virtual void onDetach( Type * object ) = 0;
 public:
+
+	/// Constructor
 	TreeNode()
 	{
 		parent = NULL;
@@ -343,16 +376,26 @@ public:
 		head = NULL;
 		tail = NULL;
 	}
+
+	/// Get pointer to target type
 	virtual Type * getTargetType() = 0;
+
+	/// Disconnect self from tree
 	void orphan_me()
 	{
 		if( parent != NULL )
 			parent->removeChild(this);
 	}
+
+	/// Check if there are any chilren
 	bool hasChild(const node_type * child) const
 	{
 		return child && child->parent == this;
 	}
+
+	/// Attach child node
+	/** newChild is detached first
+	 */
 	void attach(Type * newChild)
 	{
 		newChild->orphan_me();
@@ -373,6 +416,8 @@ public:
 		newChild->parent = static_cast<Type*>(this);
 		onAttach(static_cast<Type*>(newChild));
 	}
+
+	/// Removes specified child.
 	void removeChild(node_type * child)
 	{
 		assert( hasChild(child) );
@@ -390,49 +435,64 @@ public:
 		child->parent = NULL;
 		onDetach(static_cast<Type*>(child));
 	}
+
+	/// Detaches from tree
+	/** Detaches node from existing tree
+	 */
 	virtual void detach(node_type * child)
 	{
 		removeChild(child);
 	}
+
+	/// Destructor
 	virtual ~TreeNode()
 	{
 		orphan_me();
 	}
+
+	/// Const iterator to iterate through immediate children nodes
 	class const_iterator
 	{
 		protected:
-		const Type * container;
-		const Type * current;
+		const Type * container;	///< Pointer to container
+		const Type * current;		///< Pointer to current node
 	public:
-		typedef const_iterator iterator_type;
+		typedef const_iterator iterator_type;	///< own iterator type
+		/// Constructor
 		const_iterator(const Type * container_, const Type * current_)
 		{
 			container = container_;
 			current = current_;
 		}
+		/// Copy constructor
 		const_iterator(const const_iterator &it)
 		{
 			container = it.container;
 			current = it.current;
 		}
+		/// Check if iterators are equal
 		bool operator == ( const iterator_type & it) const
 		{
 			return container == it.container && current == it.current;
 		}
+		/// Check if iterators are not equal
 		bool operator != ( const iterator_type & it) const
 		{
 			return container != it.container || current != it.current;
 		}
+		///
 		const Type * operator->()
 		{
 			return current;
 		}
-		iterator_type & operator++()	// prefix
+		/// Prefix increment. Moves to the next element
+		iterator_type & operator++()
 		{
 			assert(current != NULL);
 			current = current->next;
 			return *this;
 		}
+		/// Postfix increment
 		iterator_type operator++(int)	// postfix
 		{
 			assert(current != NULL);
@@ -441,27 +501,33 @@ public:
 			return result;
 		}
 	};
+
+	/// Iterator to iterate through immediate children nodes
 	class iterator
 	{
 	protected:
-		Type * container;
-		Type * current;
+		Type * container;	///< pointer to the container
+		Type * current;		///< pointer to current element
 	public:
-		typedef iterator iterator_type;
+		typedef iterator iterator_type;		///< own iterator type
+		/// Constructor
 		iterator(Type * container_, Type * current_)
 		{
 			container = container_;
 			current = current_;
 		}
+		/// Copy constructor
 		iterator(const const_iterator &it)
 		{
 			container = it.container;
 			current = it.current;
 		}
+		/// Check if iterators are equal
 		bool operator == ( const iterator_type & it) const
 		{
 			return container == it.container && current == it.current;
 		}
+		/// Check if iterators are different
 		bool operator != ( const iterator_type & it) const
 		{
 			return container != it.container || current != it.current;
@@ -470,12 +536,14 @@ public:
 		{
 			return current;
 		}
+		/// Prefix increment
 		iterator_type & operator++()	// prefix
 		{
 			assert(current != NULL);
 			current = current->next;
 			return *this;
 		}
+		/// Postfix increment
 		iterator_type operator++(int)	// postfix
 		{
 			assert(current != NULL);
@@ -485,27 +553,39 @@ public:
 		}
 	};
 
+	/// Get const iterator to the first child
 	const_iterator begin() const
 	{
 		return const_iterator(static_cast<const Type*>(this), head);
 	}
+
+	/// Get const iterator to the last child
 	const_iterator end() const
 	{
 		return const_iterator(static_cast<const Type*>(this), NULL);
 	}
+
+	/// Get iterator to the first child
 	iterator begin()
 	{
 		return iterator(static_cast<Type*>(this),head);
 	}
+	/// Get iterator to the last child
 	iterator end()
 	{
 		return iterator(static_cast<Type*>(this), NULL);
 	}
 };
 
+/// Helper to manage list operations
+/**
+ * 	Type should have accessible prev and next pointers
+ */
 template<class Type> struct ListHelper
 {
+	/// typedef for node pointer
 	typedef Type * Nodeptr;
+	/// Remove node from the list
 	static void remove(Nodeptr &head, Nodeptr &tail, Type * node)
 	{
 		if(node->next != 0)
@@ -520,6 +600,7 @@ template<class Type> struct ListHelper
 		node->next = NULL;
 	}
 
+	/// Add node to the front of the list
 	static void push_front(Nodeptr &head, Nodeptr &tail, Type * node)
 	{
 		if( head == NULL )
@@ -536,6 +617,7 @@ template<class Type> struct ListHelper
 		head = node;
 	}
 
+	/// Add node to the back of the list
 	static void push_back(Nodeptr &head, Nodeptr &tail, Type * node)
 	{
 		if( tail == NULL )
@@ -552,6 +634,9 @@ template<class Type> struct ListHelper
 		tail = node;
 	}
 };
+//@}
+}	// namespace frosttools
+
 #ifdef FrostTools_Use_Asserts
 #ifndef FROSTTOOLS_ASSERT
 #define FROSTTOOLS_ASSERT

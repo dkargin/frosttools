@@ -3,7 +3,11 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+
+namespace frosttools
+{
 const bool brackets = true;
+
 class Log
 {
 public:
@@ -55,7 +59,7 @@ public:
 			}
 		}
 	};
-	// игнорировать ли сообщение
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	inline bool ignore(int threat)
 	{
 		if(threat<0)return false;
@@ -162,7 +166,10 @@ public:
 	}
 };
 #endif
+
 typedef Log * LogPtr;
+
+} // namespace frosttools
 
 #ifdef __FUNCTION__
 #define __FUNCTION_NAME__ __FUNCTION__
@@ -170,6 +177,7 @@ typedef Log * LogPtr;
 #define __FUNCTION_NAME__ ("<unknown>")
 #endif
 
-#define LogScope(log,level) Log::Scoped __logFunction((log),__FUNCTION_NAME__,(level))
+#define LogScope(log,level) frosttools::Log::Scoped __logFunction((log),__FUNCTION_NAME__,(level))
 #define LogFunction(log) LogScope(log,0)
 #endif
+

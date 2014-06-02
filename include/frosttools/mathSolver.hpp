@@ -1,5 +1,7 @@
 #pragma once
 
+namespace frosttools
+{
 /*
 A * X = B
 */
@@ -17,4 +19,6 @@ int solveLinearSystem(int equationNumber,int variableCount,Real *a,Real *b,Real 
 	//matrix.writeCol(variableCount+1,x);
 	matrix.reduceToTriangle();
 	return 0;
+}
+
 }

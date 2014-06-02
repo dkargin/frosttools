@@ -3,6 +3,14 @@
 #error "include <mathMatrix.hpp> first"
 #endif
 
+namespace frosttools
+{
+///\addtogroup Math
+//@{
+/// Partial specialization for 3x3 matrix
+/**
+ * Defines rotation transforms for specified axis
+ */
 template<class Real,bool row_order=true>
 class Matrix3: public MatrixSquare<Real,3,row_order>
 {
@@ -102,4 +110,7 @@ Matrix3<Real,order>	Matrix3<Real,order>::rotate ( const vec3& axis, float angle 
 	res(2,2) = axis[2] * axis[2] + ( 1 - axis[2] * axis[2] ) * cosine;
 
 	return res;
+}
+
+//@}
 }

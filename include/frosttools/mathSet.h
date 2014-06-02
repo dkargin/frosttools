@@ -1,13 +1,16 @@
 /////////////////////////////////////////////////////////////////////////////////
-// Работа с угловыми промежутками. 
-// Пересечение и объединение набора промежутков (множеств). 
+// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. 
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ). 
 /////////////////////////////////////////////////////////////////////////////////
 #ifndef _MATH_SET
 #define _MATH_SET
 #pragma once
 using namespace std;
 
-// обеспечивает Target операторами == и != при наличии в них статической функции equal
+namespace frosttools
+{
+
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Target пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ == пїЅ != пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ equal
 template<class Target> struct EqualTraits
 {
 	friend inline bool operator==(const Target &a,const Target &b)
@@ -19,8 +22,8 @@ template<class Target> struct EqualTraits
 		return !Target::equal(a,b);
 	}
 };
-// награждает арифметическими операциями любого своего наследника.
-// требуется наличие += -= *= /=
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ += -= *= /=
 template<class Target,class Scalar> struct ArythmeticTraits
 {
 	friend inline Target operator+(const Target &a,const Target &b)
@@ -49,7 +52,7 @@ template<class Target,class Scalar> struct ArythmeticTraits
 		return res*=(Scalar(1)/scalar);
 	}
 };
-// примитивное обрубание угла в область [-pi,pi]
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ [-pi,pi]
 inline float clampAngle(float angle)
 {
 	if(angle>=M_PI)	angle-=M_PI*2;
@@ -146,7 +149,7 @@ struct Segment: public EqualTraits<Segment>
 		min = clampAngle(min);
 		max = clampAngle(max);
 	}
-	// длина промежутка
+	// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	float length()const
 	{
 		return (min > max)?RangeDesc::RangeLength() + max - min:max - min;
@@ -248,7 +251,7 @@ struct Segment: public EqualTraits<Segment>
 			return val >= min && val <= max;
 		}		
 	}
-	// компаратор для сегмента. Нужен для набора сегментов (Segments)
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (Segments)
 	struct Compare
 	{
 		inline bool operator()(const Segment &a,const Segment &b)const
@@ -360,7 +363,7 @@ struct Segment: public EqualTraits<Segment>
 	friend Segment operator~(const Segment &seg);
 };	
 
-/// дополнение до полного
+/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 inline Segment operator~(const Segment & seg)
 {
 	Segment result;
@@ -371,7 +374,7 @@ inline Segment operator~(const Segment & seg)
 	return result;
 }
 
-// сортированый набор сегментов. . 
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. . 
 struct Segments:public set<Segment,Segment::Compare>
 {
 	typedef set<Segment,Segment::Compare> Parent;
@@ -383,7 +386,7 @@ struct Segments:public set<Segment,Segment::Compare>
 	inline Segments(const Segments &seg)
 		:Parent(seg.begin(),seg.end())
 	{}
-	// полное множество
+	// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	static Segments makeFull()
 	{
 		Segments result;
@@ -430,7 +433,7 @@ struct Segments:public set<Segment,Segment::Compare>
 				return true;
 		return false;
 	}
-	// объединение. Вроде бы проверил
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	Segments & operator|=(const Segment &seg)
 	{
 		
@@ -472,7 +475,7 @@ struct Segments:public set<Segment,Segment::Compare>
 		assign(result);
 		return *this;
 	}
-	// перечечение. Нихрена не проверял, да и не использовал. 
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. 
 	Segments & operator&=(const Segment &seg)
 	{
 		Segment b=seg;
@@ -662,7 +665,7 @@ template<class _Real> struct _Range: public EqualTraits< _Range<_Real> >
 	{
 		return a.min==b.min && a.max==b.max && a.tmin==b.tmin && a.tmax==b.tmax;
 	}
-	// компаратор для сегмента. Нужен для набора сегментов (Segments)
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (Segments)
 	struct Compare
 	{
 		inline bool operator()(const range_type &a,const range_type &b)const
@@ -672,7 +675,7 @@ template<class _Real> struct _Range: public EqualTraits< _Range<_Real> >
 	};
 };
 
-// набор промежутков. Должен сохранять сортированность и непересекаемость входящих в него отрезков
+// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 template<class _RangeType> class _RangeSet
 {
 public:
@@ -718,7 +721,7 @@ public:
 		if(isZero())return false;
 		return ranges.front().isInf() || ranges.back().isInf();
 	}
-	// объединение. По тестам вроде бы работает
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	my_type & operator|=(crRange range)
 	{
 		Range b = range;
@@ -774,7 +777,7 @@ public:
 		return ranges.back().max;
 	}
 	
-	// пересечение
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	my_type & operator &=(crRange range)
 	{
 		Range b=range;
@@ -829,4 +832,5 @@ public:
 		return *this;
 	}
 };
+}// namespace frosttools
 #endif

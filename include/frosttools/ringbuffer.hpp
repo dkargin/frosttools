@@ -4,15 +4,25 @@
 #include <string.h>
 #include <assert.h>
 
+
+namespace frosttools
+{
+/// \addtogroup Containers
+/// @{
+
+/// Ring buffer
+/**
+ * Preallocated ring buffer for read/write operations
+ * Data is overwritten when the buffer is full
+ */
 class RingBuffer
 {
-	char * buffer;
-	int maxSize;	/// allocated size
-	int currentSize;
-	int markerRead;		/// current read marker
-	int markerWrite;		/// current write marker
+	char * buffer;		///< actual data
+	int maxSize;		///< allocated size
+	int currentSize;	///< current buffer sie
+	int markerRead;		///< read marker
+	int markerWrite;	///< write marker
 public:
-
 	RingBuffer(int max)
 	{
 		buffer = NULL;
@@ -27,6 +37,7 @@ public:
 		clear();
 	}
 
+	/// remove all data
 	void clear()
 	{
 		if(buffer)
@@ -36,6 +47,7 @@ public:
 		}
 	}
 
+	/// move read marker
 	int moveRead(size_t distance)
 	{
 		markerRead += distance;
@@ -44,6 +56,7 @@ public:
 		return markerRead;
 	}
 
+	/// move write marker
 	int moveWrite(size_t distance)
 	{
 		markerWrite += distance;
@@ -51,6 +64,7 @@ public:
 			markerWrite -= maxSize;
 	}
 
+	/// resize buffer
 	void resize(size_t newSize)
 	{
 		if(maxSize == newSize)
@@ -69,6 +83,7 @@ public:
 		}
 	}
 
+	///
 	bool overwrites() const
 	{
 		return true;
@@ -239,4 +254,7 @@ struct RingArray
 	}
 };
 
+} // namespace frostools
+
+/// @}
 #endif

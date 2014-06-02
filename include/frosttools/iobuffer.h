@@ -1,6 +1,13 @@
 #ifndef _IO_BUFFER_H_
 #define _IO_BUFFER_H_
 #pragma once
+
+namespace frostoolls
+{
+
+/// Contains several helpers for safe IO operations.
+/// Seems to be deprecated
+
 /**
 	exception for buffer reading process. is throwed in xread/xwrite functions
 **/
@@ -326,4 +333,6 @@ protected:
 
 typedef IOBuffer MsgBuffer;
 typedef IOBuffer MsgBufferImpl;
+
+} // namespace frosttools
 #endif

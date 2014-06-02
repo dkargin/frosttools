@@ -4,6 +4,8 @@
 #include <assert.h>
 #include <memory.h>
 
+namespace frosttools
+{
 
 template<class Type> inline void DeleterEmpty(Type* ptr){}
 template<class Type> inline void DeleterBasic(Type* ptr)
@@ -520,4 +522,6 @@ struct AutoPtrTest
 	}
 };
 #endif
+
+}
 #endif

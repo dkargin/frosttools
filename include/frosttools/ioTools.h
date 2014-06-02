@@ -1,7 +1,7 @@
 #ifndef _IO_TOOLS_H
 #define _IO_TOOLS_H_
 
-#include "autoptr.hpp"
+#include "frosttools/autoptr.hpp"
 #include <exception>
 #include <cassert>
 #include <memory>
@@ -17,14 +17,18 @@
 #define IOTOOLS_FN_IMPL
 #endif
 
+namespace frosttools
+{
 namespace IO
 {
+	// Exception for IO operations
 	class _XEof : public std::exception
 	{
 	public:
 		_XEof(){}
 	};
 
+	/// Storage buffer for memory IO
 	class DataBuffer: public Referenced
 	{
 	public:
@@ -69,11 +73,13 @@ namespace IO
 				_xmem();
 			bufferSize = newsize;
 		}
+
 		void grow(size_t amount)
 		{
 			resize(bufferSize + amount);
 		}
 
+		/// write bytes to buffer
 		size_t write(size_t position, const void *data, size_t size)
 		{
 			assert(position + size <= bufferSize);
@@ -81,6 +87,7 @@ namespace IO
 			return position + size;
 		}
 
+		/// read bytes from buffer
 		size_t read(void * data, size_t position, size_t size) const
 		{
 			assert(position + size <= bufferSize);
@@ -95,17 +102,21 @@ namespace IO
 		{
 			minSize=256
 		};
+		/// throw memory exception
 		void _xmem()
 		{
 			//throw(std::exception("memory error"));
 		}
+		/// throw lock exception
 		void _xlocked()
 		{
 			//throw(std::exception("buffer is locked"));
 		}
 	};
+
 	typedef SharedPtr<DataBuffer> BufferPtr;
 
+	/// Base class for memory stream
 	class Stream
 	{
 	public:
@@ -118,17 +129,20 @@ namespace IO
 			return current == buffer->size();
 		}
 
+		/// returns current position
 		size_t position()const
 		{
 			return current;
 		}
 
+		/// set current position
 		void position(size_t p)
 		{
 			assert(p <= buffer->size());
 			current = p;
 		}
 
+		/// reset current position
 		void rewind()
 		{
 			current = 0;
@@ -152,12 +166,13 @@ namespace IO
 		size_t current;		// current position
 	};
 
+	/// Input stream
 	class StreamIn : public Stream
 	{
 	public:
 		StreamIn(BufferPtr buffer) : Stream(buffer) {}
 
-		// return
+		/// read data from the stream
 		int read(void *data, size_t size)
 		{
 			if(current + size > buffer->size())
@@ -180,11 +195,14 @@ namespace IO
 			return (Type*)map(sizeof(Type));
 		}
 
+		/// read generic simple type from the stream
 		template<class Type> int read(Type &t)	// returns position
 		{
 			return read(&t,sizeof(Type));
 		}
 
+
+		/// read string from the stream
 		int read(std::string & str)
 		{
 			size_t size = 0;
@@ -202,6 +220,8 @@ namespace IO
 			}
 			return bytes;
 		}
+
+		/// read vector from the stream
 		template<class Type> int read(std::vector<Type> & t)
 		{
 			size_t size = 0;
@@ -214,12 +234,15 @@ namespace IO
 	protected:
 	};
 
+	/// Output stream
 	class StreamOut : public Stream
 	{
 	public:
+		/// Constructor
 		StreamOut(BufferPtr buffer) : Stream(buffer) {}
 
-		// return bytes written
+		/// Write data to buffer
+		/// returns bytes written
 		int write(const void *data, size_t size)
 		{
 			if(current + size > buffer->size() )
@@ -229,10 +252,13 @@ namespace IO
 			return size;
 		}
 
+		/// Write data to the buffer
+		/// returns bytes written
 		template<class Type> int write(const Type &t)	// returns position
 		{
 			return write(&t,sizeof(Type));
 		}
+		/// Write string to the buffer
 		int write(const std::string & str)
 		{
 			size_t size = str.size();
@@ -240,6 +266,7 @@ namespace IO
 			bytes += write(str.c_str(),size);
 			return bytes;
 		}
+		/// Write vector to the buffer
 		template<class Type> int write(const std::vector<Type> & t)
 		{
 			size_t size = t.size();
@@ -251,6 +278,7 @@ namespace IO
 	};
 
 #ifdef IOTOOLS_IMPL_INLINE
+	/// read boolean from the stream
 	IOTOOLS_FN_IMPL bool readBool(StreamIn & stream)
 	{
 		bool result;
@@ -258,6 +286,7 @@ namespace IO
 		return result;
 	}
 
+	/// read int32 from the stream
 	IOTOOLS_FN_IMPL int readInt(StreamIn & stream)
 	{
 		int result;
@@ -265,6 +294,7 @@ namespace IO
 		return result;
 	}
 
+	/// read float32 from the stream
 	IOTOOLS_FN_IMPL float readFloat(StreamIn & stream)
 	{
 		float result;
@@ -272,6 +302,7 @@ namespace IO
 		return result;
 	}
 
+	/// read string from the stream
 	IOTOOLS_FN_IMPL std::string readString(StreamIn & stream)
 	{
 		std::string result;
@@ -279,21 +310,25 @@ namespace IO
 		return result;
 	}
 
+	/// write boolean to the stream
 	IOTOOLS_FN_IMPL void writeBool(StreamOut & stream, bool value)
 	{
 		stream.write(value);
 	}
 
+	/// write int32 to the stream
 	IOTOOLS_FN_IMPL void writeInt(StreamOut & stream, int value)
 	{
 		stream.write(value);
 	}
 
+	/// write float32 to the stream
 	IOTOOLS_FN_IMPL void writeFloat(StreamOut & stream, float value)
 	{
 		stream.write(value);
 	}
 
+	/// write string to the stream
 	IOTOOLS_FN_IMPL void writeString(StreamOut & stream, const std::string& value)
 	{
 		stream.write(value);
@@ -309,6 +344,6 @@ namespace IO
 	IOTOOLS_FN_IMPL void writeFloat(StreamOut & stream);
 	IOTOOLS_FN_IMPL void writeString(StreamOut & stream);
 #endif
-
-}
+}	// namespace IO
+}	// namespace frostools
 #endif

@@ -18,7 +18,8 @@
 #include <assert.h>
 
 
-
+namespace frosttools
+{
 const size_t DEFAULT_BUFLEN = 0xffff;
 
 const char * Network::Exception::what() const throw()
@@ -806,6 +807,7 @@ void Peer::update(timeval &timeout)
 	}
 }
 
+} // namespace frosttools
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* mkaddr.c
 * The mkaddr() Subroutine using inet_aton
@@ -825,6 +827,9 @@ void Peer::update(timeval &timeout)
 #include <arpa/inet.h>
 #include <netdb.h>
 #endif
+
+namespace frosttools
+{
 /*
 * Create an AF_INET Address:
 *
@@ -1125,3 +1130,5 @@ void run_broadcast_once(Network::SOCKET &socket, BroadcasterData *br, sockaddr_i
 		//Threading::Thread::sleep(br->timeout);
 	}
 }
+
+} // namespace frosttools

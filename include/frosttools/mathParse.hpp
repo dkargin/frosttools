@@ -1,10 +1,13 @@
 #include <iostream>
-#include <crtdbg.h>
+//#include <crtdbg.h>
 
 #include "math.h"
 #include "frostTools.h"
 
-using namespace std;
+namespace frosttools
+{
+
+//using namespace std;
 
 enum
 {
@@ -36,7 +39,8 @@ enum
 };
 
 class MathSymbol;
-ostream & operator << (ostream &stream,MathSymbol &symb);
+std::ostream & operator << (std::ostream &stream,MathSymbol &symb);
+
 class MathSymbol
 {	
 	class Value
@@ -131,6 +135,7 @@ class MathSymbol
 			return new ValueConst(0.0f);
 		}
 	};
+
 	class ValueVariable: public Value
 	{
 	public:
@@ -175,22 +180,27 @@ class MathSymbol
 		{
 			return symbolTypeVariable;
 		}
+
 		virtual bool equalOne()
 		{
 			return false;				
 		}
+
 		virtual bool equalZero()
 		{
 			return false;
 		}
+
 		virtual Value * rebuild(int depth)
 		{
 			return this;
 		}
+
 		virtual int depth(int depth)
 		{
 			return depth+1;
 		}
+
 		virtual int compare(const Value *val)
 		{
 			if(val->getType()==symbolTypeVariable)
@@ -275,15 +285,18 @@ class MathSymbol
 				return log(argument->calc());
 			}
 		}
+
 		virtual Value & addRef()
 		{
 			return *new ValueFunction(*this);
 		}
+
 		virtual void decRef()
 		{
 			delete this;
 		}
-		virtual void print(ostream &stream)
+
+		virtual void print(std::ostream &stream)
 		{
 			switch(fnType)
 			{
@@ -471,14 +484,17 @@ public:
 	friend MathSymbol mCos(MathSymbol &s);
 	friend MathSymbol mTg(MathSymbol &s);
 };
+
 inline MathSymbol mSin(MathSymbol &s)
 {
 	return MathSymbol(&MathSymbol::ValueFunction(*s.value,typeSin));
 }
+
 inline MathSymbol mCos(MathSymbol &s)
 {
 	return MathSymbol(&MathSymbol::ValueFunction(*s.value,typeCos));
 }
+
 inline MathSymbol mTg(MathSymbol &s)
 {
 	return MathSymbol(&MathSymbol::ValueFunction(*s.value,typeTg));
@@ -586,7 +602,7 @@ float MathSymbol::ValueArythmetic::calc()
 	}
 }
 
-void MathSymbol::ValueArythmetic::_print_val(MathSymbol::Value *val,ostream &stream)
+void MathSymbol::ValueArythmetic::_print_val(MathSymbol::Value *val,std::ostream &stream)
 {
 	int d=val->depth(0);
 	if(d>1)
@@ -599,7 +615,8 @@ void MathSymbol::ValueArythmetic::_print_val(MathSymbol::Value *val,ostream &str
 	else
 		val->print(stream);
 }
-void MathSymbol::ValueArythmetic::print(ostream &stream)
+
+void MathSymbol::ValueArythmetic::print(std::ostream &stream)
 {			
 	switch(operation)
 	{
@@ -625,18 +642,22 @@ void MathSymbol::ValueArythmetic::print(ostream &stream)
 		break;
 	}
 }
+
 int MathSymbol::ValueArythmetic::getType() const 
 {
 	return symbolTypeArythmetic;
 }
+
 bool MathSymbol::ValueArythmetic::equalOne()
 {
 	return false;				
 }
+
 bool MathSymbol::ValueArythmetic::equalZero()
 {
 	return false;
 }
+
 MathSymbol::Value * MathSymbol::ValueArythmetic::rebuild(int depth)
 {			
 	a=a->rebuild(0);
@@ -701,10 +722,12 @@ MathSymbol::Value * MathSymbol::ValueArythmetic::rebuild(int depth)
 	}
 	return this;
 }
+
 int MathSymbol::ValueArythmetic::depth(int depth)
 {
 	return max(a->depth(depth),b->depth(depth))+1;
 }
+
 int MathSymbol::ValueArythmetic::compare(const MathSymbol::Value *val)
 {
 	if(val->getType()==symbolTypeArythmetic)
@@ -715,9 +738,10 @@ int MathSymbol::ValueArythmetic::compare(const MathSymbol::Value *val)
 	}
 	return false;
 }
+
 MathSymbol::Value * MathSymbol::ValueArythmetic::derivative(MathSymbol::Value *val)
 {
-	// считаем что объекты динамические, ссылка уже существует, decRef после использования
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, decRef пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	MathSymbol::Value *da=a->derivative(val);
 	MathSymbol::Value *db=b->derivative(val);
 	MathSymbol::Value *res=NULL;
@@ -747,3 +771,4 @@ MathSymbol::Value * MathSymbol::ValueArythmetic::derivative(MathSymbol::Value *v
 	db->decRef();
 	return res;
 }
+} // namespace frosttools

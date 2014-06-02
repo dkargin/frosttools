@@ -1,7 +1,10 @@
 #ifndef FROSTTOOLS_DELEGATE
 #define FROSTTOOLS_DELEGATE
-#pragma once
-#include "assert.h"
+
+#include <assert.h>
+
+namespace frosttools
+{
 // Empty argument placeholder
 struct NullArg
 {
@@ -311,4 +314,6 @@ class MemberFn
 	Owner *owner;
 public:
 };*/
+
+}
 #endif

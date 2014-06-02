@@ -13,8 +13,14 @@
  * PThreads based implementation
  */
 
-namespace Threading
+namespace frosttools
 {
+namespace threading
+{
+	/// Thread
+	/**
+	 * Wraps pthread thread class
+	 */
 	class thread
 	{
 		pthread_t id;
@@ -34,6 +40,7 @@ namespace Threading
 			run(fn);
 		}
 
+		/// wait until thread is complete
 		void join()
 		{
 			void * result = NULL;
@@ -60,10 +67,12 @@ namespace Threading
 
 	};
 
+	/// sleep for millisecond time
 	inline void sleep(int msec)
 	{
 		usleep(msec*1000);
 	}
+
 	/// pthread mutex wrapper	
 	class MutexPT : public BaseLockable
 	{
@@ -103,26 +112,36 @@ namespace Threading
 			fprintf(stderr, "%s: error errno=%d, %s", where, err, strerror(err));
 		}
 
-		void lock()
+		bool lock()
 		{
 			int result = pthread_mutex_lock (&mutex);
 			if(result < 0)
+			{
 				reportError("Mutex::lock()");
+				return false;
+			}
+			return true;
 		}
 
-		void unlock()
+		bool unlock()
 		{
 			int result = pthread_mutex_unlock (&mutex);
 			if(result < 0)
+			{
 				reportError("Mutex::lock()");
+				return false;
+			}
+			return true;
 		}
 	};
-
 
 	typedef MutexPT Mutex;
 	typedef Mutex mutex;
 
-	//! Wrapper around pthreads condition variable construct. Mimics std::condition_variable
+	/// ConditionVariable
+	/**
+	 * Wrapper around pthreads condition variable construct. Mimics std::condition_variable
+	 */
 	class ConditionVariable
 	{
 		pthread_cond_t cv;
@@ -189,4 +208,6 @@ protected:
 		}
 	};
 };
+
+} // namespace frosttools
 #endif

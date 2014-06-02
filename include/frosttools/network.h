@@ -11,11 +11,16 @@ const int INVALID_SOCKET=-1;
 #include <ws2tcpip.h>
 #endif
 
+#include <string>
+#include <list>
+
 #include <exception>
 
 #include "threads.hpp"
 #include "logger.hpp"
 
+namespace frosttools
+{
 /// Wraps some generic socket methods
 /// For winsock2 inits socket library
 /// Contains some error handling
@@ -195,8 +200,6 @@ struct ServiceDesc
 	ServiceDesc(const ServiceDesc &desc);
 };
 
-#include <string>
-#include <list>
 
 struct BroadcasterData
 	{
@@ -216,4 +219,5 @@ void run_broadcast(Network & network, BroadcasterData * br);
 Network::SOCKET init_broadcast(Network &network, BroadcasterData *br, sockaddr_in &broadcast_address);
 void run_broadcast_once(Network::SOCKET &socket, BroadcasterData *br, sockaddr_in broadcast_address);
 
+}
 #endif

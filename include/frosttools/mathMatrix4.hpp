@@ -3,6 +3,8 @@
 #error "include <mathMatrix.hpp> first"
 #endif
 
+namespace frosttools
+{
 template <typename Real,bool row_order=false>
 class Matrix4 : public MatrixSquare<Real,4,row_order>
 {
@@ -452,3 +454,4 @@ Matrix4<Real,order>& Matrix4<Real,order>::setInverseRotationRadians( const float
 	return *this;
 	//Matrix4<Real> m_matrix;
 }
+}	// namespace frosttools

@@ -4,20 +4,31 @@
 #include <stdlib.h>
 #include <assert.h>
 
-namespace Threading
+namespace frosttools
+{
+
+/// \addtogroup Threading
+/// Contains cross-platform tools for working with thread synchronization
+/// @{
+namespace threading
 {
 	//! Base class for any lockable construct
 	class BaseLockable
 	{
 	public:
-		virtual void lock() = 0;
-		virtual void unlock() = 0;
+		/// Lock object
+		virtual bool lock() = 0;
+		/// Unlock object
+		virtual bool unlock() = 0;
 	};
 
-	//! Local helper
+	//! Local helper to wrap thread functions.
+	/**
+	 * Not so safe
+	 */
 	struct _thread_helper
 	{
-		//! Wraps function with 1 argument
+		/// Wraps function with 1 argument
 		template<class Arg0> struct FnWrapper1
 		{
 			typedef void (*fnptr)(Arg0 );
@@ -34,6 +45,7 @@ namespace Threading
 				return result;
 			}
 
+			/// actual thread function, that calls stored function pointer
 			static void * run(void *data)
 			{
 				wrap_type * f = (wrap_type*)data;
@@ -115,7 +127,9 @@ namespace Threading
 		cvNoTimeout,
 		cvTimeout,
 	};
-}
+}	// namespace threading
+
+} // namespace frosttools
 
 #ifdef _MSC_VER
 #include "win32/threads_impl.hpp"
@@ -123,7 +137,9 @@ namespace Threading
 #include "linux/threads_impl.hpp"
 #endif
 
-namespace Threading
+namespace frosttools
+{
+namespace threading
 {
 	template<class Lockable = BaseLockable>
 	class ScopedLock
@@ -150,18 +166,25 @@ namespace Threading
 		{
 			counter = 0;
 		}
+
 		bool locked()const
 		{
 			return counter > 0;
 		}
-		void lock()
+
+		bool lock()
 		{
 			counter++;
+			return true;
 		}
-		void unlock()
+
+		bool unlock()
 		{
 			counter--;
+			return false;
 		}
 	};
 };
+/// @}
+} // namespace frosttools
 #endif

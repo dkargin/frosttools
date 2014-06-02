@@ -3,6 +3,12 @@
 
 #include "module.hpp"
 
+#error "This file is deprecated"
+
+namespace frosttools
+{
+
+/// Base class for plugin
 template <class _C> class _Plugin
 {
 public:
@@ -13,6 +19,7 @@ public:
 	virtual void release()=0;
 };
 
+/// Base class for plugin manager
 template<class _Base=NullClass>
 class _PluginManager: public _Base
 {
@@ -24,9 +31,11 @@ public:
 	typedef std::list<std::pair<SysModule*,Plugin*> > Plugins;
 	friend Plugin;
 
+	/// Default constructor
 	_PluginManager()
 	{}
 
+	/// Destructor
 	virtual ~_PluginManager()
 	{
 		unloadPlugins();
@@ -34,6 +43,10 @@ public:
 
 	static void reportError(const char *error)
 	{}
+
+	/// Load plugin
+	/// @param path path to dynamic library
+	/// @param entry specify entry name
 	virtual Plugin * loadLib(const char * path,const char *entry=NULL)
 	{
 		SysModule *module=NULL;
@@ -58,6 +71,7 @@ public:
 		plugins.push_back(std::make_pair(module,plugin));
 		return plugin;
 	}
+	/// Unloads plugin
 	virtual int unloadPlugin(Plugin *plugin)
 	{
 		typename Plugins::iterator it=_find(plugin);
@@ -71,12 +85,14 @@ public:
 		}
 		return 0;
 	}
+	/// Unload all plugins
 	virtual void unloadPlugins()
 	{
 		while(!plugins.empty())
 			unloadPlugin(plugins.front().second);
 	}
 protected:
+	/// Find specified plugin
 	typename Plugins::iterator _find(Plugin *plugin)
 	{
 		typename Plugins::iterator it=plugins.begin();
@@ -85,6 +101,7 @@ protected:
 				break;
 		return it;
 	}
+	/// Find specified module
 	typename Plugins::iterator _find(SysModule *module)
 	{
 		typename Plugins::iterator it=plugins.begin();
@@ -93,7 +110,9 @@ protected:
 				break;
 		return it;
 	}
+	/// Container for plugins
 	Plugins plugins;
 };
 
+}
 #endif

@@ -1,6 +1,8 @@
 #pragma once
 #define MATH_MATRIX
 
+namespace frosttools
+{
 // defines operations based on Real scalar type
 template<class Real,bool order> struct MatrixOrder
 {
@@ -573,3 +575,4 @@ typename Matrix<Real,N,M,row_order>::col_type operator * ( const Matrix<Real,N,M
 typedef Matrix<float,4,4,true> Mt4x4r;
 typedef Matrix<float,4,4,false> Mt4x4c;
 //////////////////////// Derived functions /////////////////////////////
+}	// namespace frosttools
