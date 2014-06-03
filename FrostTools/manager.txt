@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 0777alpha
 1
 epsilon
@@ -12,3 +13,19 @@ psi
 4
 theta
 6
+=======
+0777alpha
+1
+epsilon
+5
+gamma
+0
+lambda
+2
+omega
+3
+psi
+4
+theta
+6
+>>>>>>> bd17e7de82f5e0c1302ffcdcf53da1a9448d3f2d

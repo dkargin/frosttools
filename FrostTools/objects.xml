@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<objects2>
+  <Turret name="Turret1">
+    <turnRateHor value="10" />
+    <turnRateVer value="20" />
+  </Turret>
+  <Turret name="Turret2">
+    <turnRateHor value="-10" />
+    <turnRateVer value="-20" />
+  </Turret>
+  <Engine name="Engine1">
+    <maxSpeed value="10" />
+    <maxAcseleration value="20" />
+    <maxPower value="30" />
+  </Engine>
+  <Unit name="Unit1">
+    <engine value="Engine1" />
+    <turret value="Turret1" />
+  </Unit>
+  <Unit name="Unit2">
+    <engine>
+      <maxSpeed value="40" />
+      <maxAcseleration value="50" />
+      <maxPower value="60" />
+    </engine>
+    <turret>
+      <turnRateHor value="10" />
+      <turnRateVer value="20" />
+    </turret>
+  </Unit>
+</objects2>

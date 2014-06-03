@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 $#include "stdafx.h"
 
 $#include "lua.h"
@@ -353,4 +354,361 @@ public:
 	~ImageClassifier();
 	int train(TrainingSet &set);
 	int classify(Image &image);
+=======
+$#include "stdafx.h"
+
+$#include "lua.h"
+$#include "tolua++.h"
+
+$#include "globals.h"
+$#include "recognition.h"
+
+enum PixelFormat
+{	
+	formatRGB,		//3 Red\Green\Blue bytes
+	formatRGBA,		//4 Reg\Greeb\Blue bytes
+	formatLuminance,	//1 grayscale byte
+	formatFloat,		// single float32 value
+	formatGrayscale=formatLuminance,
+	formatUnsupported
+};
+
+enum PixelSize
+{
+	pixelSizeRGB=3,		
+	pixelSizeRGBA=4,	
+	pixelSizeLuminance=1
+};
+
+enum imageSource
+{
+	imageSourceInvalid,		// no image data
+	imageSourceFile,		// loaded from file
+	imageSourceMemory		// created in memory
+};
+
+
+class ImageView
+{	
+public:
+	typedef PixelIteratorFreeS iterator;	
+	typedef unsigned int size_type;
+	typedef unsigned char Pixel;		
+	
+	//Pixel *data;		
+	//Image *parent;
+	
+	int pixelStride;			// distance between pixels
+	int pixelSize;
+	int rowLength;				// row length, in bytes
+
+	RECT areaSelected;
+	RECT areaReal;			//real selected area
+	
+	iterator itBegin;		//top left corner
+	iterator itEnd;			//top right corner
+	
+public:	
+	ImageView();
+	ImageView(const ImageView &view);
+	ImageView getView(int x,int y,int cx,int cy);
+	Image * getImage();
+	void assign(const ImageView &view);
+	
+	void assign(Image &image,int cx, int cy, int width, int height);
+	ImageView(Image &image,int cx, int cy, int width, int height);
+	
+	int8 * operator()(int x,int y);
+	inline bool valid();
+	size_type x_size() const;
+	size_type y_size() const;
+	size_type size() const;
+	
+	//iterator line_begin(int y);
+	//iterator line_end(int y);
+	
+	iterator begin() const;
+	iterator end() const;
+	inline vec2i getPos(const iterator & it);
+	
+	RECT rectIntersect(const RECT &a,const RECT &b);
+};
+
+class Image
+{	
+public:
+
+	bool copyImage(const Image *r);
+	
+	Image();
+	~Image(void);
+	Image(const ImageView &view);
+	Image(const string &path);
+	Image(int width,int height,int imageType);
+	
+	unsigned int width() const;
+	unsigned int height() const;
+
+	int getPixelFormat();
+	int getSource();	
+	bool isValid() const;		
+	
+	ImageView getView(int cx, int cy, int width, int height);
+	ImageView &getFullView();
+
+	int imageCreate(int width,int height,int imageType);	
+	
+	int loadImage(const char *file);	
+	int saveImage(const char *file);
+	
+	void differential();
+	void rotate(float x,float y,float angle);
+
+	const char * getName();
+	void resize(int newWidth,int newHeight);
+};
+
+class MatrixFilter//: public Filter
+{	
+public:
+	MatrixFilter(int filterSize,float data[filterSize*filterSize]);
+	~MatrixFilter();
+	virtual void init();
+	virtual void applyTo(Image &source,Image &target);
+
+	virtual void setElement(signed int x,signed int y,float e);
+	virtual float getElement(signed int x,signed int y);
+	float & operator()(int x,int y);
+};
+
+class Smooth: public Filter
+{
+public:
+	Smooth(int type,int sz0,int sz1,float thres0,float thres1);
+	virtual void init(int type,int sz0,int sz1,float thres0,float thres1);
+	virtual void applyTo(Image &source,Image &target);
+	~Smooth();
+};
+
+class Operator
+	//: public BaseDocument
+{
+public:
+	//Operator(const char *name/*,Workspace *ws*/);
+	//ImageView/*<int8>*/ *lastSource[2];
+	//ImageView/*<int8>*/ *lastTarget;
+public:
+	virtual void init();
+	virtual void apply(){};
+	virtual void setSource(ImageView &a,ImageView &b);
+	//virtual void setSource(ImageView *a[2]);
+	virtual void setTarget(ImageView &target);
+};
+
+class Correlation: public Operator
+{
+	//int size;
+	//int stride;
+	//float *matrix;
+	//float threshold;
+	//Chrono chrono;
+
+	//void setElement(signed int x,signed int y,float e);
+	//float getEletemt(signed int x,signed int y);
+	//float sum();
+	//void set(float c);
+public:
+	Correlation(int size,int stride,float t/*,Workspace *ws*/);
+	//~Correlation();
+	virtual void init(int size,float t);
+	//virtual Image & oper
+	virtual void apply();
+	//int save(std::ofstream &out);
+	//int load(std::ifstream &in);
+};
+
+class Correlation2: public Operator
+{
+public:
+	//Correlation2(float t/*,Workspace *ws*/);
+	//~Correlation2();
+	virtual void init(int size,float t);
+	virtual void apply();
+};
+
+class OpticFlow: public Operator
+{
+//	int winSize;	
+public:
+	OpticFlow(int size);
+	//void init(int filterSize);	
+	virtual void apply();
+	//int save(std::ofstream &out);
+	//int load(std::ifstream &in);
+};
+class Hypot: public Operator
+{
+public:
+	Hypot();
+	~Hypot();
+	virtual void apply();
+};
+class IntegralImage
+{
+public:
+	IntegralImage();
+	IntegralImage(ImageView/*<int8>*/ &view);
+	~IntegralImage();	
+	void setImage(ImageView/*<int8>*/ &view);
+	float getRectSum(int x,int y,int cx,int cy);	
+	int x_size();	// get width
+	int y_size();	// get height
+};
+
+/////////////////////////////////////////////////////////////////////////////
+// Haar feature element
+/////////////////////////////////////////////////////////////////////////////
+struct HaarRectDef
+{
+	float left;
+	float right;
+	float top;
+	float bottom;
+	float weight;
+
+	HaarRectDef();
+	HaarRectDef(const HaarRectDef & def);
+	HaarRectDef(float left,float top,float right,float bottom,bool sign);
+
+	void setRect(float left,float top,float right,float bottom,bool sign);
+};
+
+class HaarFeature
+{
+public:
+	//static const int rectCountMax=4;
+	HaarRectDef rect[4];
+
+	int rectCount;
+	signed int sign;
+	float threshold;
+
+	int width,height;
+	int test(float value);	// threshold test
+public:
+	HaarFeature():
+		rectCount(0),
+		sign(0),
+		threshold(0),
+		width(0),
+		height(0)
+	{}
+	HaarFeature(HaarRectDef *def,int count,int w,int h);
+	HaarFeature(const HaarFeature &feature):
+		rectCount(feature.rectCount),
+		sign(feature.sign),
+		threshold(feature.threshold),
+		width(feature.width),
+		height(feature.height)
+	{
+		for(int i=0;i<rectCountMax;i++)
+			rect[i]=feature.rect[i];
+	}
+	void addRect(const HaarRectDef &def);
+	void setSize(int w,int h);
+	float value(IntegralImage &image,int x,int y);
+	int test(IntegralImage &image,int x,int y);
+	// Training weak classifier. Parameters: 
+	// x		- item from training set
+	// y		- item classification: 0 - nonobjct, 1 - object
+	// count	- size of training
+	// Result : calculating threshold,sign,error
+	void train(IntegralImage *x,float * values, char *y, int count);	// calculate threshold and sign
+};
+
+typedef FileList::iterator FileIterator;
+class FileList
+{
+public:
+	typedef std::string String;
+	FileList();	
+	FileList(const String &directory);
+	~FileList();
+	void add(const String &path);
+	void readList(const String &lst);
+	void writeList(const String &lst);
+	void readDirectory(const String &dir,const String &ext);
+	FileIterator begin();
+	FileIterator end();
+	//void push_back(std::string &string);	
+};
+
+struct PersonImageDef
+{	
+	float scaleEyes[2];
+	float scaleMouth[2];
+	float faceTop;
+	float faceBottom;
+	float faceWidth;
+	int sizeEyes[2];
+	int sizeMouth[2];	
+	int sizeFace[2];	
+	int sizeNose[2];
+
+	PersonImageDef();
+	~PersonImageDef();
+	void setScaleEyes(float x,float y);
+	void setScaleMouth(float x,float y);
+	void setSizeEyes(float x,float y);
+	void setSizeMouth(float x,float y);
+	void setSizeNose(float x,float y);
+	void setSizeFace(float x,float y);
+};
+void addEyesBioID(PersonImageDef &def,FileList &list,const std::string &dir);
+
+int haarTraining(const FileList &positive,const FileList & negative,int width,int height,char *fileResult);
+int testHaarTracker(char *cascade,char *imageName,int width,int height,char *resultImage);
+
+int testIterators(Image &source);
+//void drawPathBlocks(char *file,char *dirOut);
+
+
+class FileIterator
+{
+public:
+	bool operator==(const FileIterator &it)const;
+};
+
+FileIterator getBegin(FileList &list);
+FileIterator getEnd(FileList &list);
+
+const char * getName(FileIterator &it);
+bool isEnd(FileIterator it,FileList &list);
+FileIterator next(FileIterator it);
+
+std::string getFileName2(const std::string &str);
+std::string getFileName(const std::string &str);
+
+int GetTickCount();
+
+class TrainingSet
+{
+public:
+	TrainingSet();
+	~TrainingSet();
+	int size();
+	int classesCount();
+	void readFile(const char *file);
+	void writeFile(const char *file);
+	void addItem(const char *file,int c);
+};
+
+class ImageClassifier
+{
+public:
+	ImageClassifier(int width,int height,int classes);
+	~ImageClassifier();
+	int train(TrainingSet &set);
+	int classify(Image &image);
+>>>>>>> bd17e7de82f5e0c1302ffcdcf53da1a9448d3f2d
 };
