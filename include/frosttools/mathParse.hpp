@@ -6,9 +6,10 @@
 
 namespace frosttools
 {
+///\addtogroup Symbolics
+//@{
 
-//using namespace std;
-
+/// Symbol type
 enum
 {
 	symbolTypeConst,
@@ -16,6 +17,8 @@ enum
 	symbolTypeArythmetic,
 	symbolTypeFunction,
 };
+
+/// Basic function type
 enum FnType
 {
 	typeSin,
@@ -39,8 +42,10 @@ enum
 };
 
 class MathSymbol;
+/// Insertor operator. For debug purposes
 std::ostream & operator << (std::ostream &stream,MathSymbol &symb);
 
+/// Math symbol. Contains calculation tree
 class MathSymbol
 {	
 	class Value
@@ -58,6 +63,7 @@ class MathSymbol
 		virtual int compare(const Value *val)=0;
 		virtual Value * derivative(Value *val)=0;
 	};
+
 	class ValueConst: public Value
 	{
 	public:		
@@ -226,20 +232,34 @@ class MathSymbol
 		Value *b;
 		int operation;	
 
+		/// Constructir
 		explicit ValueArythmetic(Value &na,Value &nb,int op);
+		/// Copy constructor
 		ValueArythmetic(const ValueArythmetic &v);
 		virtual ~ValueArythmetic();
+		/// inc reference
 		virtual Value & addRef();
+		/// dec reference
 		virtual void decRef();
+		/// calculate value
 		virtual float calc();
-		static void _print_val(Value *val,ostream &stream);
-		virtual void print(ostream &stream);
+		/// print value contents
+		static void _print_val(Value *val, std::ostream &stream);
+		/// print
+		virtual void print(std::ostream &stream);
+		/// get value type
 		virtual int getType() const ;
+		/// check if equal to 1
 		virtual bool equalOne();
+		/// check if equal to 0
 		virtual bool equalZero();
+		/// rebuild computation tree
 		virtual Value * rebuild(int depth);
+		/// get tree depth
 		virtual int depth(int depth);
+		/// compare
 		virtual int compare(const Value *val);
+		/// calculate derivative
 		virtual Value * derivative(Value *val);
 	};
 	class ValueFunction : public Value
@@ -395,10 +415,12 @@ class MathSymbol
 		}
 	};
 protected:
+	/// Pointer to actual value
 	Value *value;	
 #ifdef _DEBUG
 	int id;
 #endif
+	/// Constructor
 	MathSymbol(Value *v)
 		:value(&v->addRef())
 	{
@@ -408,9 +430,11 @@ protected:
 #endif		
 	}
 public:
+	/// Construct from float constant
 	MathSymbol(float v)
 		:value(new ValueConst(v)),id(idGenerator.genID())
 	{}
+	/// Default constructor
 	MathSymbol()
 		:value(NULL)
 	{	
@@ -420,11 +444,13 @@ public:
 		cout<<"MathSymbol constructor, id="<<id<<" statement={NULL}"<<endl;
 #endif		
 	}	
+	/// Copy constructor
 	MathSymbol(MathSymbol &m)
 	{
 		value=&m.value->addRef();
 		id=idGenerator.genID();
 	}
+	/// Constructor
 	MathSymbol(const char *name,float v)		
 	{
 		value=new ValueVariable(name,v);
@@ -434,6 +460,7 @@ public:
 		cout<<"MathSymbol constructor, id="<<id<<" statement={"<<*this<<'}'<<endl;		
 #endif
 	}
+
 	~MathSymbol()
 	{
 #ifdef _DEBUG
@@ -443,14 +470,18 @@ public:
 		if(value)
 			value->decRef();
 	}
+
+	/// Calculate value
 	virtual float calc()
 	{
 		return value->calc();
 	}
+	/// Rebuild calculation tree
 	void rebuild()
 	{
 		value=value->rebuild(0);
 	}
+	/// Assignment operator
 	virtual MathSymbol &operator = (MathSymbol &s)
 	{
 		if(value)
@@ -458,95 +489,130 @@ public:
 		value=&s.value->addRef();
 		return *this;
 	}
+	/// Calculate derivative
 	MathSymbol derivative(MathSymbol symb)
 	{
 		MathSymbol res;
 		res.value=value->derivative(symb.value);
 		return res;
 	}
+	/// ID generator for debug checking
 	static IDGenerator<int> idGenerator;
 
-	friend MathSymbol operator + (MathSymbol &a,MathSymbol &b); 
+	/// Addition operator
+	friend MathSymbol operator + (MathSymbol &a,MathSymbol &b);
+	/// Addition operator
 	friend MathSymbol operator + (MathSymbol &a,const float &b);
+	/// Addition operator
 	friend MathSymbol operator + (const float &a,MathSymbol &b);
+	/// Substraction operator
 	friend MathSymbol operator - (MathSymbol &a,MathSymbol &b);
+	/// Substraction operator
 	friend MathSymbol operator - (MathSymbol &a,const float &b);
+	/// Substraction operator
 	friend MathSymbol operator - (const float &a,MathSymbol &b);
+	/// Multiply operator
 	friend MathSymbol operator * (MathSymbol &a,MathSymbol &b);
+	/// Multiply operator
 	friend MathSymbol operator * (MathSymbol &a,const float &b);
+	/// Multiply operator
 	friend MathSymbol operator * (const float &a,MathSymbol &b);
+	/// Division operator
 	friend MathSymbol operator / (MathSymbol &a,MathSymbol &b);
+	/// Division operator
 	friend MathSymbol operator / (MathSymbol &a,const float &b);
+	/// Division operator
 	friend MathSymbol operator / (const float &a,MathSymbol &b);
+	/// Inserter operator
 	friend ostream & operator << (ostream &stream,MathSymbol &symb);
 
+	/// Calculates sinus
 	friend MathSymbol mSin(MathSymbol &s);
+	/// Calculates cosinus
 	friend MathSymbol mCos(MathSymbol &s);
+	/// Calculates tg
 	friend MathSymbol mTg(MathSymbol &s);
 };
 
+/// Calculate sin
 inline MathSymbol mSin(MathSymbol &s)
 {
 	return MathSymbol(&MathSymbol::ValueFunction(*s.value,typeSin));
 }
 
+/// Calculate cos
 inline MathSymbol mCos(MathSymbol &s)
 {
 	return MathSymbol(&MathSymbol::ValueFunction(*s.value,typeCos));
 }
-
+/// Calculate tg
 inline MathSymbol mTg(MathSymbol &s)
 {
 	return MathSymbol(&MathSymbol::ValueFunction(*s.value,typeTg));
 }
 
+/// Addition operator
 MathSymbol operator + (MathSymbol &a,MathSymbol &b)
 {	
 	return MathSymbol(&MathSymbol::ValueArythmetic(*a.value,*b.value,operatorSum));
 }
+/// Addition operator
 MathSymbol operator + (MathSymbol &a,const float &b)
 {	
 	return MathSymbol(&MathSymbol::ValueArythmetic(*a.value,MathSymbol::ValueConst(b),operatorSum));
 }
+/// Addition operator
 MathSymbol operator + (const float &a,MathSymbol &b)
 {	
 	return MathSymbol(&MathSymbol::ValueArythmetic(MathSymbol::ValueConst(a),*b.value,operatorSum));
 }
-
+/// Substraction operator
 MathSymbol operator - (MathSymbol &a,MathSymbol &b)
 {	
 	return MathSymbol(&MathSymbol::ValueArythmetic(*a.value,*b.value,operatorSub));
 }
+/// Substraction operator
 MathSymbol operator - (MathSymbol &a,const float &b)
 {	
 	return MathSymbol(&MathSymbol::ValueArythmetic(*a.value,MathSymbol::ValueConst(b),operatorSub));
 }
+/// operator
 MathSymbol operator - (const float &a,MathSymbol &b)
 {	
 	return MathSymbol(&MathSymbol::ValueArythmetic(MathSymbol::ValueConst(a),*b.value,operatorSub));
 }
 
+/// Multiplication operator
 MathSymbol operator * (MathSymbol &a,MathSymbol &b)
 {	
 	return MathSymbol(&MathSymbol::ValueArythmetic(*a.value,*b.value,operatorMul));
 }
+
+/// Multiplication operator
 MathSymbol operator * (MathSymbol &a,const float &b)
 {	
 	return MathSymbol(&MathSymbol::ValueArythmetic(*a.value,MathSymbol::ValueConst(b),operatorMul));
 }
+
+/// Multiplication operator
 MathSymbol operator * (const float &a,MathSymbol &b)
 {	
 	return MathSymbol(&MathSymbol::ValueArythmetic(MathSymbol::ValueConst(a),*b.value,operatorMul));
 }
 
+/// Division operator
 MathSymbol operator / (MathSymbol &a,MathSymbol &b)
 {	
 	return MathSymbol(&MathSymbol::ValueArythmetic(*a.value,*b.value,operatorDiv));
 }
+
+/// Division operator
 MathSymbol operator / (MathSymbol &a,const float &b)
 {	
 	return MathSymbol(&MathSymbol::ValueArythmetic(*a.value,MathSymbol::ValueConst(b),operatorDiv));
 }
+
+/// Division operator
 MathSymbol operator / (const float &a,MathSymbol &b)
 {	
 	return MathSymbol(&MathSymbol::ValueArythmetic(MathSymbol::ValueConst(a),*b.value,operatorDiv));
@@ -554,6 +620,8 @@ MathSymbol operator / (const float &a,MathSymbol &b)
 #ifdef _DEBUG
 IDGenerator<int> MathSymbol::idGenerator;
 #endif
+
+/// Inserter operator
 ostream & operator << (ostream &stream,MathSymbol &symb)
 {
 	symb.value->print(stream);
@@ -771,4 +839,6 @@ MathSymbol::Value * MathSymbol::ValueArythmetic::derivative(MathSymbol::Value *v
 	db->decRef();
 	return res;
 }
+
+//@}
 } // namespace frosttools

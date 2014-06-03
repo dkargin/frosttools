@@ -22,10 +22,12 @@ template<class _Vr>
 class _Edge
 {
 public:
-	/// First and last points
-	_Vr start,end;
+	_Vr start;	///< First edge point points
+	_Vr end;	///< Last edge point points
 public:
+	/// Defines scalar value type
 	typedef typename _Vr::value_type value_type;
+	/// Defines own type
 	typedef _Edge<_Vr> my_type;
 
 	/// Default constructor
@@ -273,13 +275,13 @@ template<class _Vector>
 class _AABB
 {
 public:
-	typedef typename _Vector::value_type value_type;
-	typedef typename _Vector::size_type size_type;
-	typedef _AABB<_Vector> my_type;
-	typedef _Vector vector_t;
+	typedef typename _Vector::value_type value_type;	///< Defines scalar value type
+	typedef typename _Vector::size_type size_type;	///< Defines index type
+	typedef _AABB<_Vector> my_type;					///< Defines own type
+	typedef _Vector vector_t;							///< Defines vector type
 	enum {D=_Vector::D};
-	_Vector center;
-	_Vector dimensions;
+	_Vector center;										///< AABB center
+	_Vector dimensions;									///< AABB dimensions from center
 public:
 	/// Default constructor
 	_AABB()
@@ -348,12 +350,12 @@ public:
 	{
 		return center[i]+dimensions[i];
 	}
-	///
+	/// get full box size
 	inline _Vector size() const
 	{
 		return dimensions+dimensions;
 	}
-	///
+	/// get box size along specified dimension
 	inline value_type size(size_type i) const
 	{
 		return dimensions[i]+dimensions[i];
@@ -911,33 +913,41 @@ typedef _Edge<vec3> Ray;
 typedef _AABB<vec3> AABB;
 typedef _Plane<vec3> Plane;
 //////////////////////////////////////////////////////////////////
-template<class _Vr> struct _Traectory
+
+/// Linear trajectory
+template<class _Vr> struct _Trajectory
 {
-	typedef _Vr vec;
-	_Vr start;
-	_Vr velocity;	
+	typedef _Vr vec;	///< Defines vector type
+	_Vr start;		///< First trajectrory point
+	_Vr velocity;	///< Trajectory velocity
 	
-	_Traectory(const _Traectory &tr)
+	/// Copy constructor
+	_Trajectory(const _Trajectory &tr)
 	:start(tr.start),velocity(tr.velocity)
 	{}
-	_Traectory(const _Vr &pos,const _Vr &vel=_Vr(0.f))
+	/// Constructor
+	_Trajectory(const _Vr &pos,const _Vr &vel=_Vr(0.f))
 		:start(pos),velocity(vel)
 	{}
+	/// Get position at specified time
 	_Vr getPosition(float time) const
 	{
 		return start+velocity*time;
 	}
-	_Traectory advance(float time) const
+	/// Move object
+	_Trajectory advance(float time) const
 	{
-		return _Traectory(getPosition(time),velocity);
+		return _Trajectory(getPosition(time),velocity);
 	}
+	/// Get position at specified time
 	const _Vr operator ()(float time) const
 	{
 		return advance(time).start;
 	}
 };
 
-template<class _V> float getMinDistance(const _Traectory<_V> &tr0,const _Traectory<_V> &tr1,float maxTime,float &time)
+/// Get minimal distance between two trajectories
+template<class _V> float getMinDistance(const _Trajectory<_V> &tr0,const _Trajectory<_V> &tr1,float maxTime,float &time)
 {
 	float res=0;	
 	_V u=tr0.start-tr1.start;
@@ -974,7 +984,7 @@ template<class _V> float getMinDistance(const _Traectory<_V> &tr0,const _Traecto
 	}
 	return res;
 }
-typedef _Traectory<vec2f> Traectory2;
+typedef _Trajectory<vec2f> Traectory2;
 } // namespace geom
 /// @}
 } // namespace frosttools

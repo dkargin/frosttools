@@ -1071,7 +1071,7 @@ void run_broadcast(Network & network, BroadcasterData * br)
 	while (true)
 	{
 		broadcastServices(br->services, socket, broadcast_address);
-		Threading::sleep(br->timeout);
+		threading::sleep(br->timeout);
 	}
 }
 

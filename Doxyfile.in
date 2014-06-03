@@ -97,7 +97,7 @@
     INPUT_ENCODING = UTF-8
     FILE_PATTERNS = *.h \ *.dox \ *.hpp
     RECURSIVE = YES
-    EXCLUDE =
+    EXCLUDE = @CMAKE_SOURCE_DIR@/include/frosttools/deprecated @CMAKE_SOURCE_DIR@/include/frosttools/win32/ @CMAKE_SOURCE_DIR@/include/frosttools/linux/ @CMAKE_SOURCE_DIR@/include/frosttools/gperftools/
     EXCLUDE_SYMLINKS = NO
     EXCLUDE_PATTERNS = .* \
     *_p* \

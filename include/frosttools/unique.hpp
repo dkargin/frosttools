@@ -1,11 +1,10 @@
 #ifndef FROSTTOOLS_UNIQUE
 #define FROSTTOOLS_UNIQUE
-//////////////////////////////////////////////////////////////////////
-// Unique ID generator
-//////////////////////////////////////////////////////////////////////
+
 #include <set>
 #include <map>
-//using namespace std;
+
+/// Unique ID generator
 template <class IDType=unsigned int>
 class IDGenerator
 {
@@ -14,12 +13,13 @@ class IDGenerator
 	typedef std::set<IDType> FreeIDSet;
 	FreeIDSet freeIDset;
 public:
-	IDGenerator(void)
+	IDGenerator()
 		:idCounter(0),idLast(0)
 	{}
 	~IDGenerator(void)
 	{}
 
+	/// Generate new ID
 	IDType genID()
 	{
 		IDType res;
@@ -36,6 +36,8 @@ public:
 		}
 		return res;
 	}
+
+	/// Reset container contents
 	void reset()
 	{
 		idCounter=0;
@@ -48,10 +50,12 @@ public:
 	{
 
 	}
+	/// Check if ID is in use
 	bool used(IDType id)
 	{
 		return freeIDset.find(id)==freeIDset.end() && id<idLast;
 	}
+	/// Free ID from use
 	void freeID(IDType id)
 	{
 		//don't check, if id is valid
@@ -62,7 +66,9 @@ public:
 		idCounter--;
 	}
 
+	/// Save container contents to the stream
 	inline void write(std::ostream& _stream);
+	/// Load container contents from the stream
 	inline void read(std::istream& stream);
 };
 
@@ -94,15 +100,13 @@ template<class IDType>inline void IDGenerator<IDType>::read(std::istream& stream
     stream>>idLast;
     stream>>idCounter;
 }
-//////////////////////////////////////////////////////////////////////
-// Unique id manager
-// Convert unique object to unique id and vice versa
-//////////////////////////////////////////////////////////////////////
+
+/// Unique id manager
+/// Convert unique object to unique id and vice versa
 template <	class InputType,
 			class OutputType=unsigned int>
 class IDManager
 {
-protected:
 	std::map<InputType,OutputType> forward;
 	IDGenerator<OutputType> idGenerator;
 public:
@@ -123,10 +127,12 @@ public:
 		}
 		return it->second;
 	}
+	/// Check if manager contains object
 	bool containsObject(const InputType &obj)
 	{
 		return forward.find(obj)==forward.end();
 	}
+	/// Remove object
 	virtual void erase(const InputType &obj)
 	{
 		typename std::map<InputType,OutputType>::iterator it=forward.find(obj);
@@ -135,6 +141,7 @@ public:
 		idGenerator.freeID(it->second);
 		forward.erase(it);
 	}
+	/// Save contents to stream
 	inline void write(std::ostream &stream)
 	{
 		idGenerator.write(stream);
@@ -160,6 +167,7 @@ public:
 		   system( "type outfile" );
 		*/
 	}
+	/// Load contents from the stream
 	inline void read(std::istream &stream)
 	{
 		forward.clear();
@@ -178,23 +186,28 @@ public:
 		}
 	}
 };
+
+/// Reverse ID manager
 template <	class InputType,
 			class OutputType=unsigned int>
 class ReverseIDManager
 {
 protected:
-	IDGenerator<OutputType> idGenerator;
-	std::map<InputType,OutputType> forward;
-	std::map<OutputType,InputType> backward;
+	IDGenerator<OutputType> idGenerator;		///< ID generator
+	std::map<InputType,OutputType> forward;	///< Forward map
+	std::map<OutputType,InputType> backward;	///< Backward map
 public:
+	/// Get B by A
 	inline const OutputType & operator [] (const InputType &obj)
 	{
 		return getID(obj);
 	}
+	/// Get A by B
 	inline const InputType & operator [] (const OutputType &obj)
 	{
 		return backward[obj];
 	}
+	/// Get Pair ID
 	virtual const OutputType & getID(const InputType &obj)
 	{
 		typename std::map<InputType,OutputType>::iterator it=forward.find(obj);
@@ -209,6 +222,7 @@ public:
 		}
 		return it->second;
 	}
+	/// Remove object
 	virtual void erase(const InputType &obj)
 	{
 		typename std::map<InputType,OutputType>::iterator it=forward.find(obj);
@@ -223,15 +237,14 @@ public:
 			backward.erase(out);
 		}
 	}
+	/// check if object is contained
 	bool containsObject(const InputType &obj)
 	{
 		return forward.find(obj)!=forward.end();
 	}
 };
-//////////////////////////////////////////////////////////////////////
-// Unique name manager
-//////////////////////////////////////////////////////////////////////
-//template <class CharType=char>
+
+/// Unique name manager
 class NameManager
 {
 	typedef char CharType;
@@ -245,6 +258,8 @@ public:
 	{}
 	~NameManager(void)
 	{}
+
+	/// Generate new name
 	StringType getName(const StringType &name)
 	{
 		StringStreamType stringStream;	//utility stream
@@ -258,6 +273,8 @@ public:
 			//stringStream<<name<<++stringTable[name];
 		return getName(temp);
 	}
+
+	/// Get counter for specified name
 	int getNameCounter(const StringType &str)
 	{
 		MapType::iterator it=stringTable.find(str);
@@ -265,6 +282,7 @@ public:
 			return 0;
 		return it->second;
 	}
+	/// Reset string table
 	void reset()
 	{
 		stringTable.clear();
@@ -279,6 +297,8 @@ inline bool valid(const ID &id)
 {
 	return id!=invalidID;
 }
+
+/// Base class to be stored by its ID
 template<class Target>
 class IDStored
 {
@@ -340,10 +360,13 @@ public:
 	typedef IDStore<Target> my_type;
 	Objects objects;
 
+	/// Base class for ID generator
 	class IDGen
 	{
 	public:
+		/// Generates ID for object
 		virtual ID generate(Target *target)=0;
+		/// Releases ID
 		virtual void release(ID id)=0;
 	};
 public:
@@ -376,6 +399,7 @@ public:
 	{
 		return objects.begin();
 	}
+
 	iterator end()
 	{
 		return objects.end();
@@ -387,6 +411,7 @@ public:
 		else
 			return NULL;
 	}
+	/// Remap ID
 	bool remap(ID source,ID target)	// change ID from source to target
 	{
 		// source->target
@@ -410,11 +435,13 @@ public:
 		object->back=objects.find(target);
 		return true;
 	}
+	/// Get object by id
 	virtual Target * get(ID id)
 	{
 		return contains(id)?(Target * )objects[id]:NULL;
 	}
 protected:
+	/// assigned ID generator
 	IDGen *generator;
 	void setGenerator(IDGen *gen)
 	{
@@ -433,14 +460,14 @@ protected:
 	//	typedef void ( X::*Mfn)(ID);
 	//	(base->*reinterpret_cast<Mfn>(_freeID))(id);
 	//}
-	// convert from  Stored * to Target *
+	/// convert from  Stored * to Target *
 	virtual Target * getTarget(Stored * object)
 	{
 		return (Target * )object;
 	}
 	
-	// called in Stored constructor
-	// assignes new unique ID and back iterator
+	/// called in Stored constructor
+	/// assignes new unique ID and back iterator
 	virtual ID add(Stored * object)
 	{
 		assert(generator);
@@ -456,8 +483,8 @@ protected:
 		onAdd((Target*)object);		// raise onAdd event.
 		return object->id();
 	}
-	// called in Stored destructor
-	// removes the object from list. returns iterator to next valid object.
+	/// called in Stored destructor
+	/// removes the object from list. returns iterator to next valid object.
 	virtual void remove(Stored * object)
 	{
 		// some STL versions of remove return void instead 
@@ -470,7 +497,7 @@ protected:
 		
 		objects.erase(object->back);	
 	}
-	// remove all contained objects. 
+	/// remove all contained objects.
 	virtual void clear()
 	{
 		while(!objects.empty())
@@ -484,12 +511,13 @@ protected:
 		}
 		assert(objects.empty());
 	}
-	// called everytime when Stored object is removerd
+	/// called everytime when Stored object is removerd
 	virtual void onRemove(Target * object){}
-	// called everytime when Stored object is added
+	/// called everytime when Stored object is added
 	virtual void onAdd(Target *object){}
 };
 
+/// Base storage for IDs
 template<class Target> class BasicIDStore: public IDStore<Target>
 {
 	class BasicIDGen: public IDStore<Target>::IDGen
@@ -506,4 +534,5 @@ template<class Target> class BasicIDStore: public IDStore<Target>
 public:
 	BasicIDStore():IDStore<Target>(&idGen){}
 };
+
 #endif

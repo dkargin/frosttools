@@ -5,7 +5,7 @@
 int main(int argc, char* argv[])
 {
 	{
-		Threading::TaskMaster<std::function<void(void)>> manager(2);
+		frosttools::threading::TaskMaster<std::function<void(void)> > manager(2);
 		printf("Before start\n");
 		Threading::sleep(2000);
 		for(int i = 0; i < 10; i++)

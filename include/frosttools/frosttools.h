@@ -4,21 +4,6 @@
 /// FrostHand's ToolBox. Different utilitary functions
 /// v0.5 WIP
 //////////////////////////////////////////////////////////////////////
-/*! \page page1 A documentation page
-  \tableofcontents
-  Leading text.
-  \section sec An example section
-  This page contains the subsections \ref subsection1 and \ref subsection2.
-  For more info see page \ref page2.
-  \subsection subsection1 The first subsection
-  Text.
-  \subsection subsection2 The second subsection
-  More text.
-*/
-
-/*! \page page2 Another page
-  Even more info.
-*/
 
 #include <fstream>
 #include <list>
@@ -28,6 +13,7 @@
 #include <sstream>
 #include <math.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #ifdef FrostTools_Use_All
 #define FrostTools_Use_Asserts
@@ -83,11 +69,13 @@ typedef std::basic_string<TCHAR> tstring;
 #define FrostTools_Locals
 #define rel_size(a,b) ((sizeof(a)+sizeof(b))/sizeof(b))
 
-#include <stdarg.h>
-
+/// Utility class for string operatios. Used to overcome g++/vcs++ differencies between standard string methods
 template <typename Char> struct StrUtils {};
+
+/// Specialization for char
 template<> struct StrUtils<char>
 {
+	/// Printf to array
 	char * sprintf(char *dst,char *format,...)
 	{
 		va_list v;
@@ -96,6 +84,8 @@ template<> struct StrUtils<char>
 		va_end(v);
 		return dst;
 	}
+
+	/// Printf to array
 	char * vsnprintf(char *dst,size_t max,char *format,...)
 	{
 		va_list v;
@@ -107,6 +97,7 @@ template<> struct StrUtils<char>
 };
 
 #ifdef FROSTTOOLS_WCHAR
+/// Specialization for wide char
 template<> struct StrUtils<wchar_t>
 {
 	wchar_t *sprintf(wchar_t *dst,wchar_t*format,...)
@@ -136,25 +127,33 @@ template<class T, int MaxSize>
 class StaticArray
 {
 public:
+	/// Defines value type
 	typedef T value_type;
+	/// Defines container type
 	typedef StaticArray<T,MaxSize> container_type;
+	/// Defines raw pointer type
 	typedef T* ptr_type;
-	// constant pointer holder
+	/// constant pointer holder
 	struct holder_const
 	{
-		typedef const T value_type;
-		typedef const T * pointer;
-		typedef const T & reference;
+		typedef const T value_type;	///< Defines value type
+		typedef const T * pointer;		///< Defines pointer type
+		typedef const T & reference;	///< Defines reference type
 
+		/// Data pointer
 		const T * ptr;
+
+		/// Cast to cosnt target type
 		operator const T() const
 		{
 			return *ptr;
 		}
+		/// Get value
 		const T operator *() const
 		{
 			return *ptr;
 		}
+		/// Dereferencing operator
 		const T * operator->() const
 		{
 			return ptr;
@@ -163,60 +162,75 @@ public:
 	// free pointer holder
 	struct holder
 	{
-		typedef T value_type;
-		typedef T * pointer;
-		typedef T & reference;
+		typedef T value_type;		///< Defines value type
+		typedef T * pointer;		///< Defines pointer type
+		typedef T & reference;		///< Defines reference type
 
+		/// data pointer
 		T * ptr;
+		/// cast to target type
 		operator value_type() 
 		{
 			return *ptr;
 		}
+		/// Get value to pointer
 		T operator* ()
 		{
 			return *ptr;
 		}
+		/// Dereferencing operator
 		T * operator->()
 		{
 			return ptr;
 		}
 	};
 
+	/// base iterator
 	template<class Base> struct _iterator_base: public Base
 	{
-		typedef std::random_access_iterator_tag iterator_category;
-		typedef int difference_type;		
-		typedef _iterator_base<Base> my_type;
+		typedef std::random_access_iterator_tag iterator_category;	///< Iterator category
+		typedef int difference_type;								///< Defines iterator difference type
+		typedef _iterator_base<Base> my_type;						///< Defines own type
 
+		/// constructor
 		_iterator_base(container_type * container, value_type * data)
 		{
 			this->ptr = data;
 		}
+		/// copy constructor
 		_iterator_base(const my_type &it)
 		{
 			this->ptr = it.ptr;
 		}
+
+		/// equal
 		bool operator == (const my_type & t) const
 		{
 			return t.ptr == this->ptr;
 		}
+		/// non-equal
 		bool operator != (const my_type &t) const
 		{
 			return t.ptr != this->ptr;
 		}
+		/// less
 		bool operator < (const my_type &t) const
 		{
 			return this->ptr < t.ptr;
 		}
+
+		/// larger
 		bool operator > (const my_type &t) const
 		{
 			return this->ptr > t.ptr;
 		}
+		/// increment operator
 		my_type & operator++()
 		{
 			this->ptr++;
 			return *this;
 		}
+		/// decrement operator
 		my_type & operator--()
 		{
 			this->ptr--;
@@ -224,17 +238,22 @@ public:
 		}
 	};
 
+	/// Defines iterator type
 	typedef _iterator_base<holder> iterator;
+	/// Defines const iterator type
 	typedef _iterator_base<holder_const> const_iterator;	
 protected:	
-	// Dummy object with the same size, as value_type
+	/// Dummy object with the same size, as value_type
 	struct Dummy
 	{
-		char data[sizeof(value_type)];
+		char data[sizeof(value_type)];	///< dummy data
 	};
+	/// Preallocated data
 	Dummy data[MaxSize];
+	/// Current size
 	size_t currentSize;
 
+	/// Removes object from storage
 	void remove(Dummy * dummy)
 	{
 		//value_type * ptr = static_cast<value_type*>(dummy);
@@ -248,22 +267,27 @@ public:
 	{
 		clear();
 	}
+	/// get current size
 	size_t size() const
 	{
 		return currentSize;
 	}
+	/// get max allowed size
 	size_t max_size() const
 	{
 		return MaxSize;
 	}
+	/// get iterator from begin
 	iterator begin()
 	{
 		return iterator(this,(value_type*)(data));
 	}
+	/// get iterator from the end
 	iterator end()
 	{
 		return iterator(this,(value_type*)(data + currentSize + 1));
 	}
+	/// push value to back
 	void push_back(const value_type &t)
 	{
 		if(currentSize < max_size())
@@ -276,10 +300,12 @@ public:
 			std::exception("Array: maximum size exceeded");
 		}
 	}
+	/// check if container is empty
 	bool empty() const
 	{
 		return currentSize == 0;
 	}
+	/// remove all the contents
 	void clear()
 	{
 		if(!empty())
@@ -289,6 +315,7 @@ public:
 			}
 	}
 
+	/// get raw data pointer
 	value_type * getData()
 	{
 		return (value_type*) data;
@@ -356,10 +383,12 @@ namespace frosttools
 template<class Type> class TreeNode
 {
 protected:
-	typedef TreeNode<Type> node_type;
-	Type *parent;						///< Pointer to parent node
-	Type *next, *prev;					///< Pointer to adjacent nodes
-	Type *head, *tail;					///< Pointer to head/tail child nodes
+	typedef TreeNode<Type> node_type;	///< Defines node type
+	Type * parent;						///< Pointer to parent node
+	Type * next;						///< Pointer to next node
+	Type * prev;						///< Pointer to previous node
+	Type * head;						///< Pointer to head child nodes
+	Type * tail;						///< Pointer to tail child nodes
 
 	/// Called when node is attached
 	virtual void onAttach( Type * object ) = 0;
@@ -480,7 +509,7 @@ public:
 		{
 			return container != it.container || current != it.current;
 		}
-		///
+		/// Dereferencing operator
 		const Type * operator->()
 		{
 			return current;
@@ -532,6 +561,7 @@ public:
 		{
 			return container != it.container || current != it.current;
 		}
+		/// Dereferencing operator
 		Type * operator->()
 		{
 			return current;

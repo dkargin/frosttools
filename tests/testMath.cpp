@@ -1,6 +1,7 @@
 #include "frosttools/3dmath.h"
 #include "frosttools/ringbuffer.hpp"
 #include <vector>
+#include <stdio.h>
 
 namespace Test
 {
@@ -44,21 +45,21 @@ template<class Real> int solve(const Real &a,const Real &b,const Real &c,Real re
 vec3 getWeaponTarget(const Geom::Edge &edge,const vec3 &pos,float v1)
 {
 	vec3 result=pos;
-	// проекция исходного положения на траекторию	
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ	
 	vec3 O=edge.project(pos);
-	// вектор, перпендикулярный траектории
+	// пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	vec3 H=O-pos;
 	float h=H.length();
 	float l=edge.projectLen(pos);
 	float impactTime[2]={0,0};
-	float v0=edge.length();				// скорость объекта который надо сбить
-	//float v1=def->velocity;				// скорость снаряда которым сбиваем
+	float v0=edge.length();				// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+	//float v1=def->velocity;				// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	int res=solve(v0*v0-v1*v1,-2*l*v0,h*h+l*l,impactTime);
 	if(res>0)
 	{
-		float time=impactTime[res-1];	// если 2 корня, берём impactTime[1], если один корень - impactTime[0]
-		float vx=h;						// скорость в направлении, перпендикулярном траектории
-		float vy=v0*time-l;				// скорость в направлении, параллельном траектории
+		float time=impactTime[res-1];	// пїЅпїЅпїЅпїЅ 2 пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ impactTime[1], пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ - impactTime[0]
+		float vx=h;						// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+		float vy=v0*time-l;				// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		result=pos+(vecNormalise(H)*vx+edge.direction()*vy);
 	}
 	return result;

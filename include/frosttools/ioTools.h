@@ -21,10 +21,11 @@ namespace frosttools
 {
 namespace IO
 {
-	// Exception for IO operations
+	/// Exception for IO operations
 	class _XEof : public std::exception
 	{
 	public:
+		/// Constructor
 		_XEof(){}
 	};
 
@@ -47,16 +48,18 @@ namespace IO
 				bufferSize = 0;
 			}
 		}
+		/// returns allocatd data size
 		size_t size()const
 		{
 			return bufferSize;
 		}
 
+		/// returns raw pointer to allocated data
 		const char * data() const
 		{
 			return buffer;
 		}
-		// calculate power of 2 size
+		/// calculate power of 2 size
 		static size_t calcSize(size_t newsize)
 		{
 			size_t result = 1;
@@ -64,7 +67,7 @@ namespace IO
 				result*=2;
 			return result;
 		}
-		// resize data buffer
+		/// resize data buffer
 		void resize(size_t newsize = minSize)
 		{
 			newsize = calcSize(newsize);
@@ -74,6 +77,7 @@ namespace IO
 			bufferSize = newsize;
 		}
 
+		/// increase buffer size by specified amount
 		void grow(size_t amount)
 		{
 			resize(bufferSize + amount);
@@ -95,9 +99,10 @@ namespace IO
 			return position + size;
 		}
 	protected:
-		char * buffer;
-		size_t bufferSize;
-		size_t bLocked;
+		char * buffer;		///< allocated data buffer
+		size_t bufferSize;	///< allocated buffer size
+		size_t bLocked;		///< if write operations are allowed
+
 		enum
 		{
 			minSize=256
@@ -120,10 +125,12 @@ namespace IO
 	class Stream
 	{
 	public:
+		/// Constructor
 		Stream(BufferPtr buffer)
 			:buffer(buffer),current(0)
 		{}
 
+		/// Check if end of file is reached
 		bool eof()
 		{
 			return current == buffer->size();
@@ -147,29 +154,32 @@ namespace IO
 		{
 			current = 0;
 		}
+		/// get data buffer pointer
 		const char * data() const
 		{
 			return buffer->data();
 		}
+		/// get current size
 		int size()const
 		{
 			return current;
 		}
-		// free bytes left
+		/// free bytes left
 		size_t left()const
 		{
 			assert(buffer->size() >= current);
 			return buffer->size() - current;
 		}
 	protected:
-		BufferPtr buffer;
-		size_t current;		// current position
+		BufferPtr buffer;	///< Pointer to buffer object
+		size_t current;		///< current buffer position
 	};
 
 	/// Input stream
 	class StreamIn : public Stream
 	{
 	public:
+		/// Constructor
 		StreamIn(BufferPtr buffer) : Stream(buffer) {}
 
 		/// read data from the stream
@@ -181,6 +191,7 @@ namespace IO
 			return size;
 		}
 
+		/// get data pointer
 		const void * map(size_t size)
 		{
 			if(current + size > buffer->size())
@@ -190,6 +201,7 @@ namespace IO
 			return result;
 		}
 
+		/// get buffer pointer
 		template<class Type> const Type * map()
 		{
 			return (Type*)map(sizeof(Type));

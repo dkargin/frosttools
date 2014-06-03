@@ -5,13 +5,14 @@ template <typename Real,int _D>
 class Vector
 {
 public:
-	typedef Real value_type;
-	typedef unsigned int size_type;
-	static const size_type D = _D;
-	typedef Vector<Real,_D> vector_type;
+	typedef Real value_type;				///< defines scalar value type
+	typedef unsigned int size_type;		///< defines index type
+	static const size_type D = _D;			///< dimension size
+	typedef Vector<Real,_D> vector_type;	///< defines vector type
 
-	value_type c[_D];
+	value_type c[_D];						///< actual data
 public:
+	/// Get zero vector
 	inline static Vector zero()
 	{
 		Vector result;
@@ -20,6 +21,7 @@ public:
 		return result;
 	}
 
+	/// Get orth vector for specified direction
 	inline static Vector orth(size_type dir,const Real &def=1)
 	{
 		Vector result;
@@ -30,18 +32,21 @@ public:
 
 	inline Vector()	{}
 
+	/// Constructor
 	inline explicit Vector(Real p)
 	{
 		for(size_type i = 0; i < _D; i++)
 			c[i] = p;
 	}
 
+	/// Constructor
 	template<typename tReal> inline Vector(const Vector<tReal,_D>& vec)
 	{
 		for(size_type i = 0; i < _D; i++)
 			c[i] = vec.c[i];
 	}
 
+	/// Constructor
 	template<typename tReal> explicit inline Vector(const tReal *v)
 	{
 		for(size_type i = 0; i < _D; i++)
@@ -65,6 +70,7 @@ public:
 	{
 		return ((Real*)this);
 	}
+	/// assignment operator
 	inline Vector/*<Real,_D>*/ & operator = ( const Vector/*<Real,_D>*/& v )
 	{
 		for(size_type i = 0;i < _D; i++)
@@ -72,11 +78,13 @@ public:
 		return *this;
 	}
 
+	/// addition operator
 	inline Vector<Real,_D> operator + () const
 	{
 		return *this;
 	}
 
+	/// substraction operator
 	inline Vector<Real,_D> operator - () const
 	{
 		Vector res;
@@ -84,6 +92,7 @@ public:
 			res[i] = -c[i];
 		return res;
 	}
+	/// get squared length
 	inline Real length_squared () const
 	{
 		return (*this) & (*this);
@@ -96,16 +105,19 @@ public:
 			result += c[i];
 		return result;
 	}
+	/// calculate vector length
 	inline Real	length () const
 	{
 		return (Real) sqrtf ( (*this) & (*this) );
 	}
 
-	Vector<Real,_D>&	normalise ()
+	/// normalize vector
+	Vector<Real,_D>&	normalize ()
 	{
 		return (*this) /= length ();
 	}
 
+	/// addition
 	inline Vector& operator += ( const Vector& v )
 	{
 		for(size_type i = 0; i < _D; i++)
@@ -113,6 +125,7 @@ public:
 		return *this;
 	}
 
+	/// substraction
 	inline Vector& operator -= ( const Vector& v )
 	{
 		for(size_type i = 0; i < _D; i++)
@@ -120,6 +133,7 @@ public:
 		return *this;
 	}
 
+	/// strange one?
 	inline Vector& operator *= ( const Vector& v )
 	{
 		for(size_type i = 0;i < _D; i++)
@@ -127,6 +141,7 @@ public:
 		return *this;
 	}
 
+	/// multiplication
 	inline Vector& operator *= ( float f )
 	{
 		for(size_type i = 0; i < _D; i++)
@@ -134,6 +149,7 @@ public:
 		return *this;
 	}
 
+	/// another strange one
 	inline Vector& operator /= ( const Vector& v )
 	{
 		for(size_type i = 0; i < _D; i++)
@@ -141,6 +157,7 @@ public:
 		return *this;
 	}
 
+	/// scalar division operator
 	inline Vector<Real,_D>& operator /= ( Real f )
 	{
 		for(size_type i = 0; i < _D; i++)
@@ -148,6 +165,8 @@ public:
 
 		return *this;
 	}
+
+	/// check if vectors are equal
 	inline int operator == ( const Vector<Real,_D>& v ) const
 	{
 		for(size_type i = 0; i < _D; i++)
@@ -156,6 +175,7 @@ public:
 		return true;
 	}
 
+	/// Check if vectors are not equal
 	inline int operator != ( const Vector<Real,_D>& v ) const
 	{
 		for(size_type i = 0; i < _D;i++)
@@ -164,6 +184,7 @@ public:
 		return true;
 	}
 
+	/// return dimensions number
 	inline int size() const
 	{
 		return _D;
@@ -236,6 +257,7 @@ inline _Vr vecAbs(const _Vr &v)
 	return res;
 }
 
+/// Vector Specialization for 2D
 template <class Real>
 class	Vector2D: public Vector<Real,2>
 {
@@ -285,6 +307,7 @@ public:
 	}
 };
 
+/// Vector Specialization for 3D
 template <class Real>
 class	Vector3D: public Vector<Real,3>
 {
@@ -438,6 +461,7 @@ inline Vector<Real,3> crossProduct ( const Vector<Real,3>& u, const Vector<Real,
 	return Vector3D<Real> (u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0]);
 }
 
+/// Vector Specialization for 4D
 template <class Real>
 class	Vector4D: public Vector<Real,4>
 {
@@ -514,13 +538,13 @@ typedef const vec2i & crvec2i;
 typedef Vector2D<float> vec2f;
 typedef const vec2f & crvec2f;
 
-template <typename _Vr> inline _Vr vecNormalise(const _Vr &v)
+template <typename _Vr> inline _Vr vecNormalize(const _Vr &v)
 {
 	_Vr res = v;
 	return res.normalise();
 }
 
-template <typename _Vr> inline _Vr vecNormalise_s(const _Vr &v)
+template <typename _Vr> inline _Vr vecNormalize_s(const _Vr &v)
 {
 	typename _Vr::value_type len = v.length();
 	return len>0.f?v/len:_Vr::zero();

@@ -34,8 +34,8 @@ public:
 	/// Ticket for timer
 	struct Timer
 	{
-		Action * action;
-		Time time;
+		Action * action;	//!< Action to run
+		Time time;			//!< Time to run
 	};
 
 	/// Add action to execute after specified delay

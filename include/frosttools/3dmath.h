@@ -26,9 +26,10 @@
 #pragma warning(disable:4305)
 #endif
 
-//!\defgroup Math
+//!\defgroup Math Mathematics
+/// Mathematics library. Contains classes for linear algebra and set of simple geomety primitives
 
-//!\defgroup Geometry
+//!\defgroup Geometry Geometry
 ///	Classes for simple geometry objects
 
 ///\brief frosttools
@@ -114,9 +115,10 @@ inline float fSign(float f)
 /// Clamp filter
 struct Clamp
 {
-  typedef float value_type;
-  typedef Clamp my_type;
-  value_type min,max;
+  typedef float value_type;	///< defines scalar type
+  typedef Clamp my_type;		///< defines own type
+  value_type min;				///< defines minimal value
+  value_type max;				///< defines maximal value
   /// Constructor
   Clamp(const value_type &min,const value_type &max)
     :min(min),max(max)
@@ -143,11 +145,6 @@ struct Clamp
   }
 };
 
-inline float operator *= (float val,const Clamp & clamp)
-{
-  return clamp * val;
-}
-
 /// Space relation for two edges
 enum spaceRelation
 {
@@ -166,9 +163,10 @@ enum planeRelation
 	prIntersect
 };
 
+/// Does anybody needs it?
 template<class Real> struct MathTypes
 {
-	typedef int size_type;
+	typedef int size_type;	///< Definesi index type
 };
 
 }	// namespace frosttools
@@ -235,11 +233,12 @@ protected:
 	}
 };
 
-///
+/// Dynamic vector
+/// Can be resized at the runtime
 template<class Type> struct VectorDynamic
 {
 public:
-	typedef VectorDynamic<Type> my_type;
+	typedef VectorDynamic<Type> my_type;	///< Defines own type
 
 	typedef Type value_type;	///< Stored type
 
@@ -345,7 +344,8 @@ protected:
 /// Dynamic storage for matrix
 template<class Type> struct StorageDynamic
 {
-	typedef Type value_type;
+
+	typedef Type value_type;	///< Defines scalar type
 	Type *c;		///< stored data
 	int size_x;		///< number of columns
 	int size_y;		///< number of rows
@@ -502,11 +502,13 @@ template<class R> inline bool valueInRange(const R &a,const R &c,const R &b)
 		return (b>=c) && (b<=a);
 }
 
+/// Tests. Something
 inline float sideXY(const vec3 &a,const vec3 &b)
 {
 	return a[0]*b[1]-b[0]*a[1];
 }
 
+/// Tests. Something.
 inline bool testvecXY(const vec3 &a,const vec3 &b,const vec3 &c)
 {
 	return (sideXY(a,c)>0) ^ (sideXY(b,c)>0);
@@ -517,13 +519,14 @@ namespace Math
 	const bool RowOrder=true;
 };
 
+/// Cast vector3 to vector2
 template<class Type> const Vector2D<Type> & vec3to2(const Vector3D<Type> & v)
 {
 	return (Vector2D<Type>&)v;
 }
 
-typedef Matrix3<float,Math::RowOrder> Mt3x3;
-typedef Matrix4<float,Math::RowOrder> Mt4x4;
+typedef Matrix3<float,Math::RowOrder> Mt3x3;	///! specialized float 3x3 row order matrix
+typedef Matrix4<float,Math::RowOrder> Mt4x4;	///! specialized float 4x4 row order matrix
 //typedef Matrix4<float,Math::RowOrder> COORDSYS;
 
 
@@ -541,7 +544,7 @@ public:
 
 	pos3 position;			///< object global position
 	rot orientation;		///< object global orientation. For 2d pose it's scalar angle(rad). For 3d - quaternion
-	typedef Pose2z pose_type;
+	typedef Pose2z pose_type;	///< own pose type
 
 	/// Constructor
 	Pose2z():position(0.0f),orientation(0.0) {}
@@ -705,6 +708,7 @@ public:
 		float y = -sn * v[0] + cs * v[1];
 		return vec(x,y);
 	}
+	/// calculate inverted pose
 	inline pose_type invert() const
 	{
 		return pose_type(-position, -orientation);
@@ -808,9 +812,10 @@ public:
 	typedef FastAngle rot;	///< describes "rotation" type.
 	typedef Mt3x3 mat;		///< describes "matrix" type
 
-	rot orientation;		/// cos(orientation), sin(orientation)
-	pos position;			/// object global position
+	rot orientation;		///< cos(orientation), sin(orientation)
+	pos position;			///< object global position
 
+	/// Defines pose type
 	typedef Pose2 pose_type;
 	/// Default constructor
 	Pose2():orientation(1.0,0.0), position(0.0f) {}
@@ -843,6 +848,7 @@ public:
 		return pos(rx, ry);
 	}
 
+	/// set pose origin
 	void setPosition(const pos &pos)
 	{
 		position[0] = pos[0];
@@ -959,6 +965,7 @@ public:
 	}
 };
 
+/// Multiply two transforms
 inline Pose2 operator * (const Pose2 &a,const Pose2 &b)
 {
 	//float cs = a.CS() * b.CS() - a.SN() * b.SN();

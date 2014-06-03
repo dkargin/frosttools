@@ -18,7 +18,7 @@ namespace LockFree
 #else
 	inline int32_t InterlockedEX(volatile int32_t * ptr, int32_t val)
 	{		
-		// gcc atomic, cast to void to prevent "value computed is not used"
+		// gcc atomic, cast to voimathSolverd to prevent "value computed is not used"
 		
 		asm volatile("" ::: "memory");              // prevend compiler reordering
 		return __sync_lock_test_and_set(ptr, val);
@@ -53,6 +53,7 @@ namespace LockFree
 			assert(empty() == true);
 		}
 
+		/// Check if queue is empty
 		bool empty() const
 		{
 			return head == tail;
@@ -94,7 +95,7 @@ namespace LockFree
 		}
 	};
 
-	// This queue uses extarnal type with pointer "next"
+	/// This queue uses extarnal type with pointer "next"
 	template <typename Node/*, typename _Alloc = std::allocator<Node>*/ >
 	class BaseQueue
 	{
@@ -121,11 +122,13 @@ namespace LockFree
 		  }
 		}
 
+		/// Check if queue is empty
 		bool empty() const
 		{
 			return first == divider;
 		}
 
+		/// Add object to queue
 		void produce(Node * node)
 		{
 		  last->next = node;                              // add the new item
@@ -141,6 +144,7 @@ namespace LockFree
 		  }
 		}
 
+		/// Remove object from queue
 		bool consume(NodePtr& result)
 		{
 		  if(divider != last)                                // if queue is nonempty
@@ -159,6 +163,7 @@ namespace LockFree
 		}
 	};
 
+	/// lock free queue
 	template <typename T>
 	class lockfreequeue
 	{
@@ -191,6 +196,7 @@ namespace LockFree
 		  }
 		}
 
+		/// Enqueue object
 		void produce(const T& t)
 		{
 		  last->next = new Node(t);                              // add the new item
@@ -205,6 +211,7 @@ namespace LockFree
 		  }
 		}
 
+		/// Remove obect from the queue
 		bool consume(T& result)
 		{
 		  if(divider != last)                                // if queue is nonempty

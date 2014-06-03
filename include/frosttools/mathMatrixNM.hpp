@@ -3,33 +3,33 @@
 #error "include <mathMatrix.hpp> first"
 #endif
 
+/// Dynamic matrix of generic size
 template<class Real>
 class MatrixNM
 {
-	typedef MatrixOrder<Real,true> Base;
-	typedef Real value_type;
-	typedef MatrixNM<Real> my_type;
-	typedef my_type vector_type;
-	typedef my_type column_type;
-	typedef my_type row_type;
+	typedef MatrixOrder<Real,true> Base;	///< matrix helper
+	typedef Real value_type;		///< scalar type
+	typedef MatrixNM<Real> my_type;///< matrix type
+	typedef my_type vector_type;	///< vector type
+	typedef my_type column_type;	///< column type
+	typedef my_type row_type;		///< row type
 	typedef my_type transposed_type;
-	int width;
-	int height;
-	Real *data;
+	int width;		///< matrix width
+	int height;		///< matrix height
+	Real *data;		///< matrix contents
 public:
-	Real * getData()
-	{
-		return data;
-	}
 	MatrixNM()
 		:width(0),height(0),data(NULL)
 	{}
+
+	/// Constructor
 	MatrixNM(int c,int r)
 	{
 		width=c;
 		height=r;
 		data=new Real[c*r];
 	}
+	/// Constructor
 	MatrixNM(int c,int r,Real *d)
 	{
 		width=c;
@@ -38,6 +38,7 @@ public:
 		for(int i=0;i<c*r;i++)
 			data[i]=d[i];
 	}
+	/// Copy constructor
 	MatrixNM(const MatrixNM &m)
 	{
 		width=m.width;
@@ -51,22 +52,32 @@ public:
 		if(data)
 			delete []data;
 	}
+	/// Get raw pointer to data
+	Real * getData()
+	{
+		return data;
+	}
+	/// Get number of columns
 	int cols() const
 	{
 		return width;
 	}
+	/// Get number of rows
 	int rows() const
 	{
 		return height;
 	}
+	/// Get value
 	Real & operator()(int c,int r)
 	{
 		return Base::get(data,cols(),rows(),c,r);
 	}
+	/// Get value
 	const Real & operator()(int c,int r) const
 	{
 		return Base::get(data,cols(),rows(),c,r);
 	}
+	/// Addition
 	MatrixNM& operator += ( const MatrixNM& a)
 	{
 		for ( register int i = 0; i < cols; i++ )
@@ -74,14 +85,16 @@ public:
 				this->x [i][j] += a.x [i][j];
 		return *this;
 	}
+	/// Substraction
 	MatrixNM& operator -= ( const MatrixNM& a)
 	{
 		for ( register int i = 0; i < cols; i++ )
-				for ( register int j = 0; j < rows; j++ )
-					this->x [i][j] -= a.x [i][j];
+			for ( register int j = 0; j < rows; j++ )
+				this->x [i][j] -= a.x [i][j];
 
 		return *this;
 	}
+	/// Scalar multiplication
 	MatrixNM& operator *= ( const Real& v)
 	{
 		for ( register int i = 0; i < cols; i++ )
@@ -90,6 +103,7 @@ public:
 
 		return *this;
 	}	
+	/// Swap rows
 	void swapRows(int a,int b)
 	{
 		assert(a<rows && b<rows);
@@ -99,6 +113,7 @@ public:
 			tmp=value(i,a);value(i,a)=value(i,b);value(i,b)=tmp;
 		}
 	}
+	/// Swap columns
 	void swapCols(int a,int b)
 	{
 		assert(a<cols && b<cols);
@@ -132,6 +147,7 @@ public:
 	//	for(int i=0;i<cols;i++)
 	//		value(i,n)=c[i];
 	//}
+	/// Get a value
 	Real & value(int c,int r)
 	{
 		assert(c<cols && r<rows);

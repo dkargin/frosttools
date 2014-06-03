@@ -100,10 +100,13 @@ namespace threading
 
 	template<class Function> struct FunctionWrapper
 	{
+		/// Function pointer
 		Function * func;
 
+		/// Defines wrapper type
 		typedef FunctionWrapper<Function> wrap_type;
 
+		/// Create wrapper
 		static wrap_type * create(Function &fn)
 		{
 			wrap_type * result = new wrap_type;
@@ -111,6 +114,7 @@ namespace threading
 			return result;
 		}
 
+		/// Runs wrapped functor
 		static void * run(void * data)
 		{
 			wrap_type * f = (wrap_type*)data;
@@ -141,11 +145,15 @@ namespace frosttools
 {
 namespace threading
 {
+	/// Scoped locker
 	template<class Lockable = BaseLockable>
 	class ScopedLock
 	{
 	public:
+		/// reference to locking object
 		Lockable & mutex;
+
+		/// Constructor
 		ScopedLock(Lockable &mutex)
 			:mutex(mutex)
 		{
@@ -161,23 +169,27 @@ namespace threading
 	class SimpleMutex : public BaseLockable
 	{
 	public:
-		int counter;
+		int counter;	///< Lock counter
+
 		SimpleMutex()
 		{
 			counter = 0;
 		}
 
+		/// Check if mutex is locked
 		bool locked()const
 		{
 			return counter > 0;
 		}
 
+		/// Lock object
 		bool lock()
 		{
 			counter++;
 			return true;
 		}
 
+		/// Unlock object
 		bool unlock()
 		{
 			counter--;
