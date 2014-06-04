@@ -1,6 +1,11 @@
 #ifndef _MATH_VECTOR_HPP_
 #define _MATH_VECTOR_HPP_
 
+#include "mathBase.hpp"
+
+namespace frosttools
+{
+
 template <typename Real,int _D>
 class Vector
 {
@@ -737,6 +742,8 @@ template <> inline float vecSqrDistance<vec3>(const vec3 &a, const vec3 &b)
 template <> inline float vecDotProduct<vec3>(const vec3 &a, const vec3 &b)
 {	
 	return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+
 }
 
 #endif

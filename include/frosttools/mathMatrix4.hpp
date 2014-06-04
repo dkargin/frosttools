@@ -127,16 +127,16 @@ public:
 	/// Project point into local coordinate system
 	inline vec3 project(const vec3 &a)const
 	{
-		return vec3(::vecProjectLen(a-origin(),axisX()),
-					::vecProjectLen(a-origin(),axisY()),
-					::vecProjectLen(a-origin(),axisZ()));
+		return vec3(vecProjectLen(a-origin(),axisX()),
+					vecProjectLen(a-origin(),axisY()),
+					vecProjectLen(a-origin(),axisZ()));
 	}
 	/// Project direction into local coordinate system
 	inline vec3 projectDir(const vec3 &a)
 	{
-		return vec3(::vecProjectLen(a,axisX()),
-					::vecProjectLen(a,axisY()),
-					::vecProjectLen(a,axisZ()));
+		return vec3(vecProjectLen(a,axisX()),
+					vecProjectLen(a,axisY()),
+					vecProjectLen(a,axisZ()));
 	}
 
 	/// Create translation matrix

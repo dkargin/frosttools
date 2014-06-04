@@ -354,7 +354,7 @@ public:
 	{
 		typename my_type::col_type res;
 		for(int i = 0; i < this->cols(); i++)
-			res[i]=::vecProjectLen(a, this->col(i));
+			res[i]=vecProjectLen(a, this->col(i));
 		return res;
 //		return vec3(::vecProjectLen(a-origin(),col(0)),
 //					::vecProjectLen(a-origin(),axisY()),
