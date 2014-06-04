@@ -106,7 +106,7 @@ int mkaddr(void *addr, int *addrlen, const char *str_addr, const char *protocol)
 class Peer
 {
 protected:
-	typedef frosttools::threading::mutex Mutex;				///< Defines mutex type
+	typedef frosttools::threading::Mutex Mutex;				///< Defines mutex type
 	typedef frosttools::threading::ScopedLock<Mutex> Lock;	///< Defines locker type
 	Mutex baseLock;					///<Lock for internal synchronization
 	bool reconnect;			///< Reconnect mode

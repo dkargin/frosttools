@@ -21,20 +21,20 @@ namespace threading
 	/**
 	 * Wraps pthread thread class
 	 */
-	class thread
+	class Thread
 	{
 		pthread_t id;
 		pthread_attr_t attr;
 		
 	public:
-		thread()
+		Thread()
 		{
 			id = 0;
 			pthread_attr_init(&attr);
 			pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE);
 		}
 
-		template<class Function> thread(Function fn)
+		template<class Function> Thread(Function fn)
 		{
 			id = 0;
 			run(fn);
@@ -74,17 +74,20 @@ namespace threading
 	}
 
 	/// pthread mutex wrapper	
-	class MutexPT : public BaseLockable
+	class Mutex : public BaseLockable
 	{
 	public:
 		pthread_mutex_t mutex;
+		pthread_mutexattr_t attr;
 
-		MutexPT()
+		Mutex()
 		{
-			pthread_mutex_init(&mutex, NULL);
+			pthread_mutexattr_init(&attr);
+			pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+			pthread_mutex_init(&mutex, &attr);
 		}
 
-		~MutexPT()
+		~Mutex()
 		{
 			pthread_mutex_destroy(&mutex);
 		}
@@ -104,12 +107,6 @@ namespace threading
 				return true;
 			}
 			return false;
-		}
-
-		void reportError(const char * where)
-		{
-			int err = errno;
-			fprintf(stderr, "%s: error errno=%d, %s", where, err, strerror(err));
 		}
 
 		bool lock()
@@ -133,10 +130,13 @@ namespace threading
 			}
 			return true;
 		}
+	private:
+		void reportError(const char * where)
+		{
+			int err = errno;
+			fprintf(stderr, "%s: error errno=%d, %s", where, err, strerror(err));
+		}
 	};
-
-	typedef MutexPT Mutex;
-	typedef Mutex mutex;
 
 	/// ConditionVariable
 	/**
@@ -169,7 +169,7 @@ namespace threading
 		/*! Wait for specified time, in milliseconds.
 		 * Returns cv status after completion
 		*/
-		CvStatus wait_for(Mutex & mutex, int timeMS)
+		CvStatus waitFor(Mutex & mutex, int timeMS)
 		{
 			if(timeMS <= 0)
 				return cvError;
@@ -188,20 +188,20 @@ namespace threading
 		}
 
 		//! Signal one thread waiting for this CV
-		void notify_one()
+		void notifyOne()
 		{
 			int result = pthread_cond_signal(&cv);
 			if( result != 0)
 				reportError(result);
 		}
 		//! Signal every thread waiting for this CV
-		void notify_all()
+		void notifyAll()
 		{
 			int result = pthread_cond_broadcast(&cv);
 			if( result != 0)
 				reportError(result);
 		}
-protected:
+private:
 		//! Used as error reporting
 		static void reportError(int errcode)
 		{

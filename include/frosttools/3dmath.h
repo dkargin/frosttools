@@ -525,8 +525,8 @@ template<class Type> const Vector2D<Type> & vec3to2(const Vector3D<Type> & v)
 	return (Vector2D<Type>&)v;
 }
 
-typedef Matrix3<float,Math::RowOrder> Mt3x3;	///! specialized float 3x3 row order matrix
-typedef Matrix4<float,Math::RowOrder> Mt4x4;	///! specialized float 4x4 row order matrix
+typedef Matrix3<float,Math::RowOrder> Mt3x3;	///< specialized float 3x3 row order matrix
+typedef Matrix4<float,Math::RowOrder> Mt4x4;	///< specialized float 4x4 row order matrix
 //typedef Matrix4<float,Math::RowOrder> COORDSYS;
 
 

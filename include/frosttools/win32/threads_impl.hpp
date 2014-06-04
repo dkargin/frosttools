@@ -6,20 +6,20 @@
 #include <process.h>
 #include <assert.h>
 
-namespace Threading
+namespace threading
 {
-	class thread
+	class Thread
 	{
 		HANDLE hThread;
 		unsigned threadID;
 	public:
-		thread()
+		Thread()
 		{
 			hThread = 0;
 			threadID = 0;
 		}
 
-		template<class Function> thread(Function fn)
+		template<class Function> Thread(Function fn)
 		{
 			id = 0;
 			run(fn);
@@ -104,15 +104,15 @@ namespace Threading
 		}
 	};
 
-	class mutex
+	class Mutex
 	{
 		HANDLE handle;
 	public:
-		mutex()
+		Mutex()
 		{
 			handle = CreateMutex(NULL, FALSE, NULL);
 		}
-		~mutex()
+		~Mutex()
 		{
 			CloseHandle(handle);
 		}
@@ -130,7 +130,7 @@ namespace Threading
 		{
 			ReleaseMutex(handle);
 		}
-		bool try_lock()
+		bool trylock()
 		{
 			if(WaitForSingleObject (handle, 0) == WAIT_OBJECT_0)
 			{
@@ -140,7 +140,7 @@ namespace Threading
 			return true;
 		}
 	private:
-		mutex(const mutex & mutex);
+		Mutex(const Mutex & mutex);
 	};
 
 	
@@ -293,18 +293,26 @@ namespace Threading
 			pthread_cond_destroy(&cv);
 		}
 
-		void wait(mutex &mutex)
+		void wait(Mutex &mutex)
 		{
 			HANDLE mHandle = mutex.getHandle();
 			pthread_cond_wait(&cv, &mHandle);
 		}
 
-		void notify_one()
+		CvStatus waitFor(Mutex & mutex, int timeMS)
+		{
+			HANDLE mHandle = mutex.getHandle();
+			/// TODO: implement timed variant
+			pthread_cond_wait(&cv, &mHandle);
+			return cvNoTimeout;
+		}
+
+		void notifyOne()
 		{
 			pthread_cond_signal(&cv);
 		}
 
-		void notify_all()
+		void notifyAll()
 		{
 			pthread_cond_broadcast(&cv);
 		}
