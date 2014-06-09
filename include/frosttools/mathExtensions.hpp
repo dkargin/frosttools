@@ -54,7 +54,7 @@ public:
 	/// Get normalized direction
 	inline _Vr direction() const
 	{
-		return vecNormalise(end-start);
+		return vecNormalize(end-start);
 	}
 	/// Get projection length
 	inline value_type projectLen(const _Vr &v) const
@@ -643,7 +643,7 @@ template<class Real> int intersection3(const _Edge<Vector3D<Real> > &a,const _Ed
 }
 
 
-/// Sphere and Shhere intersection
+/// Sphere and Sphere intersection
 /// Returns:
 /// 0 - no intersection
 /// 1 - touch
@@ -666,7 +666,7 @@ template<class Vector> int intersection(const _Sphere<Vector> &a,const _Sphere<V
 		if(distance+b.radius<a.radius)
 			return 0;
 		float alpha=(-b.radius*b.radius+a.radius*a.radius-distance*distance)/(2*distance);
-		*v=b.center+vecNormalise(b.center-a.center)*alpha;
+		*v=b.center+vecNormalize(b.center-a.center)*alpha;
 		*radius=sqrt(b.radius*b.radius-alpha*alpha);
 		return 1;
 	}
@@ -675,7 +675,7 @@ template<class Vector> int intersection(const _Sphere<Vector> &a,const _Sphere<V
 		if(distance+a.radius<b.radius)
 			return 0;
 		float alpha=(-a.radius*a.radius+b.radius*b.radius-distance*distance)/(2*distance);
-		*v=a.center+vecNormalise(a.center-b.center)*alpha;
+		*v=a.center+vecNormalize(a.center-b.center)*alpha;
 		*radius=sqrt(a.radius*a.radius-alpha*alpha);
 		return 1;
 	}
@@ -683,7 +683,7 @@ template<class Vector> int intersection(const _Sphere<Vector> &a,const _Sphere<V
 		return 0;
 	float a1=(distance*distance+a.radius*a.radius-b.radius*b.radius)/(distance+distance);
 	*radius=sqrt(a.radius*a.radius-a1*a1);
-	*v=a.center+vecNormalise(b.center-a.center)*a1;
+	*v=a.center+vecNormalize(b.center-a.center)*a1;
 	return 1;
 }
 

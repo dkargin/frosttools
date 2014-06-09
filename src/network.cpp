@@ -375,7 +375,7 @@ int Peer::send(size_t peerId, const void * data, size_t size)
 			}
 			//network.getLog()->line(0,"General net: ERROR sending to invalid connection\n");
 		} else if (bytesData != size) {
-			printf("bytesData != size !! %d %d \n", bytesData, size);
+			printf("bytesData != size !! %d %d \n", bytesData, (int)size);
 		}
 		//else
 		//	network.getLog()->line(0,"Sent %d bytes of data\n", bytesData);

@@ -16,6 +16,7 @@ namespace threading
 	class BaseLockable
 	{
 	public:
+		virtual ~BaseLockable() {}
 		/// Lock object
 		virtual bool lock() = 0;
 		/// Unlock object

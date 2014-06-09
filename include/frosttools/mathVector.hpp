@@ -546,7 +546,7 @@ typedef const vec2f & crvec2f;
 template <typename _Vr> inline _Vr vecNormalize(const _Vr &v)
 {
 	_Vr res = v;
-	return res.normalise();
+	return res.normalize();
 }
 
 template <typename _Vr> inline _Vr vecNormalize_s(const _Vr &v)

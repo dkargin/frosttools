@@ -41,7 +41,7 @@ if(BUILD_DOCUMENTATION)
 		message(FATAL_ERROR "Doxygen should be installed to build the documentation")
 	endif(NOT DOXYGEN_FOUND)
 	configure_file(Doxyfile.in ${PROJECT_BINARY_DIR}/Doxyfile @ONLY IMMEDIATE)
-  add_custom_target (Docs ALL 
+	add_custom_target (Docs ALL 
 		COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/Doxyfile
 		SOURCES ${PROJECT_BINARY_DIR}/Doxyfile)
 endif(BUILD_DOCUMENTATION)

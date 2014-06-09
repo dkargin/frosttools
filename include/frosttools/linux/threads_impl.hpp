@@ -85,6 +85,7 @@ namespace threading
 			pthread_mutexattr_init(&attr);
 			pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 			pthread_mutex_init(&mutex, &attr);
+			//pthread_mutex_init(&mutex, NULL);
 		}
 
 		~Mutex()
@@ -173,9 +174,16 @@ namespace threading
 		{
 			if(timeMS <= 0)
 				return cvError;
+
+			const int nsecInSec = 1000000000;
+			const int msecInSec = 1000;
+			const int nsecInMsec = 1000000;
+			timespec current;
+			clock_gettime(CLOCK_REALTIME, &current);
 			timespec time;
-			time.tv_sec = timeMS / 1000;
-			time.tv_nsec = timeMS / 1000000;
+			long nsec = current.tv_nsec + (timeMS % msecInSec) * nsecInMsec;
+			time.tv_sec = current.tv_sec + timeMS / msecInSec + nsec / nsecInSec;
+			time.tv_nsec = nsec % nsecInSec;
 			int result = pthread_cond_timedwait(&cv, &mutex.mutex, &time);
 			if( result != 0 && result != ETIMEDOUT)
 			{
@@ -205,6 +213,7 @@ private:
 		//! Used as error reporting
 		static void reportError(int errcode)
 		{
+			printf("Error %d:%d in CV: %s\n", errcode, errno, strerror(errno));
 		}
 	};
 };

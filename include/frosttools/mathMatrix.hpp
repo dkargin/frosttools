@@ -276,7 +276,7 @@ public:
 	/// Constructor for specified matrix size
 	MatrixNM(int w,int h)
 	{
-		assign_val(Real(0),w,h);
+		this->assign_val(Real(0),w,h);
 	}
 	/// Copy constructor
 	MatrixNM(const MatrixNM &m)
