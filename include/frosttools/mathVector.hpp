@@ -601,8 +601,8 @@ template <class _Vr> inline typename _Vr::value_type vecLength(_Vr v)
 
 template <class _Vr> inline float vecAngle2d(const _Vr &a, const _Vr &b)
 {
-	_Vr ta = vecNormalise(a);
-	_Vr tb = vecNormalise(b);
+	_Vr ta = vecNormalize(a);
+	_Vr tb = vecNormalize(b);
 	float sn = ta[0]*tb[1] - ta[1]*tb[0];
 	float cs = (a&b) > 0.0f;
 
@@ -614,8 +614,8 @@ template <class _Vr> inline float vecAngle2d(const _Vr &a, const _Vr &b)
 
 template <class _Vr> inline float vecAngle2d_CCW(const _Vr &a, const _Vr &b)
 {
-	_Vr ta = vecNormalise(a);
-	_Vr tb = vecNormalise(b);
+	_Vr ta = vecNormalize(a);
+	_Vr tb = vecNormalize(b);
 	float cs = ta&tb;
 	float sn = ta[0]*tb[1] - ta[1]*tb[0];
 	// sn<0 if CW order
@@ -627,8 +627,8 @@ template <class _Vr> inline float vecAngle2d_CCW(const _Vr &a, const _Vr &b)
 
 template <class _Vr> inline float vecAngle2d_CW(const _Vr &a, const _Vr &b)
 {
-	_Vr ta = vecNormalise(a);
-	_Vr tb = vecNormalise(b);
+	_Vr ta = vecNormalize(a);
+	_Vr tb = vecNormalize(b);
 	float cs = ta&tb;
 	float sn = ta[0]*tb[1] - ta[1]*tb[0];
 	// sn<0 if CW order
@@ -640,8 +640,8 @@ template <class _Vr> inline float vecAngle2d_CW(const _Vr &a, const _Vr &b)
 
 template <class _Vr> inline float vecAngle2d_positive(const _Vr &a, const _Vr &b)
 {
-	_Vr ta = vecNormalise(a);
-	_Vr tb = vecNormalise(b);
+	_Vr ta = vecNormalize(a);
+	_Vr tb = vecNormalize(b);
 	float sn = ta[0]*tb[1] - ta[1]*tb[0];
 	float cs = (a&b);
 
