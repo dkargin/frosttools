@@ -3,28 +3,36 @@
 #error "include <mathMatrix.hpp> first"
 #endif
 
+namespace frosttools
+{
+
+/// 4-dimensinal matrix
 template <typename Real,bool row_order=false>
 class Matrix4 : public MatrixSquare<Real,4,row_order>
 {
 public:
-	typedef MatrixSquare<Real,4,row_order> parent_type;
-	typedef typename parent_type::value_type value_type;
-	typedef Matrix4<Real,row_order> my_type;
+	typedef MatrixSquare<Real,4,row_order> parent_type;	///< Defines parent type
+	typedef typename parent_type::value_type value_type;	///< Defines scalar types
+	typedef Matrix4<Real,row_order> my_type;				///< Defines own type
+	/// Default constructor
 	Matrix4 () {}
-	// copy constructor
+	/// copy constructor
 	Matrix4 (const Matrix<Real,4,4,row_order> &m)
 	{
 		this->assign((const Real*)m);
 	}
+	/// Constructor
 	template<class R> inline Matrix4(const Vector<R,4*4> &m)
 	{
 		this->assign((const R*)m);
 	}
+	/// Constructor
 	template<class R>Matrix4(const R *m)
 	{
 		this->assign(m);
 	}
 
+	/// Set X axis
 	inline void axisX(vec3 v)
 	{
 	    value_type *c=(value_type*)this;
@@ -35,32 +43,39 @@ public:
 		//c[4]=v[1];
 		//c[8]=v[2];
 	}
+	/// Set X axis
 	inline void axisX(Real x,Real y,Real z)
 	{
 		axisX(vec3(x,y,z));
 	}
-	inline void axisY(vec3 v)
+	/// Set Y axis
+	inline void axisY(const vec3 &v)
 	{
 	    value_type *c=(value_type*)this;
 	    this->set(1,0,v[0]);
 	    this->set(1,1,v[1]);
 	    this->set(1,2,v[2]);
 	}
+
+	/// Set Y axis
 	inline void axisY(Real x,Real y,Real z)
 	{
 		axisY(vec3(x,y,z));
 	}
-	inline void axisZ(vec3 v)
+	/// Set Z axis
+	inline void axisZ(const vec3 &v)
 	{
 		value_type *c=(value_type*)this;
 		this->set(2,0,v[0]);
 		this->set(2,1,v[1]);
 		this->set(2,2,v[2]);
 	}
+	/// Set Z axis
 	inline void axisZ(Real x,Real y,Real z)
 	{
 		this->axisZ(vec3(x,y,z));
 	}
+	/// Set transform origin
 	inline void origin(const vec3 &v)
 	{
 	    //value_type *c=(value_type*)this;
@@ -68,106 +83,125 @@ public:
 	    this->set(3,1,v[1]);
 	    this->set(3,2,v[2]);
 	}
+
+	/// Set transform origin
+	inline void origin(Real x,Real y,Real z)
+	{
+		//value_type *c=(value_type*)this;
+		this->origin(vec3(x,y,z));
+	}
+	/// Apply yaw rotation
 	inline void yaw(float ang)//around y axis
 	{
 		(*this)*=rotateY(ang);
 	}
+	/// Apply pitch rotation
 	inline void pitch(float ang)//around Z axis
 	{
 		(*this)*=rotateX(ang);
 	}
-	inline void origin(Real x,Real y,Real z)
-	{
-	    //value_type *c=(value_type*)this;
-		this->origin(vec3(x,y,z));
-	}
+	/// Get X axis
 	inline vec3 axisX() const
 	{
 	    //const value_type *c=(const value_type*)this;
 		return vec3(this->get(0,0),this->get(0,1),this->get(0,2));
 	}
+	/// Get Y axis
 	inline vec3 axisY() const
 	{
 	    //const value_type *c=(const value_type*)this;
 		return vec3(this->get(1,0),this->get(1,1),this->get(1,2));
 	}
+	/// Get Z axis
 	inline vec3 axisZ() const
 	{
 	    //const value_type *c=(const value_type*)this;
 		return vec3(this->get(2,0),this->get(2,1),this->get(2,2));
 	}
+	/// Get transform origin
 	inline vec3 origin() const
 	{
 	    //const value_type *c=(const value_type*)this;
 		return vec3(this->get(3,0),this->get(3,1),this->get(3,2));
 	}
-	inline vec3 project(const vec3 &a)const//returns a coordinates in this system
+	/// Project point into local coordinate system
+	inline vec3 project(const vec3 &a)const
 	{
-		return vec3(::vecProjectLen(a-origin(),axisX()),
-					::vecProjectLen(a-origin(),axisY()),
-					::vecProjectLen(a-origin(),axisZ()));
+		return vec3(vecProjectLen(a-origin(),axisX()),
+					vecProjectLen(a-origin(),axisY()),
+					vecProjectLen(a-origin(),axisZ()));
 	}
+	/// Project direction into local coordinate system
 	inline vec3 projectDir(const vec3 &a)
 	{
-		return vec3(::vecProjectLen(a,axisX()),
-					::vecProjectLen(a,axisY()),
-					::vecProjectLen(a,axisZ()));
+		return vec3(vecProjectLen(a,axisX()),
+					vecProjectLen(a,axisY()),
+					vecProjectLen(a,axisZ()));
 	}
-	inline vec3 vecProject(vec3 a)const
-	{
-		return vec3(::vecProjectLen(a,axisX()),
-					::vecProjectLen(a,axisY()),
-					::vecProjectLen(a,axisZ()));
-	}
+
+	/// Create translation matrix
 	static my_type	translate ( const vec3& );
+	/// Create translation matrix
 	static my_type  translate (Real x,Real y,Real z)
 	{
 		my_type	res = Matrix4::identity();
 		res.origin(x,y,z);
 		return res;
 	}
+	/// Create scale matrix
 	static my_type	scale     ( const vec3& );
+	/// Create scale matrix
 	static my_type	scale     ( float x,float y,float z );
+	/// Create rotation matrix
 	static my_type	rotateX   ( float );
+	/// Create rotation matrix
 	static my_type	rotateY   ( float );
+	/// Create rotation matrix
 	static my_type	rotateZ   ( float );
+	/// Create rotation matrix
 	static my_type	rotate    ( const vec3& v, float );
 	//static my_type	mirrorX   ();
 	//static my_type	mirrorY   ();
 	//static my_type	mirrorZ   ();
 
-	//	Make a rotation matrix from Euler angles. The 4th row and column are unmodified. //
+	///	Make a rotation matrix from Euler angles. The 4th row and column are unmodified. //
 	my_type &setRotationRadians( const float *angles );
 
-	//	Make a rotation matrix from Euler angles. The 4th row and column are unmodified.
+	///	Make a rotation matrix from Euler angles. The 4th row and column are unmodified.
 	my_type &setRotationDegrees( const float *angles );
 
-	//	Make an inverted rotation matrix from Euler angles. The 4th row and column are unmodified.
+	///	Make an inverted rotation matrix from Euler angles. The 4th row and column are unmodified.
 	my_type &setInverseRotationRadians( const float *angles );
 
-	//	Make an inverted rotation matrix from Euler angles. The 4th row and column are unmodified.
+	///	Make an inverted rotation matrix from Euler angles. The 4th row and column are unmodified.
 	my_type &setInverseRotationDegrees( const float *angles );
+
+	/// Assignment operator
 	my_type &operator=(const parent_type &m)
 	{
 		for(int i=0;i< this->cols()*this->rows();i++)
 			(*this)[i]=m[i];
 		return *this;
 	}
+	/// Cast to a parent type
 	operator parent_type ()
 	{
 		return *this; 
 	}
 };
 
+/// cast static array to a matrix
 template<typename Real>
 Matrix4<Real,false> & attachMt4c(Real source[16])
 {
-	return *new (source) Matrix4<Real>;
+	return *new (source) Matrix4<Real, false>;
 }
+
+/// cast static array to a matrix
 template<typename Real>
 Matrix4<Real,true> & attachMt4r(Real source[16])
 {
-	return *new (source) Matrix4<Real>;
+	return *new (source) Matrix4<Real, true>;
 }
 
 
@@ -329,6 +363,7 @@ Matrix4<Real,order>	Matrix4<Real,order>::rotate ( const vec3& axis, float angle 
 //	return res;
 //}
 
+/// Transform point by a matrix
 template<typename Real,bool order>
 Vector3D<Real> operator * ( const Matrix4<Real,order>& m, const Vector3D<Real>& v )
 {
@@ -452,3 +487,4 @@ Matrix4<Real,order>& Matrix4<Real,order>::setInverseRotationRadians( const float
 	return *this;
 	//Matrix4<Real> m_matrix;
 }
+}	// namespace frosttools

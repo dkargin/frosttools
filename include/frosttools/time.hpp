@@ -16,35 +16,50 @@ namespace frosttools
 class TimeManager
 {
 public:
-	typedef size_t Time;
-	typedef long unsigned int TimeAccumulator;
+	typedef size_t Time;	///< Type to store actual time
+	typedef long unsigned int TimeAccumulator;	///< Type to accumulate time
 
+	/// Base class for stored action
 	class Action
 	{
 	public:
+		/// Destructor
 		virtual ~Action() {}
+		/// Check if TimeManager should delete it by itself
 		virtual bool IsDestructible() const {return true;}
+		/// Execute pending action
 		virtual void Execute() = 0;
 	};
 
+	/// Ticket for timer
 	struct Timer
 	{
-		Action * action;
-		Time time;
+		Action * action;	//!< Action to run
+		Time time;			//!< Time to run
 	};
 
+	/// Add action to execute after specified delay
 	void add(Action * action, Time delay);
+	/// Update timer
+	/// It increments time counter and calls pending actions
 	virtual void update(Time dt);
 
+	/// Constructor
 	TimeManager();
+	/// Destructor
 	~TimeManager();
 
-	void clear();					// clear timeline
-	void resetTime();				// reset accumulated time
+	/// remove all pending actions
+	void clear();
+	/// reset accumulated time
+	void resetTime();
 protected:
+	/// Accumulated time
 	TimeAccumulator totalTime;
+	/// Stored actions
 	std::vector<Timer> timeLine;
 
+	/// remove all actions
 	void destroy(Timer & timer);	// destroy specific timer
 };
 

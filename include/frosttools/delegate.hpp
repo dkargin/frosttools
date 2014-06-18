@@ -1,25 +1,33 @@
 #ifndef FROSTTOOLS_DELEGATE
 #define FROSTTOOLS_DELEGATE
-#pragma once
-#include "assert.h"
-// Empty argument placeholder
+
+#include <assert.h>
+
+namespace frosttools
+{
+
+/// @cond DOX_DEEP_IMPLEMENTATION=1
+/// Empty argument placeholder
 struct NullArg
 {
-	NullArg()
-	{}
+	/// Default constructor
+	NullArg() {}
 };
-// Empty argument test - positive variants
+
+/// Empty argument test - positive variants
 template<class Type> struct NotNullArg
 {
+	/// Dummt value
 	enum Test
 	{
 		value=1
 	};
 };
 
-// Empty argument test - negative variant
+/// Empty argument test - negative variant
 template<> struct NotNullArg<NullArg>
 {
+	/// Dummy value
 	enum Test
 	{
 		value=0
@@ -38,12 +46,14 @@ struct SignatureSingle
 	static const int N=6;
 	typedef ret (*single)(Arg1,Arg2,Arg3,Arg4,Arg5,Arg6);
 };
+
 template<	class ret>
 struct SignatureSingle<ret,NullArg,NullArg,NullArg,NullArg,NullArg,NullArg>
 {
 	static const int N=0;
 	typedef ret (*single)();
 };
+
 template<	class ret,class Arg1>
 struct SignatureSingle<ret,Arg1,NullArg,NullArg,NullArg,NullArg,NullArg>
 {
@@ -51,6 +61,7 @@ struct SignatureSingle<ret,Arg1,NullArg,NullArg,NullArg,NullArg,NullArg>
 	static const int N=1;
 	typedef ret (*single)(Arg1);
 };
+
 template<	class ret,class Arg1,class Arg2>
 struct SignatureSingle<ret,Arg1,Arg2,NullArg,NullArg,NullArg,NullArg>
 {
@@ -59,6 +70,7 @@ struct SignatureSingle<ret,Arg1,Arg2,NullArg,NullArg,NullArg,NullArg>
 	static const int N=2;
 	typedef ret (*single)(Arg1,Arg2);
 };
+
 template<	class ret,class Arg1,class Arg2,class Arg3>
 struct SignatureSingle<ret,Arg1,Arg2,Arg3,NullArg,NullArg,NullArg>
 {
@@ -102,6 +114,7 @@ struct MemberFn<Owner,ret,NullArg,NullArg,NullArg,NullArg,NullArg,NullArg>//: pu
 	typedef ret (Owner::*member)(void);
 };
 
+///\endcond DOX_DEEP_IMPLEMENTATION
 //class SignatureMember:
 template<	class ret,
 			class Arg1=NullArg,
@@ -123,16 +136,28 @@ private:
 	int argc;	// argument count
 
 public:
+	/// Method signature
 	typedef SignatureSingle<ret,Arg1,Arg2,Arg3,Arg4,Arg5,Arg6> signature;
 	typedef typename signature::single single;
+
+	/// Return type
 	typedef ret return_type;
+
+	/// Default constructor
 	Delegate()
 		: _ptr(0), _func(0)
 	{}
+	/// Copy constructor
 	Delegate(const Delegate &delegate)
 		: _ptr(delegate._ptr), _func(delegate._func)
 	{}
 
+	/// Constructor
+	/**
+	 * Constructs delegate using class method
+	 * @param owner class pointer
+	 * @param func pointer to class method
+	 */
 	template <class Owner>
 		Delegate(Owner *owner, return_type (Owner::*func)(void))
 		: _ptr(0), _func(0)
@@ -141,6 +166,12 @@ public:
 		_func = reinterpret_cast<MemberFn>(func);
 		_ptr = reinterpret_cast<X *>(owner);
 	}
+	/// Constructor
+	/**
+	 * Constructs delegate using class method
+	 * @param owner class pointer
+	 * @param func pointer to class method
+	 */
 	template <class Owner>
 	Delegate(Owner *owner, ret (Owner::*func)(Arg1))
 	{
@@ -148,6 +179,12 @@ public:
 		_func = reinterpret_cast<MemberFn>(func);
 		_ptr = reinterpret_cast<X *>(owner);
 	}
+	/// Constructor
+	/**
+	 * Constructs delegate using class method
+	 * @param owner class pointer
+	 * @param func pointer to class method
+	 */
 	template <class Owner>
 	Delegate(Owner *owner, ret (Owner::*func)(Arg1, Arg2))
 	{
@@ -155,6 +192,12 @@ public:
 		_func = reinterpret_cast<MemberFn>(func);
 		_ptr = reinterpret_cast<X *>(owner);
 	}
+	/// Constructor
+	/**
+	 * Constructs delegate using class method
+	 * @param owner class pointer
+	 * @param func pointer to class method
+	 */
 	template <class Owner>//, class Arg1, class Arg2>
 	Delegate(Owner *owner, ret (Owner::*func)(Arg1, Arg2, Arg3))
 	{
@@ -162,20 +205,25 @@ public:
 		_func = reinterpret_cast<MemberFn>(func);
 		_ptr = reinterpret_cast<X *>(owner);
 	}
-	bool operator ! ()
+
+	/// Check if delegate is attached somewhere
+	bool operator ! () const
 	{
 		return (!_ptr || !_func);
 	}
 
+	/// Check if two delegates are equal
 	bool operator == (const Delegate &delegate)
 	{
 		return (_ptr == delegate._ptr && _func == delegate._func);
 	}
 
+	/// Check if two delegates are not equal
 	bool operator != (const Delegate &delegate)
 	{
 		return !(*this == delegate);
 	}
+	/// Invoke a delegate
 	return_type operator ()(Arg1 arg1=NullArg(),Arg2 arg2=NullArg(),Arg3 arg3=NullArg(),Arg4 arg4=NullArg(),Arg5 arg5=NullArg(),Arg6 arg6=NullArg())
 	{
 		//static parameter list check
@@ -222,6 +270,12 @@ public:
 	}
 
 
+	/// Attach delegate
+	/**
+	 * Attaches delegate to class method
+	 * @param owner class pointer
+	 * @param func pointer to class method
+	 */
 	template <class Owner>
 	void attach(Owner *owner, return_type (Owner::*func)(void))
 	{
@@ -229,6 +283,12 @@ public:
 		_func = reinterpret_cast<MemberFn>(func);
 		_ptr = reinterpret_cast<X *>(owner);
 	}
+	/// Attach delegate
+	/**
+	 * Attaches delegate to class method
+	 * @param owner class pointer
+	 * @param func pointer to class method
+	 */
 	template <class Owner>
 	void attach(Owner *owner, ret (Owner::*func)(Arg1))
 	{
@@ -236,6 +296,12 @@ public:
 		_func = reinterpret_cast<MemberFn>(func);
 		_ptr = reinterpret_cast<X *>(owner);
 	}
+	/// Attach delegate
+	/**
+	 * Attaches delegate to class method
+	 * @param owner class pointer
+	 * @param func pointer to class method
+	 */
 	template <class Owner>
 	void attach(Owner *owner, ret (Owner::*func)(Arg1, Arg2))
 	{
@@ -243,6 +309,12 @@ public:
 		_func = reinterpret_cast<MemberFn>(func);
 		_ptr = reinterpret_cast<X *>(owner);
 	}
+	/// Attach delegate
+	/**
+	 * Attaches delegate to class method
+	 * @param owner class pointer
+	 * @param func pointer to class method
+	 */
 	template <class Owner>//, class Arg1, class Arg2>
 	void attach(Owner *owner, ret (Owner::*func)(Arg1, Arg2, Arg3))
 	{
@@ -250,18 +322,21 @@ public:
 		_func = reinterpret_cast<MemberFn>(func);
 		_ptr = reinterpret_cast<X *>(owner);
 	}
+	/// Detach delegate
 	void detach()
 	{
 		_func=NULL;
 		_ptr=NULL;
 	}
+	/// Check if delegate is attached
 	inline bool attached()
 	{
 		return _ptr && _func;
 	}
+	/// Cast to bool - checks if delegate is valid
 	inline operator bool()
 	{
-		return _ptr && _func;
+		return attached();
 	}
 	/*
 	ret_type operator()(Arg1 arg)
@@ -284,6 +359,7 @@ public:
 		if (_ptr && func)
 			return (_ptr->*func)(arg1, arg2);
 	}*/
+	/// Get function signature
 	template<class Owner>
 	::MemberFn<Owner,ret,Arg1,Arg2,Arg3,Arg4,Arg5,Arg6> getSignatureSingle(Owner *ptr)
 	{
@@ -311,4 +387,6 @@ class MemberFn
 	Owner *owner;
 public:
 };*/
+
+}
 #endif

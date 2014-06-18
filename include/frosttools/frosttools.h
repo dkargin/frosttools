@@ -1,10 +1,8 @@
 #pragma once
 
-
 //////////////////////////////////////////////////////////////////////
-// FrostHand's ToolBox. Different utilitary functions
-// v0.4
-//
+/// FrostHand's ToolBox. Different utilitary functions
+/// v0.5 WIP
 //////////////////////////////////////////////////////////////////////
 
 #include <fstream>
@@ -15,6 +13,7 @@
 #include <sstream>
 #include <math.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #ifdef FrostTools_Use_All
 #define FrostTools_Use_Asserts
@@ -46,6 +45,9 @@
 #pragma warning(disable:4996) // This function or variable may be unsafe.
 #endif
 
+/// Root namespace for all library classes
+namespace frosttools
+{
 #ifdef FrostTools_Use_Types
 typedef unsigned int uint;
 typedef unsigned char uint8;
@@ -67,18 +69,13 @@ typedef std::basic_string<TCHAR> tstring;
 #define FrostTools_Locals
 #define rel_size(a,b) ((sizeof(a)+sizeof(b))/sizeof(b))
 
-#include <stdarg.h>
-
-FrostTools_Impl float clampf(float value,float max)
-{
-	signed int n=(int)floor(value/max);
-	return value-max*n;
-}
-
-
+/// Utility class for string operatios. Used to overcome g++/vcs++ differencies between standard string methods
 template <typename Char> struct StrUtils {};
+
+/// Specialization for char
 template<> struct StrUtils<char>
 {
+	/// Printf to array
 	char * sprintf(char *dst,char *format,...)
 	{
 		va_list v;
@@ -87,6 +84,8 @@ template<> struct StrUtils<char>
 		va_end(v);
 		return dst;
 	}
+
+	/// Printf to array
 	char * vsnprintf(char *dst,size_t max,char *format,...)
 	{
 		va_list v;
@@ -96,7 +95,9 @@ template<> struct StrUtils<char>
 		return dst;
 	}
 };
+
 #ifdef FROSTTOOLS_WCHAR
+/// Specialization for wide char
 template<> struct StrUtils<wchar_t>
 {
 	wchar_t *sprintf(wchar_t *dst,wchar_t*format,...)
@@ -118,29 +119,41 @@ template<> struct StrUtils<wchar_t>
 };
 #endif
 
+/// Static array for specified type.
+/**
+ * 	Provides some bounds checking
+ */
 template<class T, int MaxSize>
 class StaticArray
 {
 public:
+	/// Defines value type
 	typedef T value_type;
+	/// Defines container type
 	typedef StaticArray<T,MaxSize> container_type;
+	/// Defines raw pointer type
 	typedef T* ptr_type;
-	// constant pointer holder
+	/// constant pointer holder
 	struct holder_const
 	{
-		typedef const T value_type;
-		typedef const T * pointer;
-		typedef const T & reference;
+		typedef const T value_type;	///< Defines value type
+		typedef const T * pointer;		///< Defines pointer type
+		typedef const T & reference;	///< Defines reference type
 
+		/// Data pointer
 		const T * ptr;
+
+		/// Cast to cosnt target type
 		operator const T() const
 		{
 			return *ptr;
 		}
+		/// Get value
 		const T operator *() const
 		{
 			return *ptr;
 		}
+		/// Dereferencing operator
 		const T * operator->() const
 		{
 			return ptr;
@@ -149,60 +162,75 @@ public:
 	// free pointer holder
 	struct holder
 	{
-		typedef T value_type;
-		typedef T * pointer;
-		typedef T & reference;
+		typedef T value_type;		///< Defines value type
+		typedef T * pointer;		///< Defines pointer type
+		typedef T & reference;		///< Defines reference type
 
+		/// data pointer
 		T * ptr;
+		/// cast to target type
 		operator value_type() 
 		{
 			return *ptr;
 		}
+		/// Get value to pointer
 		T operator* ()
 		{
 			return *ptr;
 		}
+		/// Dereferencing operator
 		T * operator->()
 		{
 			return ptr;
 		}
 	};
 
+	/// base iterator
 	template<class Base> struct _iterator_base: public Base
 	{
-		typedef std::random_access_iterator_tag iterator_category;
-		typedef int difference_type;		
-		typedef _iterator_base<Base> my_type;
+		typedef std::random_access_iterator_tag iterator_category;	///< Iterator category
+		typedef int difference_type;								///< Defines iterator difference type
+		typedef _iterator_base<Base> my_type;						///< Defines own type
 
+		/// constructor
 		_iterator_base(container_type * container, value_type * data)
 		{
 			this->ptr = data;
 		}
+		/// copy constructor
 		_iterator_base(const my_type &it)
 		{
 			this->ptr = it.ptr;
 		}
+
+		/// equal
 		bool operator == (const my_type & t) const
 		{
 			return t.ptr == this->ptr;
 		}
+		/// non-equal
 		bool operator != (const my_type &t) const
 		{
 			return t.ptr != this->ptr;
 		}
+		/// less
 		bool operator < (const my_type &t) const
 		{
 			return this->ptr < t.ptr;
 		}
+
+		/// larger
 		bool operator > (const my_type &t) const
 		{
 			return this->ptr > t.ptr;
 		}
+		/// increment operator
 		my_type & operator++()
 		{
 			this->ptr++;
 			return *this;
 		}
+		/// decrement operator
 		my_type & operator--()
 		{
 			this->ptr--;
@@ -210,16 +238,22 @@ public:
 		}
 	};
 
+	/// Defines iterator type
 	typedef _iterator_base<holder> iterator;
+	/// Defines const iterator type
 	typedef _iterator_base<holder_const> const_iterator;	
 protected:	
-	// Dummy object with the same size, as value_type
+	/// Dummy object with the same size, as value_type
 	struct Dummy
 	{
-		char data[sizeof(value_type)];
+		char data[sizeof(value_type)];	///< dummy data
 	};
+	/// Preallocated data
 	Dummy data[MaxSize];
+	/// Current size
 	size_t currentSize;
+
+	/// Removes object from storage
 	void remove(Dummy * dummy)
 	{
 		//value_type * ptr = static_cast<value_type*>(dummy);
@@ -233,22 +267,27 @@ public:
 	{
 		clear();
 	}
+	/// get current size
 	size_t size() const
 	{
 		return currentSize;
 	}
+	/// get max allowed size
 	size_t max_size() const
 	{
 		return MaxSize;
 	}
+	/// get iterator from begin
 	iterator begin()
 	{
 		return iterator(this,(value_type*)(data));
 	}
+	/// get iterator from the end
 	iterator end()
 	{
 		return iterator(this,(value_type*)(data + currentSize + 1));
 	}
+	/// push value to back
 	void push_back(const value_type &t)
 	{
 		if(currentSize < max_size())
@@ -261,10 +300,12 @@ public:
 			std::exception("Array: maximum size exceeded");
 		}
 	}
+	/// check if container is empty
 	bool empty() const
 	{
 		return currentSize == 0;
 	}
+	/// remove all the contents
 	void clear()
 	{
 		if(!empty())
@@ -274,13 +315,16 @@ public:
 			}
 	}
 
+	/// get raw data pointer
 	value_type * getData()
 	{
 		return (value_type*) data;
 	}
 };
-
 #endif
+/// @}
+} // namespace frosttools
+
 #ifdef FrostTools_Use_AutoPtr
 #include "autoptr.hpp"
 #endif
@@ -325,16 +369,34 @@ public:
 
 #include "logger.hpp"
 
+namespace frosttools
+{
+
+//\addtogroup Containers
+//@{
+
+/// Intrusive tree node
+/**
+ * 	Each node can have several children.
+ *	Children are stored in double-linked list
+ */
 template<class Type> class TreeNode
 {
 protected:
-	typedef TreeNode<Type> node_type;
-	Type * parent;
-	Type * next, *prev, *head, *tail;
+	typedef TreeNode<Type> node_type;	///< Defines node type
+	Type * parent;						///< Pointer to parent node
+	Type * next;						///< Pointer to next node
+	Type * prev;						///< Pointer to previous node
+	Type * head;						///< Pointer to head child nodes
+	Type * tail;						///< Pointer to tail child nodes
 
+	/// Called when node is attached
 	virtual void onAttach( Type * object ) = 0;
+	/// Called when node is detached
 	virtual void onDetach( Type * object ) = 0;
 public:
+
+	/// Constructor
 	TreeNode()
 	{
 		parent = NULL;
@@ -343,16 +405,26 @@ public:
 		head = NULL;
 		tail = NULL;
 	}
+
+	/// Get pointer to target type
 	virtual Type * getTargetType() = 0;
+
+	/// Disconnect self from tree
 	void orphan_me()
 	{
 		if( parent != NULL )
 			parent->removeChild(this);
 	}
+
+	/// Check if there are any chilren
 	bool hasChild(const node_type * child) const
 	{
 		return child && child->parent == this;
 	}
+
+	/// Attach child node
+	/** newChild is detached first
+	 */
 	void attach(Type * newChild)
 	{
 		newChild->orphan_me();
@@ -373,6 +445,8 @@ public:
 		newChild->parent = static_cast<Type*>(this);
 		onAttach(static_cast<Type*>(newChild));
 	}
+
+	/// Removes specified child.
 	void removeChild(node_type * child)
 	{
 		assert( hasChild(child) );
@@ -390,92 +464,64 @@ public:
 		child->parent = NULL;
 		onDetach(static_cast<Type*>(child));
 	}
+
+	/// Detaches from tree
+	/** Detaches node from existing tree
+	 */
 	virtual void detach(node_type * child)
 	{
 		removeChild(child);
 	}
+
+	/// Destructor
 	virtual ~TreeNode()
 	{
 		orphan_me();
 	}
+
+	/// Const iterator to iterate through immediate children nodes
 	class const_iterator
 	{
 		protected:
-		const Type * container;
-		const Type * current;
+		const Type * container;	///< Pointer to container
+		const Type * current;		///< Pointer to current node
 	public:
-		typedef const_iterator iterator_type;
+		typedef const_iterator iterator_type;	///< own iterator type
+		/// Constructor
 		const_iterator(const Type * container_, const Type * current_)
 		{
 			container = container_;
 			current = current_;
 		}
+		/// Copy constructor
 		const_iterator(const const_iterator &it)
 		{
 			container = it.container;
 			current = it.current;
 		}
+		/// Check if iterators are equal
 		bool operator == ( const iterator_type & it) const
 		{
 			return container == it.container && current == it.current;
 		}
+		/// Check if iterators are not equal
 		bool operator != ( const iterator_type & it) const
 		{
 			return container != it.container || current != it.current;
 		}
+		/// Dereferencing operator
 		const Type * operator->()
 		{
 			return current;
 		}
-		iterator_type & operator++()	// prefix
+		/// Prefix increment. Moves to the next element
+		iterator_type & operator++()
 		{
 			assert(current != NULL);
 			current = current->next;
 			return *this;
 		}
-		iterator_type operator++(int)	// postfix
-		{
-			assert(current != NULL);
-			const_iterator result(*this);
-			current = current->next;
-			return result;
-		}
-	};
-	class iterator
-	{
-	protected:
-		Type * container;
-		Type * current;
-	public:
-		typedef iterator iterator_type;
-		iterator(Type * container_, Type * current_)
-		{
-			container = container_;
-			current = current_;
-		}
-		iterator(const const_iterator &it)
-		{
-			container = it.container;
-			current = it.current;
-		}
-		bool operator == ( const iterator_type & it) const
-		{
-			return container == it.container && current == it.current;
-		}
-		bool operator != ( const iterator_type & it) const
-		{
-			return container != it.container || current != it.current;
-		}
-		Type * operator->()
-		{
-			return current;
-		}
-		iterator_type & operator++()	// prefix
-		{
-			assert(current != NULL);
-			current = current->next;
-			return *this;
-		}
+		/// Postfix increment
 		iterator_type operator++(int)	// postfix
 		{
 			assert(current != NULL);
@@ -485,27 +531,91 @@ public:
 		}
 	};
 
+	/// Iterator to iterate through immediate children nodes
+	class iterator
+	{
+	protected:
+		Type * container;	///< pointer to the container
+		Type * current;		///< pointer to current element
+	public:
+		typedef iterator iterator_type;		///< own iterator type
+		/// Constructor
+		iterator(Type * container_, Type * current_)
+		{
+			container = container_;
+			current = current_;
+		}
+		/// Copy constructor
+		iterator(const const_iterator &it)
+		{
+			container = it.container;
+			current = it.current;
+		}
+		/// Check if iterators are equal
+		bool operator == ( const iterator_type & it) const
+		{
+			return container == it.container && current == it.current;
+		}
+		/// Check if iterators are different
+		bool operator != ( const iterator_type & it) const
+		{
+			return container != it.container || current != it.current;
+		}
+		/// Dereferencing operator
+		Type * operator->()
+		{
+			return current;
+		}
+		/// Prefix increment
+		iterator_type & operator++()	// prefix
+		{
+			assert(current != NULL);
+			current = current->next;
+			return *this;
+		}
+		/// Postfix increment
+		iterator_type operator++(int)	// postfix
+		{
+			assert(current != NULL);
+			const_iterator result(*this);
+			current = current->next;
+			return result;
+		}
+	};
+
+	/// Get const iterator to the first child
 	const_iterator begin() const
 	{
 		return const_iterator(static_cast<const Type*>(this), head);
 	}
+
+	/// Get const iterator to the last child
 	const_iterator end() const
 	{
 		return const_iterator(static_cast<const Type*>(this), NULL);
 	}
+
+	/// Get iterator to the first child
 	iterator begin()
 	{
 		return iterator(static_cast<Type*>(this),head);
 	}
+	/// Get iterator to the last child
 	iterator end()
 	{
 		return iterator(static_cast<Type*>(this), NULL);
 	}
 };
 
+/// Helper to manage list operations
+/**
+ * 	Type should have accessible prev and next pointers
+ */
 template<class Type> struct ListHelper
 {
+	/// typedef for node pointer
 	typedef Type * Nodeptr;
+	/// Remove node from the list
 	static void remove(Nodeptr &head, Nodeptr &tail, Type * node)
 	{
 		if(node->next != 0)
@@ -520,6 +630,7 @@ template<class Type> struct ListHelper
 		node->next = NULL;
 	}
 
+	/// Add node to the front of the list
 	static void push_front(Nodeptr &head, Nodeptr &tail, Type * node)
 	{
 		if( head == NULL )
@@ -536,6 +647,7 @@ template<class Type> struct ListHelper
 		head = node;
 	}
 
+	/// Add node to the back of the list
 	static void push_back(Nodeptr &head, Nodeptr &tail, Type * node)
 	{
 		if( tail == NULL )
@@ -552,6 +664,9 @@ template<class Type> struct ListHelper
 		tail = node;
 	}
 };
+//@}
+}	// namespace frosttools
+
 #ifdef FrostTools_Use_Asserts
 #ifndef FROSTTOOLS_ASSERT
 #define FROSTTOOLS_ASSERT

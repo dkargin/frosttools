@@ -5,122 +5,168 @@
 #error "include <mathMatrix.hpp> first"
 #endif
 
-namespace Geom
+namespace frosttools
 {
 
+/// \addtogroup Geometry
+/// Classes for simple geometry objects
+/// @{
+namespace geometry
+{
+
+/// N-dimensional edge
+/**
+ * Specified by two vectors. Dimension value is obtained from vector type
+ */
 template<class _Vr>
 class _Edge
 {
 public:
-	_Vr start,end;
+	_Vr start;	///< First edge point points
+	_Vr end;	///< Last edge point points
 public:
+	/// Defines scalar value type
 	typedef typename _Vr::value_type value_type;
+	/// Defines own type
 	typedef _Edge<_Vr> my_type;
 
+	/// Default constructor
 	_Edge()
 	{}
+	/// Copy constructor
 	inline _Edge(const my_type &edge)
 		:start(edge.start),end(edge.end)
 	{}
+	/// Constructor
 	inline _Edge(const _Vr &s,const _Vr &e)
 		:start(s),end(e)
 	{}
+	/// Get edge length
 	inline value_type length() const
 	{
 		return vecDistance(start,end);
 	}
-	// interpolation
+	/// Interpolation
 	inline _Vr operator()(value_type t) const
 	{
 		return start+t*(end-start);
 	}
+	/// Get normalized direction
 	inline _Vr direction() const
 	{
-		return vecNormalise(end-start);
+		return vecNormalize(end-start);
 	}
+	/// Get projection length
 	inline value_type projectLen(const _Vr &v) const
 	{
 		return vecProjectLen(v-start,direction());
 	}
+	/// Get projection vector
 	inline _Vr project(const _Vr &v) const
 	{
 		return start+vecProject(v-start,direction());
 	}
+	/// Project edge to
 	inline my_type project(const my_type &edge)
 	{
 		return my_type(start+vecProject(edge.start-start,direction()),start+vecProject(edge.end-start,direction()));
 	}
+	/// Check if two edges are equal
 	inline bool operator ==(const my_type &edge) const
 	{
 		return start==edge.start && end==edge.end;
 	}
+	/// Check if two edges are different
 	inline bool operator !=(const my_type &edge) const
 	{
 		return start!=edge.start || end!=edge.end;
 	}
 };
 
+
+/// Generic N-D Sphere
+/**
+ * Dimension is specified by provided template Vector argument
+ */
 template<class Vector>
 class _Sphere
 {
 public:
-	typedef typename Vector::value_type value_type;
+	typedef typename Vector::value_type value_type;	///< Vector type
+	/// Default constructor
 	_Sphere()
 	{}
+	/// Copy constructor
 	inline _Sphere(const _Sphere<Vector> &sphere)
 		:center(sphere.center),radius(sphere.radius)
 	{}
+	/// Constructor
 	inline _Sphere(const Vector &v,value_type r)
 		:center(v),radius(r)
 	{}
-	// return distance to sphere surface. Positive if <v> is outside, negative if <v> is inside
+	/// return distance to sphere surface. Positive if v is outside, negative if v is inside
 	inline value_type distance(const Vector &v) const
 	{
 		return vecDistance(v,center)-radius;
 	}
 public:
+
+	/// Sphere center
 	Vector center;
+	/// Sphere raduis
 	value_type radius;
 };
 
+/// Generic N-D plane
+/**
+ * Dimension is specified by provided template Vector argument
+ */
 template<class Vector>
 class _Plane
 {
 public:
-	typedef typename Vector::value_type value_type;
-	typedef Vector vector_type;
-	Vector normal;
-	value_type d;
+	typedef typename Vector::value_type value_type;	///< Type for scalar value
+	typedef Vector vector_type;						///< Type for vector
+	Vector normal;										///< Plane normal parameter
+	value_type d;										///< Plane D parameter
 public:
+	/// Copy constructor
 	inline _Plane(const _Plane<Vector> &plane)
 		:normal(plane.normal),d(plane.d)
 	{}
+	/// Constructor
 	inline _Plane(const Vector &v,value_type D)
 		:normal(v),d(D)
 	{}
+	/// Default constructor
 	_Plane()
 	{}
 
+	/// Get distance from vector to plane
 	float distance(const vector_type &v) const
 	{
 		return (v&normal)-d;
 	}
 
+	/// Project vector to plane using normal direction
 	vector_type project(const vector_type &v) const
 	{
 		return v-normal*((v&normal)-d);
 	}
 
+	/// Project vector to plane
 	vector_type projectDir(const vector_type &v) const
 	{
 		return v-vecProject(v,normal);
 	}
 
+	/// Project edge to plane
 	_Edge<vector_type> project(const _Edge<vector_type> &edge)
 	{
 		return _Edge<vector_type>(project(edge.start),project(edge.end));
 	}
 
+	/// Calculate point relation
 	int classify(const vector_type &v) const
 	{
 		register float res=(v&normal)-d;
@@ -131,6 +177,7 @@ public:
 		return prIntersect;
 	}
 
+	/// Calculate edge relation
 	int classify(const vector_type &a, const vector_type &b) const
 	{
 		register float resa=(a&normal)-d;
@@ -142,6 +189,7 @@ public:
 		return prFront;
 	}
 
+	/// Calculate plane-edge intersection
 	int intersectEdge(const vector_type &a, const vector_type &b, vector_type &result) const
 	{
 		register float resa=(a&normal)-d;
@@ -157,6 +205,7 @@ public:
 		return prFront;
 	}
 
+	/// Calculate plane-ray intersection
 	int intersectRay(const vector_type &a, const vector_type &dir, vector_type &result) const
 	{
 		register float resa=(a&normal)-d;
@@ -182,6 +231,7 @@ public:
 	}
 };
 
+/// Create plane from point and direction
 template<class Vector> _Plane<Vector> planeFromPointDir(const Vector &pt,const Vector &dir)
 {
 	_Plane<Vector> res;
@@ -190,6 +240,7 @@ template<class Vector> _Plane<Vector> planeFromPointDir(const Vector &pt,const V
 	return res;
 }
 
+/// Create plane at edge start and using edge direction
 template<class Vector> _Plane<Vector> planeFromEdgeStart(const _Edge<Vector> &edge)
 {
 	_Plane<Vector> res;
@@ -198,6 +249,7 @@ template<class Vector> _Plane<Vector> planeFromEdgeStart(const _Edge<Vector> &ed
 	return res;
 }
 
+/// Create plane at edge end using edge direction
 template<class Vector> _Plane<Vector> planeFromEdgeEnd(const _Edge<Vector> &edge)
 {
 	_Plane<Vector> res;
@@ -206,6 +258,7 @@ template<class Vector> _Plane<Vector> planeFromEdgeEnd(const _Edge<Vector> &edge
 	return res;
 }
 
+/// Create plane at edge center using edge direction
 template<class Vector> _Plane<Vector> planeFromEdgeCenter(const _Edge<Vector> &edge)
 {
 	_Plane<Vector> res;
@@ -213,35 +266,42 @@ template<class Vector> _Plane<Vector> planeFromEdgeCenter(const _Edge<Vector> &e
 	res.d=edge(0.5)&res.normal;
 	return res;
 }
-//////////////////////////////////////////////////////////////////////////
-// Axis alligned bounding box
-//////////////////////////////////////////////////////////////////////////
+
+/// Axis alligned N-D bounding box
+/**
+ * Dimension is specified by provided template Vector argument
+ */
 template<class _Vector>
 class _AABB
 {
 public:
-	typedef typename _Vector::value_type value_type;
-	typedef typename _Vector::size_type size_type;
-	typedef _AABB<_Vector> my_type;
-	typedef _Vector vector_t;
+	typedef typename _Vector::value_type value_type;	///< Defines scalar value type
+	typedef typename _Vector::size_type size_type;	///< Defines index type
+	typedef _AABB<_Vector> my_type;					///< Defines own type
+	typedef _Vector vector_t;							///< Defines vector type
 	enum {D=_Vector::D};
-	_Vector center;
-	_Vector dimensions;
+	_Vector center;										///< AABB center
+	_Vector dimensions;									///< AABB dimensions from center
 public:
+	/// Default constructor
 	_AABB()
 	{}
+	/// Copy constructor
 	template<typename Vec>
 	_AABB(const _AABB<Vec> &box)
 		:center(box.center),dimensions(vecAbs(box.dimensions))
 	{}
+	/// Constructor
 	template<typename tCenter,typename tDimensions>
 	_AABB(const tCenter &c,const tDimensions &d)
 		:center(c),dimensions(d)
 	{}
+	/// Create AABB from lower/upper bounds
 	template<typename Vec> static _AABB<Vec> minmax(const Vec &min,const Vec &max)		
 	{
 		return _AABB<Vec>((min+max)/2,(max - min)/2);
 	}
+	/// Check if AABB contains specified vector
 	inline bool contains(const _Vector &v)
 	{
 		for(int i = 0;i < D;i++)
@@ -249,7 +309,7 @@ public:
 				return false;
 		return true;
 	}
-	// does box contain this vector.
+	/// Check if box contains this vector.
 	// sides - bound test result for every dimension. -1 if is lower, 1 if is higher, 0 if is in bounds
 	inline bool contains(const _Vector &v,int sides[_Vector::D])
 	{
@@ -270,31 +330,37 @@ public:
 				sides[i]=0;
 		return flag;
 	}
+	/// get lower bounds
 	inline _Vector min() const
 	{
 		return center-dimensions;
 	}
+	/// get upper bounds
 	inline _Vector max() const
 	{
 		return center+dimensions;
 	}
+	/// get lower bound for specified dimension
 	inline value_type min(size_type i) const
 	{
 		return center[i]-dimensions[i];
 	}
+	/// get higher bound for specified dimension
 	inline value_type max(size_type i) const
 	{
 		return center[i]+dimensions[i];
 	}
+	/// get full box size
 	inline _Vector size() const
 	{
 		return dimensions+dimensions;
 	}
+	/// get box size along specified dimension
 	inline value_type size(size_type i) const
 	{
 		return dimensions[i]+dimensions[i];
 	}
-	// get face centers
+	/// get face centers
 	int getCenters(_Vector *vertices) const
 	{
 		const typename _Vector::size_type max = D;
@@ -308,7 +374,7 @@ public:
 		}
 		return max;
 	}
-	// get box corners
+	/// get box corners
 	int getCorners(_Vector *vertices) const
 	{
 		const typename _Vector::size_type max=2<<(D-1);
@@ -321,7 +387,7 @@ public:
 		}
 		return max;
 	}
-	// update box size
+	/// update box size
 	my_type & operator&=(const _Vector &v)
 	{
 		_Vector lmin=min();
@@ -337,6 +403,7 @@ public:
 		dimensions=(lmax-dimensions);
 		return *this;
 	}
+	/// Intersect two AABBs
 	template<class Vec> my_type & operator&=(const _AABB<Vec> &box)
 	{
 		_Vector lmin=min();
@@ -355,7 +422,8 @@ public:
 		return *this;
 	}
 };
-// generate minimal AABB containg group of points
+
+/// generate AABB from array of points
 template<class _Iter> _AABB<typename _Iter::value_type> make_box(const _Iter &begin,const _Iter &end)
 {
 	assert(begin!=end);
@@ -379,13 +447,14 @@ template<class _Iter> _AABB<typename _Iter::value_type> make_box(const _Iter &be
 	res.dimensions=(vmax-vmin)*0.5;
 	return res;
 }
+
+/// Create AABB from lower and upper bounds
 template<class Vector> _AABB<Vector> make_rect(const Vector &s,const Vector &e)
 {
 	return _AABB<Vector>((s+e)/2,(e-s)/2);
 }
-////////////////////////////////////////////////////////////////////////////////
-// Edge to plane intersection
-////////////////////////////////////////////////////////////////////////////////
+
+/// Edge to plane intersection
 template<class Vector>
 int intersection(const _Edge<Vector> &edge,const _Plane<Vector> &plane,Vector *res_v,typename Vector::value_type *res_t)
 {
@@ -407,11 +476,10 @@ int intersection(const _Edge<Vector> &edge,const _Plane<Vector> &plane,Vector *r
 		*res_v=edge(t);
 	return 1;
 }
-////////////////////////////////////////////////////////////////////////////////
-// Edge to Box intersection. 
-// returns hits count
-// Warning: Not explicit variant. 
-////////////////////////////////////////////////////////////////////////////////
+
+/// Edge to Box intersection.
+/// returns hits count
+/// Warning: Not explicit variant.
 template<class _Vr>
 int intersection(const _Edge<_Vr> &edge,const _AABB<_Vr> &box,_Vr *res_v=NULL,typename _Vr::value_type *res_t=NULL)
 {
@@ -494,10 +562,10 @@ int intersection(const _Edge<_Vr> &edge,const _AABB<_Vr> &box,_Vr *res_v=NULL,ty
 	}
 	return res;
 }
-//////////////////////////////////////////////////////////////
-// Edge to edge intersection
-// Returns 1 if intersection is found, 0 - otherwise
-//////////////////////////////////////////////////////////////
+
+
+/// Edge to edge intersection
+/// Returns 1 if intersection is found, 0 - otherwise
 template<class Vector> int intersection(const _Edge<Vector> &a,const _Edge<Vector> &b,Vector &res_v,typename Vector::value_type res_t[2])
 {
 	typedef typename Vector::value_type value_type;
@@ -531,6 +599,8 @@ template<class Vector> int intersection(const _Edge<Vector> &a,const _Edge<Vecto
 
 	return 1;
 }
+
+/// Calculate Edge-Edge intersection
 template<class Real> int intersection3(const _Edge<Vector3D<Real> > &a,const _Edge<Vector3D<Real> > &b,Vector3D<Real> *res_v,float *res_t)
 {
 	// 1. calculate plane
@@ -572,15 +642,14 @@ template<class Real> int intersection3(const _Edge<Vector3D<Real> > &a,const _Ed
 	return 1;
 }
 
-///////////////////////////////////////////////////////////////
-// Sphere and Shhere intersection
-// Returns:
-// 0 - no intersection
-// 1 - touch
-// 2 - intersection
-// v - touch point (middle point on edge)
-// radius - distance from v to intersection points
-///////////////////////////////////////////////////////////////
+
+/// Sphere and Sphere intersection
+/// Returns:
+/// 0 - no intersection
+/// 1 - touch
+/// 2 - intersection
+/// v - touch point (middle point on edge)
+/// radius - distance from v to intersection points
 template<class Vector> int intersection(const _Sphere<Vector> &a,const _Sphere<Vector> &b,Vector *v=NULL,typename Vector::value_type *radius=NULL)
 {
 	typedef typename Vector::value_type value_type;
@@ -597,7 +666,7 @@ template<class Vector> int intersection(const _Sphere<Vector> &a,const _Sphere<V
 		if(distance+b.radius<a.radius)
 			return 0;
 		float alpha=(-b.radius*b.radius+a.radius*a.radius-distance*distance)/(2*distance);
-		*v=b.center+vecNormalise(b.center-a.center)*alpha;
+		*v=b.center+vecNormalize(b.center-a.center)*alpha;
 		*radius=sqrt(b.radius*b.radius-alpha*alpha);
 		return 1;
 	}
@@ -606,7 +675,7 @@ template<class Vector> int intersection(const _Sphere<Vector> &a,const _Sphere<V
 		if(distance+a.radius<b.radius)
 			return 0;
 		float alpha=(-a.radius*a.radius+b.radius*b.radius-distance*distance)/(2*distance);
-		*v=a.center+vecNormalise(a.center-b.center)*alpha;
+		*v=a.center+vecNormalize(a.center-b.center)*alpha;
 		*radius=sqrt(a.radius*a.radius-alpha*alpha);
 		return 1;
 	}
@@ -614,13 +683,12 @@ template<class Vector> int intersection(const _Sphere<Vector> &a,const _Sphere<V
 		return 0;
 	float a1=(distance*distance+a.radius*a.radius-b.radius*b.radius)/(distance+distance);
 	*radius=sqrt(a.radius*a.radius-a1*a1);
-	*v=a.center+vecNormalise(b.center-a.center)*a1;
+	*v=a.center+vecNormalize(b.center-a.center)*a1;
 	return 1;
 }
-///////////////////////////////////////////////////////////////
-// Edge and Sphere intersection
-// Returns number of intersections
-///////////////////////////////////////////////////////////////
+
+/// Edge and Sphere intersection
+/// Returns number of intersections
 template<class Vector>
 int intersection(const _Edge<Vector> &edge,const _Sphere<Vector> &sphere,Vector * res_v=NULL,typename Vector::value_type * res_t=NULL)
 {
@@ -677,11 +745,13 @@ int intersection(const _Edge<Vector> &edge,const _Sphere<Vector> &sphere,Vector 
 	return 0;
 }
 
+/// Get angle from X,Y vector coordinates
 template<typename _Vector> float getPolarAngle(const _Vector &a)
 {
 	return atan2(a[1],a[0]);
 }
 
+/// Compare two vectors using appropriate polar angles
 template<typename _Vector> int compareVec2d_polar(const _Vector &a,const _Vector &b,const _Vector &c=_Vector(0.0f))
 {
 	_Vector va=a-c;
@@ -701,6 +771,7 @@ template<typename _Vector> int compareVec2d_polar(const _Vector &a,const _Vector
 	return 0;
 }
 
+/// Flat relation for two edges
 enum EdgeRelation{
 	cLEFT,
 	cRIGHT,
@@ -710,6 +781,7 @@ enum EdgeRelation{
 	cDESTINATION,
 	cBETWEEN
 };
+
 /// determine where v lies relative to specified edge
 template<class _Vector> EdgeRelation classify(const _Edge<_Vector> &edge,const _Vector &v)
 {
@@ -751,7 +823,7 @@ template<class _Vector> EdgeRelation classifyZero(const _Edge<_Vector> &edge)
 	return cBETWEEN;
 }
 
-
+/// 2d convex hull generation
 template<class Source> void wrapHull(const Source &source,std::vector<vec2f> &target)
 {
 	std::vector<vec2f> tmpSource(source.begin(),source.end());
@@ -782,6 +854,7 @@ template<class Source> void wrapHull(const Source &source,std::vector<vec2f> &ta
 	}
 	target.assign(tempTarget.begin(),tempTarget.end());
 }
+
 //class Angle
 //{
 //public:
@@ -840,33 +913,41 @@ typedef _Edge<vec3> Ray;
 typedef _AABB<vec3> AABB;
 typedef _Plane<vec3> Plane;
 //////////////////////////////////////////////////////////////////
-template<class _Vr> struct _Traectory
+
+/// Linear trajectory
+template<class _Vr> struct _Trajectory
 {
-	typedef _Vr vec;
-	_Vr start;
-	_Vr velocity;	
+	typedef _Vr vec;	///< Defines vector type
+	_Vr start;		///< First trajectrory point
+	_Vr velocity;	///< Trajectory velocity
 	
-	_Traectory(const _Traectory &tr)
+	/// Copy constructor
+	_Trajectory(const _Trajectory &tr)
 	:start(tr.start),velocity(tr.velocity)
 	{}
-	_Traectory(const _Vr &pos,const _Vr &vel=_Vr(0.f))
+	/// Constructor
+	_Trajectory(const _Vr &pos,const _Vr &vel=_Vr(0.f))
 		:start(pos),velocity(vel)
 	{}
+	/// Get position at specified time
 	_Vr getPosition(float time) const
 	{
 		return start+velocity*time;
 	}
-	_Traectory advance(float time) const
+	/// Move object
+	_Trajectory advance(float time) const
 	{
-		return _Traectory(getPosition(time),velocity);
+		return _Trajectory(getPosition(time),velocity);
 	}
+	/// Get position at specified time
 	const _Vr operator ()(float time) const
 	{
 		return advance(time).start;
 	}
 };
 
-template<class _V> float getMinDistance(const _Traectory<_V> &tr0,const _Traectory<_V> &tr1,float maxTime,float &time)
+/// Get minimal distance between two trajectories
+template<class _V> float getMinDistance(const _Trajectory<_V> &tr0,const _Trajectory<_V> &tr1,float maxTime,float &time)
 {
 	float res=0;	
 	_V u=tr0.start-tr1.start;
@@ -903,5 +984,9 @@ template<class _V> float getMinDistance(const _Traectory<_V> &tr0,const _Traecto
 	}
 	return res;
 }
-typedef _Traectory<vec2f> Traectory2;
-}
+typedef _Trajectory<vec2f> Traectory2;
+} // namespace geom
+/// @}
+} // namespace frosttools
+
+

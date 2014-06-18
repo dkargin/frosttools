@@ -1,7 +1,9 @@
 #include "frosttools/3dmath.h"
 #include "frosttools/ringbuffer.hpp"
 #include <vector>
+#include <stdio.h>
 
+using namespace frosttools;
 namespace Test
 {
 // solve square equation a*x^2+b*x+c=0
@@ -41,45 +43,39 @@ template<class Real> int solve(const Real &a,const Real &b,const Real &c,Real re
 }
 // calc aiming target
 // v1 - velocity of the projectile used to shot target down
-vec3 getWeaponTarget(const Geom::Edge &edge,const vec3 &pos,float v1)
+vec3 getWeaponTarget(const geometry::Edge &edge,const vec3 &pos,float v1)
 {
 	vec3 result=pos;
-	// проекция исходного положения на траекторию	
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ	
 	vec3 O=edge.project(pos);
-	// вектор, перпендикулярный траектории
+	// пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	vec3 H=O-pos;
 	float h=H.length();
 	float l=edge.projectLen(pos);
 	float impactTime[2]={0,0};
-	float v0=edge.length();				// скорость объекта который надо сбить
-	//float v1=def->velocity;				// скорость снаряда которым сбиваем
+	float v0=edge.length();				// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+	//float v1=def->velocity;				// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	int res=solve(v0*v0-v1*v1,-2*l*v0,h*h+l*l,impactTime);
 	if(res>0)
 	{
-		float time=impactTime[res-1];	// если 2 корня, берём impactTime[1], если один корень - impactTime[0]
-		float vx=h;						// скорость в направлении, перпендикулярном траектории
-		float vy=v0*time-l;				// скорость в направлении, параллельном траектории
-		result=pos+(vecNormalise(H)*vx+edge.direction()*vy);
+		float time=impactTime[res-1];	// пїЅпїЅпїЅпїЅ 2 пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ impactTime[1], пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ - impactTime[0]
+		float vx=h;						// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+		float vy=v0*time-l;				// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+		result=pos+(vecNormalize(H)*vx+edge.direction()*vy);
 	}
 	return result;
 }
 
-float testAiming(const Geom::Edge &edge,const vec3 &source,float velocity)
+float testAiming(const geometry::Edge &edge,const vec3 &source,float velocity)
 {	
 	vec3 target=getWeaponTarget(edge,source,velocity);
 	float t=vecLength(target-source)/velocity;
 	vec3 predict=edge(t);
 	float error=vecDistance(target,predict);
-	printf("Aiming object(%g,%g,%g)-(%g,%g,%g), from (%g,%g,%g) with shot velocity %g\n",	edge.start[0],
-																							edge.start[1],
-																							edge.start[2],
-																							edge.end[0],
-																							edge.end[1],
-																							edge.end[2],
-																							source[0],
-																							source[1],
-																							source[2],
-																							velocity);
+	printf("Aiming object(%g,%g,%g)-(%g,%g,%g), from (%g,%g,%g) with shot velocity %g\n",
+			edge.start[0],edge.start[1],edge.start[2],
+			edge.end[0],edge.end[1],edge.end[2],
+			source[0],source[1],source[2],velocity);
 	printf("-calculated impact at(%g,%g,%g)\n",target[0],target[1],target[2]);
 	printf("-calculation error=%g\n",error);
 	return error;
@@ -100,11 +96,12 @@ void testRingBuffer()
 
 void testSphereIntersection()
 {
-	Geom::_Sphere<vec2f> s0(vec2f(100,0),100),s1(vec2f(230,0),50);
+	geometry::_Sphere<vec2f> s0(vec2f(100,0),100),s1(vec2f(230,0),50);
 	vec2f res_v;
 	float res_t;
-	int res = Geom::intersection(s0,s1,&res_v,&res_t);
+	int res = geometry::intersection(s0,s1,&res_v,&res_t);
 }
+
 void testMatrix()
 {
 	Mt4x4 a = Mt4x4::identity(1.0),b=Mt4x4::identity(1.0);
@@ -126,6 +123,7 @@ void testMatrix4r()
 	assert(m.col(0)==vec4f(col0) && "test row order Mt4x4.col(0)");
 	assert(m.col(1)==vec4f(col1) && "test row order Mt4x4.col(1)");
 }
+
 void testMatrixNM()
 {
 	typedef MatrixNM<float> Mat;
@@ -143,6 +141,7 @@ float testMatrixInversion()
 		3,	0,	1,	0,
 		0.5,2,	2,	1,
 	};
+
 	Mat::value_type inverted[]=
 	{
 		-0.1388889,	-1.666667,	0.1944444,	1.111111,
@@ -150,12 +149,14 @@ float testMatrixInversion()
 		0.4166667,	5.0,	0.4166667,	-3.333333,
 		0.2361111,	0.8333333,	0.06944444,	-0.8888889,
 	};
+
 	Mat s=invert(Mat(source)),check(inverted);
 	Mat diff=check-s;
 	Mat d=Mat(source)*invert(Mat(source));
 	float dist=diff.length();
 	return dist;
 }
+
 void testMatrix4c()
 {
 	float test[]={0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
@@ -191,9 +192,10 @@ struct SomeObject: public Base<Real>
 {
 	void set(int i,Real v)
 	{
-		assert(i<size());
+		assert(i<this->size());
 	}
 };
+
 template<class Real>struct Static4:public Static<Real,4>{};
 
 void testMath()

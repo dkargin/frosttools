@@ -4,15 +4,26 @@
 #include <string.h>
 #include <assert.h>
 
+
+namespace frosttools
+{
+/// \addtogroup Containers
+/// @{
+
+/// Ring buffer
+/**
+ * Preallocated ring buffer for read/write operations
+ * Data is overwritten when the buffer is full
+ */
 class RingBuffer
 {
-	char * buffer;
-	int maxSize;	/// allocated size
-	int currentSize;
-	int markerRead;		/// current read marker
-	int markerWrite;		/// current write marker
+	char * buffer;		///< actual data
+	int maxSize;		///< allocated size
+	int currentSize;	///< current buffer sie
+	int markerRead;		///< read marker
+	int markerWrite;	///< write marker
 public:
-
+	/// Constructor
 	RingBuffer(int max)
 	{
 		buffer = NULL;
@@ -27,6 +38,7 @@ public:
 		clear();
 	}
 
+	/// remove all data
 	void clear()
 	{
 		if(buffer)
@@ -36,6 +48,7 @@ public:
 		}
 	}
 
+	/// move read marker
 	int moveRead(size_t distance)
 	{
 		markerRead += distance;
@@ -44,6 +57,7 @@ public:
 		return markerRead;
 	}
 
+	/// move write marker
 	int moveWrite(size_t distance)
 	{
 		markerWrite += distance;
@@ -51,6 +65,7 @@ public:
 			markerWrite -= maxSize;
 	}
 
+	/// resize buffer
 	void resize(size_t newSize)
 	{
 		if(maxSize == newSize)
@@ -69,16 +84,19 @@ public:
 		}
 	}
 
+	/// check if overwriting is allowed
 	bool overwrites() const
 	{
 		return true;
 	}
 
+	/// get max buffer size
 	size_t getMaxSize() const
 	{
 		return maxSize;
 	}
 
+	/// clean buffer contents
 	void clean()
 	{
 		markerWrite = 0;
@@ -86,6 +104,7 @@ public:
 		currentSize = 0;
 	}
 
+	/// try to get data from buffer
 	const char *peek(size_t &asize)
 	{
 		if(asize == 0)
@@ -128,6 +147,7 @@ public:
 		return 0;
 	}
 
+	/// get available data size
 	size_t available()
 	{
 		return currentSize;
@@ -165,17 +185,21 @@ public:
 		return size;
 	}
 };
+
+/// Ring Array
 template<class Type,int Max>
 struct RingArray
 {
-	typedef Type value_type;
-	typedef unsigned int size_type;
-	static const size_type max=Max;
-	value_type values[max];
-	size_type count;
-	size_type start;
+	typedef Type value_type;			///< Defines value type
+	typedef unsigned int size_type;	///< Defines index type
+	static const size_type max=Max;	///< Max array capacity
+	value_type values[max];				///< Data storage
+	size_type count;					///< Number of stored objects
+	size_type start;					///< index of the first stored object
+
+
 	RingArray():count(0),start(0){}
-	// add value to buffer end
+	/// add value to buffer end
 	void push_back(const value_type &val)
 	{
 		if(count==max)
@@ -189,6 +213,8 @@ struct RingArray
 			count++;
 		}
 	}
+
+	/// add value to buffer front
 	void push_front(const value_type &val)
 	{
 		start=index(-1);
@@ -196,6 +222,7 @@ struct RingArray
 		if(count<max)		
 			count++;		
 	}
+	/// pop value from buffer back
 	value_type pop_back()
 	{
 		value_type res;
@@ -206,6 +233,7 @@ struct RingArray
 		}
 		return res;
 	}
+	/// pop value from buffer front
 	value_type pop_front()
 	{
 		value_type res;
@@ -217,26 +245,34 @@ struct RingArray
 		}
 		return res;
 	}
+	/// check if ring is empty
 	inline bool empty() const
 	{
 		return count==0;
 	}
+	/// get current size
 	inline size_type size() const
 	{
 		return count;
 	}
+	/// get value at index
 	const value_type & operator[](const size_type &i) const
 	{
 		return values[index(i)];
 	}
+	/// get value at index
 	value_type & operator[](const size_type &i)
 	{
 		return values[index(i)];
 	}
+	/// find value by its reference
 	size_type index(const size_type &i) const
 	{		
 		return (start+i<0?labs(i+max):i)%max;
 	}
 };
 
+} // namespace frostools
+
+/// @}
 #endif

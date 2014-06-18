@@ -13,27 +13,34 @@
  * PThreads based implementation
  */
 
-namespace Threading
+namespace frosttools
 {
-	class thread
+namespace threading
+{
+	/// Thread
+	/**
+	 * Wraps pthread thread class
+	 */
+	class Thread
 	{
 		pthread_t id;
 		pthread_attr_t attr;
 		
 	public:
-		thread()
+		Thread()
 		{
 			id = 0;
 			pthread_attr_init(&attr);
 			pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE);
 		}
 
-		template<class Function> thread(Function fn)
+		template<class Function> Thread(Function fn)
 		{
 			id = 0;
 			run(fn);
 		}
 
+		/// wait until thread is complete
 		void join()
 		{
 			void * result = NULL;
@@ -60,22 +67,28 @@ namespace Threading
 
 	};
 
+	/// sleep for millisecond time
 	inline void sleep(int msec)
 	{
 		usleep(msec*1000);
 	}
+
 	/// pthread mutex wrapper	
-	class MutexPT : public BaseLockable
+	class Mutex : public BaseLockable
 	{
 	public:
 		pthread_mutex_t mutex;
+		pthread_mutexattr_t attr;
 
-		MutexPT()
+		Mutex()
 		{
-			pthread_mutex_init(&mutex, NULL);
+			pthread_mutexattr_init(&attr);
+			pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+			pthread_mutex_init(&mutex, &attr);
+			//pthread_mutex_init(&mutex, NULL);
 		}
 
-		~MutexPT()
+		~Mutex()
 		{
 			pthread_mutex_destroy(&mutex);
 		}
@@ -97,32 +110,39 @@ namespace Threading
 			return false;
 		}
 
+		bool lock()
+		{
+			int result = pthread_mutex_lock (&mutex);
+			if(result < 0)
+			{
+				reportError("Mutex::lock()");
+				return false;
+			}
+			return true;
+		}
+
+		bool unlock()
+		{
+			int result = pthread_mutex_unlock (&mutex);
+			if(result < 0)
+			{
+				reportError("Mutex::lock()");
+				return false;
+			}
+			return true;
+		}
+	private:
 		void reportError(const char * where)
 		{
 			int err = errno;
 			fprintf(stderr, "%s: error errno=%d, %s", where, err, strerror(err));
 		}
-
-		void lock()
-		{
-			int result = pthread_mutex_lock (&mutex);
-			if(result < 0)
-				reportError("Mutex::lock()");
-		}
-
-		void unlock()
-		{
-			int result = pthread_mutex_unlock (&mutex);
-			if(result < 0)
-				reportError("Mutex::lock()");
-		}
 	};
 
-
-	typedef MutexPT Mutex;
-	typedef Mutex mutex;
-
-	//! Wrapper around pthreads condition variable construct. Mimics std::condition_variable
+	/// ConditionVariable
+	/**
+	 * Wrapper around pthreads condition variable construct. Mimics std::condition_variable
+	 */
 	class ConditionVariable
 	{
 		pthread_cond_t cv;
@@ -150,13 +170,20 @@ namespace Threading
 		/*! Wait for specified time, in milliseconds.
 		 * Returns cv status after completion
 		*/
-		CvStatus wait_for(Mutex & mutex, int timeMS)
+		CvStatus waitFor(Mutex & mutex, int timeMS)
 		{
 			if(timeMS <= 0)
 				return cvError;
+
+			const int nsecInSec = 1000000000;
+			const int msecInSec = 1000;
+			const int nsecInMsec = 1000000;
+			timespec current;
+			clock_gettime(CLOCK_REALTIME, &current);
 			timespec time;
-			time.tv_sec = timeMS / 1000;
-			time.tv_nsec = timeMS / 1000000;
+			long nsec = current.tv_nsec + (timeMS % msecInSec) * nsecInMsec;
+			time.tv_sec = current.tv_sec + timeMS / msecInSec + nsec / nsecInSec;
+			time.tv_nsec = nsec % nsecInSec;
 			int result = pthread_cond_timedwait(&cv, &mutex.mutex, &time);
 			if( result != 0 && result != ETIMEDOUT)
 			{
@@ -169,24 +196,27 @@ namespace Threading
 		}
 
 		//! Signal one thread waiting for this CV
-		void notify_one()
+		void notifyOne()
 		{
 			int result = pthread_cond_signal(&cv);
 			if( result != 0)
 				reportError(result);
 		}
 		//! Signal every thread waiting for this CV
-		void notify_all()
+		void notifyAll()
 		{
 			int result = pthread_cond_broadcast(&cv);
 			if( result != 0)
 				reportError(result);
 		}
-protected:
+private:
 		//! Used as error reporting
 		static void reportError(int errcode)
 		{
+			printf("Error %d:%d in CV: %s\n", errcode, errno, strerror(errno));
 		}
 	};
 };
+
+} // namespace frosttools
 #endif

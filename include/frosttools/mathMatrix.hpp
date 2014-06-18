@@ -1,31 +1,43 @@
 #pragma once
 #define MATH_MATRIX
 
-// defines operations based on Real scalar type
+namespace frosttools
+{
+/// Generic matrix accessor based on Real scalar type
 template<class Real,bool order> struct MatrixOrder
 {
+	/// typedef for size type
 	typedef typename MathTypes<Real>::size_type size_type;
+	/// get column from matrix
 	template<class R> inline static void getCol(const Real *data,size_type size,size_type c,R *col);
+	/// set column to matrix
 	template<class R> inline static void setCol(Real *data,size_type size,size_type c,const R *col);
+	/// get matrix row
 	template<class R> inline static void getRow(const Real *data,size_type size,size_type r,R *row);
+	/// set matrix row
 	template<class R> inline static void setRow(Real *data,size_type size,size_type r,const R *row);
 };
-///////////////////////////////////////////////////////////////////////////
-/// specialisation for row-ordered matrix
-///////////////////////////////////////////////////////////////////////////
+
+/// Accessor specialization for row-ordered matrix
 template<class Real> struct MatrixOrder<Real,true>
 {
+	/// index type
 	typedef typename MathTypes<Real>::size_type size_type;
+
+	/// get const matrix value
 	inline static const Real & get(const Real *data,size_type sx,size_type sy,size_type x,size_type y)
 	{
 		assert(x>=0 && x<sx && y<sy && y>=0);
 		return data[x+sx*y];
 	}
+
+	/// get matrix value
 	inline static Real & get(Real *data,size_type sx,size_type sy,size_type x,size_type y)
 	{
 		assert(x>=0 && x<sx && y<sy && y>=0);
 		return data[x+sx*y];
 	}
+	/// get matrix column
 	template<class R> inline static void getCol(const Real *data,size_type sx,size_type sy,size_type c,R *res)
 	{
 		assert(c<sx);
@@ -33,6 +45,7 @@ template<class Real> struct MatrixOrder<Real,true>
 		for(size_type j=sy;j;j--,ptr+=sx)
 			*res++=*ptr;
 	}
+	/// set matrix column
 	template<class R> inline static void setCol(Real *data,size_type sx,size_type sy,size_type c,const R *res)
 	{
 		assert(c<sx);
@@ -40,12 +53,14 @@ template<class Real> struct MatrixOrder<Real,true>
 		for(size_type j=sy;j;j--,ptr+=sx)
 			*ptr=*res++;
 	}
+	/// get matrix row
 	template<typename R> inline static void getRow(const Real *data,size_type sx,size_type sy,size_type r,R *res)
 	{
 		assert(r<sy);
 		for(size_type j=0;j<sx;j++)
 			res[j]=data[r*sx+j];
 	}	
+	/// set matrix row
 	template<typename R> inline static void setRow(Real *data,size_type sx,size_type sy,size_type r,const R *res)
 	{
 		assert(r<sy);
@@ -54,22 +69,25 @@ template<class Real> struct MatrixOrder<Real,true>
 	}
 };
 
-///////////////////////////////////////////////////////////////////////////
-/// specialisation for column-ordered matrix
-///////////////////////////////////////////////////////////////////////////
+
+/// Accessor for column-ordered matrix
 template<class Real> struct MatrixOrder<Real,false>
 {
+	/// index type
 	typedef typename MathTypes<Real>::size_type size_type;
+	/// get specific cell
 	inline static const Real & get(const Real *data,size_type sx,size_type sy,size_type x,size_type y)
 	{
 		assert(x>=0 && x<sx && y<sy && y>=0);
 		return data[sy*x+y];
 	}
+	/// get specific cell reference
 	inline static Real & get(Real *data,size_type sx,size_type sy,size_type x,size_type y)
 	{
 		assert(x>=0 && x<sx && y<sy && y>=0);
 		return data[sy*x+y];
 	}
+	/// get matrix column
 	template<typename R> inline static void getCol(const Real *data,size_type sx,size_type sy,size_type c,R *res)
 	{
 		assert(c<sx);
@@ -77,6 +95,7 @@ template<class Real> struct MatrixOrder<Real,false>
 		for(size_type j=sx;j>0;j--)
 			*res++=*ptr++;
 	}
+	/// set matrix column
 	template<typename R> inline static void setCol(Real *data,size_type sx,size_type sy,size_type c,const R *res)
 	{
 		assert(c<sx);
@@ -84,14 +103,14 @@ template<class Real> struct MatrixOrder<Real,false>
 		for(size_type j=sx;j>0;j--)
 			*ptr++=*res++;
 	}
-	// still slow variant
+	/// get matrix row
 	template<typename R> inline static void getRow(const Real *data,size_type sx,size_type sy,size_type r,R *res)
 	{
 		assert(r<sy);
 		for(size_type j=0;j<sy;j++)
 			res[j]=data[j*sy+r];
 	}	
-	// still slow variant
+	/// set matrix row
 	template<typename R> inline static void setRow(Real *data,size_type sx,size_type sy,size_type r,const R *res)
 	{
 		assert(r<sy);
@@ -100,84 +119,100 @@ template<class Real> struct MatrixOrder<Real,false>
 	}
 };
 
-// generic row order matrix
+/// generic row order matrix
 template<class Storage,bool row_order> class MatrixBase: public Storage
 {
 public:	
-	typedef typename Storage::col_type col_type;
-	typedef typename Storage::row_type row_type;
-	typedef typename Storage::value_type value_type;
-	typedef int size_type;
+	typedef typename Storage::col_type col_type;		///< Column type
+	typedef typename Storage::row_type row_type;		///< Row type
+	typedef typename Storage::value_type value_type;	///< Single value type
+	typedef int size_type;								///< Index type
 
-	typedef MatrixOrder<value_type,row_order> Order;
-	typedef MatrixBase<Storage,row_order> matrix_type;
-	typedef MatrixBase<Storage,row_order> my_type;
+	typedef MatrixOrder<value_type,row_order> Order;	///< Accessor type
+	typedef MatrixBase<Storage,row_order> matrix_type;	///< Matrix type
+	typedef MatrixBase<Storage,row_order> my_type;		///< Own type
 
+	/// Get row order
 	inline static bool rowOrder()
 	{
 		return row_order;
 	}	
+	/// Get cell value
 	value_type & operator()(size_type x,size_type y)
 	{
 		return Order::get(this->c,Storage::cols(),Storage::rows(),x,y);
 	}
+	/// Get cell constant value
 	const value_type & operator()(size_type x,size_type y) const
 	{
 		return Order::get(this->c,Storage::cols(),Storage::rows(),x,y);
 	}
+	/// Get cell value
 	value_type get(size_type x,size_type y) const
 	{
 		return Order::get(this->c,Storage::cols(),Storage::rows(),x,y);
 	}
+	/// Set cell value
 	void set(size_type x,size_type y,const value_type &r)
 	{
 		Order::get(this->c,Storage::cols(),Storage::rows(),x,y)=r;
 	}
-	// for NxM matrix compatibility
+	/// Write column data to array
 	template<class R>inline void getCol(int i,R *res) const
 	{
 		Order::getCol(this->c,Storage::cols(),Storage::rows(),i,res);
 	}
+	/// Set column data
 	template<class R>inline void setCol(int i,const R *vec)
 	{
 		Order::setCol(this->c,Storage::cols(),Storage::rows(),i,vec);
 	}
+	/// Get column vector
 	col_type col(int i) const
 	{		
 		col_type res = Storage::make_col();
 		Order::getCol(this->c,Storage::cols(),Storage::rows(),i,(value_type*)res);
 		return res;
 	}	
+	/// Set column vector
 	template<class tVector>	void col(int i,const tVector &vec)
 	{		
 		Order::setCol(this->c,Storage::cols(),Storage::rows(),i,(const value_type*)vec);
 	}
+	/// Write row data to array
 	template<class R> void getRow(int i,R *res) const
 	{
 		Order::getRow(this->c,Storage::cols(),Storage::rows(),i,res);
 	}
+	/// Set row data
 	template<class R> void setRow(int i,const R *res)
 	{
 		Order::setRow(this->c,Storage::cols(),Storage::rows(),i,res);
 	}
+	/// Get row vector
 	row_type row(int i) const
 	{
 		row_type res = Storage::make_row();
 		Order::getRow(this->c,Storage::cols(),Storage::rows(),i,(value_type*)res);
 		return res;
 	}
+	/// Set row by vector
 	template<class tVector> void row(int i,const tVector &vec)
 	{		
 		Order::setRow(this->c,Storage::cols(),Storage::rows(),i,(const value_type*)vec);
 	}
+	/// Cast to Scalar array pointer
 	operator value_type *()
 	{
 		return Storage::ptr();
 	}
+	/// Cast to const Scalar array pointer
 	operator const value_type *() const
 	{
 		return Storage::ptr();
 	}
+
+	/// Calculate determinant
 	value_type det() const
 	{
 		const int ncols = Storage::cols();
@@ -206,6 +241,7 @@ public:
 		}
 		return result;		
 	}	
+	/// Swap rows
 	void swapRows(int a,int b)
 	{
 		assert(a<Storage::rows() && b<Storage::rows());
@@ -216,6 +252,7 @@ public:
 		setRow(a,(value_type*)r);
 		setRow(b,(value_type*)tmp);
 	}
+	/// Swap columns
 	void swapCols(int a,int b)
 	{
 		assert(a<Storage::cols() && b<Storage::cols());
@@ -228,48 +265,46 @@ public:
 	}
 };
 
-////////////////////////////////////////////////////////
-// Variable size matrix
-////////////////////////////////////////////////////////
+/// MatrixNM
+/// Variable size matrix
 template<class Real>
 class MatrixNM: public MatrixBase<StorageDynamic<Real >,true>
 {
 public:
+	/// Default constructor
 	MatrixNM(){};
+	/// Constructor for specified matrix size
 	MatrixNM(int w,int h)
 	{
-		assign_val(Real(0),w,h);
+		this->assign_val(Real(0),w,h);
 	}
+	/// Copy constructor
 	MatrixNM(const MatrixNM &m)
 	{
 		assign(m.c,m.cols(),m.rows());
 	}
+	///\brief Constructor
+	/// Constructs using raw array
 	template<class R>MatrixNM(const R* data,int w,int h)
 	{
 		assign(data,w,h);
 	}
 };
-//template<> struct mult_res<Matrix<Real,X,Y>,Matrix<Real,Y,Z>
-//{
-//	typedef Matrix<Real,X,Z> type;
-//};
-////////////////////////////////////////////////////////
-// Constant size matrix
-////////////////////////////////////////////////////////
-// ���������, �� ��� ���� ��� ������ ������� ��� column-order?
+
+/// Constant size matrix
 template<class Real,int _X,int _Y,bool order>
 class Matrix: public MatrixBase<StorageStatic<Real,_X,_Y>,order>
 {
 public:
 	enum{X=_X,Y=_Y};
-	typedef int size_type;
-	typedef Real value_type;
-	typedef MatrixBase<StorageStatic<Real,X,Y>,order> parent_type;
-	typedef Matrix<Real,X,Y,order> my_type;
-	typedef my_type matrix_type;
-	typedef Matrix<Real,Y,X,order> transposed_type;
+	typedef int size_type;					///< index type
+	typedef Real value_type;				///< scalar type
+	typedef MatrixBase<StorageStatic<Real,X,Y>,order> parent_type;	///< parent type
+	typedef Matrix<Real,X,Y,order> my_type;							///< own type
+	typedef my_type matrix_type;										///< matrix type
+	typedef Matrix<Real,Y,X,order> transposed_type;					///< transposed type
 	
-
+	/// Assignment operator
 	my_type & operator = (const my_type &m)
 	{
 		this->assign((const value_type*)m);
@@ -289,15 +324,16 @@ public:
 	}*/
 };
 ////////////////////////////////////////////////////////
-// generic Square matrix
+/// generic Square matrix
 ////////////////////////////////////////////////////////
 template<class Real,int N,bool order>
 class MatrixSquare: public Matrix<Real,N,N,order>
 {
 public:
-	typedef MatrixSquare<Real,N,order> my_type;
-	typedef my_type transposed_type;
+	typedef MatrixSquare<Real,N,order> my_type;	///< Defines own type
+	typedef my_type transposed_type;				///< Defines transposed type
 
+	/// Get identity matrix
 	static my_type identity(Real v=Real(1))
 	{	
 		my_type res;
@@ -313,16 +349,18 @@ public:
 		return res;
 	}
 
-	inline typename my_type::col_type project(const typename my_type::row_type &a)const//returns a coordinates in this system
+	/// returns a coordinates in this system
+	inline typename my_type::col_type project(const typename my_type::row_type &a)const
 	{
 		typename my_type::col_type res;
 		for(int i = 0; i < this->cols(); i++)
-			res[i]=::vecProjectLen(a, this->col(i));
+			res[i]=vecProjectLen(a, this->col(i));
 		return res;
 //		return vec3(::vecProjectLen(a-origin(),col(0)),
 //					::vecProjectLen(a-origin(),axisY()),
 //					::vecProjectLen(a-origin(),axisZ()));
 	}
+	/// multiply a matrix
 	my_type & operator *=(const my_type &b)
 	{
 		const int X = this->cols();
@@ -392,6 +430,8 @@ swap:
 	}
 	return result;
 }
+
+/// Calculate number of nonzero rows in the matrix
 template<class _Matrix>int realRows(const _Matrix &source)
 {
 	typedef typename _Matrix::value_type value_type;
@@ -406,13 +446,14 @@ template<class _Matrix>int realRows(const _Matrix &source)
 end:
 	return y+1;
 }
+
+/// Calculate matrix rank
 template<class _Matrix>int rank(const _Matrix &source)
 {
 	return realRows(reduceToTriangle(source));
 }
-//////////////////////////////////////////////////////////////////
-// Gramm-Shmidt orthonormalisation
-//////////////////////////////////////////////////////////////////
+
+/// Gramm-Shmidt orthonormalisation
 template<class _Matrix> _Matrix orthonormalise(const _Matrix &source)
 {
 	assert(source.cols()==source.rows());	// only square matrices are allowed
@@ -429,9 +470,8 @@ template<class _Matrix> _Matrix orthonormalise(const _Matrix &source)
 	}
 	return result;
 }
-////////////////////////////////////////////////////////////
-// rotate around matrix center
-////////////////////////////////////////////////////////////
+
+/// rotate around matrix center
 template<class _Matrix> _Matrix &rotate(const _Matrix &src,bool dir=true)
 {
 	assert(src.cols()==src.rows());	// only square matrices allowed
@@ -456,6 +496,8 @@ template<class _Matrix> _Matrix &rotate(const _Matrix &src,bool dir=true)
 			}
 	return tmp;
 }
+
+/// Calculate matrix inversion
 template<class _Matrix> _Matrix invert (const _Matrix &source)
 {
 	assert(source.cols()==source.rows());	// only square matrices are allowed
@@ -493,13 +535,14 @@ template<class _Matrix> _Matrix invert (const _Matrix &source)
 	return out;
 }
 
-// Seems to be not completed
+/// Seems to be not completed
 template<class _Matrix> _Matrix pseudoinvert (const _Matrix &source)
 {
 	int r=rank(source);
 	return invert(source);
 }
 // slow ( but universal variant
+/// Transpose the matrix
 template<class _Matrix> typename _Matrix::transposed_type transpose(const _Matrix &source)
 {
 	typename _Matrix::transposed_type result;
@@ -514,6 +557,7 @@ template<class _Matrix> typename _Matrix::transposed_type transpose(const _Matri
 }
 
 //template<class Storage,bool row_order>
+/// Multiply two matrices
 template<class Real,int X,int Y,int Z,bool order> Matrix<Real,X,Z,order> operator *( const Matrix<Real,X,Y,order> &a,const Matrix<Real,Y,Z,order> &b)
 {
 	Matrix<Real,X,Z,order> res;
@@ -559,6 +603,7 @@ template<class Real,int X,int Y,int Z,bool order> Matrix<Real,X,Z,order> operato
 //}
 //
 // �������� ������� �� ������-�������.
+/// Multiply matrix and vector (row-vector)
 template<typename Real,int N,int M,bool row_order>
 typename Matrix<Real,N,M,row_order>::col_type operator * ( const Matrix<Real,N,M,row_order>& m, const typename Matrix<Real,N,M,row_order>::row_type & v )
 {
@@ -570,6 +615,8 @@ typename Matrix<Real,N,M,row_order>::col_type operator * ( const Matrix<Real,N,M
 	//}
 	return res;
 }
-typedef Matrix<float,4,4,true> Mt4x4r;
-typedef Matrix<float,4,4,false> Mt4x4c;
+
+typedef Matrix<float,4,4,true> Mt4x4r;	///< float matrix[4][4], row order
+typedef Matrix<float,4,4,false> Mt4x4c;	///< float matrix[4][4], row column order
 //////////////////////// Derived functions /////////////////////////////
+}	// namespace frosttools

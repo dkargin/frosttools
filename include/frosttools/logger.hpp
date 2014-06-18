@@ -3,7 +3,13 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+
+namespace frosttools
+{
+/// If we use brackets
 const bool brackets = true;
+
+/// Logger class
 class Log
 {
 public:
@@ -17,6 +23,7 @@ public:
 	    fill = ' ';
 	}
 
+	/// Scope for logger
 	class Scoped
 	{
 		friend class Log;
@@ -37,6 +44,7 @@ public:
 			}
 		}
 	public:
+		/// Constructor
 		Scoped(Log &l,const char *_text,int threatLevel) :root(l)
 		{
 		    threat = threatLevel;
@@ -55,13 +63,14 @@ public:
 			}
 		}
 	};
-	// игнорировать ли сообщение
+	/// Check if thread should be ignored
 	inline bool ignore(int threat)
 	{
 		if(threat<0)return false;
 		if(last)threat+=last->threat;
 		return threat>=0 && threat<threatLevel;
 	}
+	/// Write line to log
 	virtual void line(int threat,const char *format,...)
 	{
 		va_list	ap;
@@ -84,14 +93,17 @@ public:
 		}
 		va_end(ap);
 	}
+	/// increase log level
 	inline int levelInc()
 	{
 		return ++level;
 	}
+	/// decrease log level
 	inline int levelDec()
 	{
 		return level>0?--level:level;
 	}
+	/// Write line to log
 	void operator()(int threat,const char *format,...)
 	{
 		va_list	ap;
@@ -99,38 +111,48 @@ public:
 		line(threat,format,ap);
 		va_end(ap);
 	}
+	/// Set threat level
 	void setThreat(int threat)
 	{
 		threatLevel=threat;
 	}
 protected:
 
+	/// Push a new scope
 	void push(Scoped *scoped)
 	{
 		scoped->prev=last;
 		last=scoped;
 	}
+	/// Pop scope
 	void pop(Scoped *scoped)
 	{
 		last=scoped->prev;
 	}
+	/// write line
 	virtual void sendLine(const char *text)=0;
-	char fill;
-	int level;
-	Scoped * last;
-	int threatLevel;
+
+	char fill;			///< Filler character
+	int level;			///< Character level
+	Scoped * last;		///< Last scope pointer
+	int threatLevel;	///< Current threat level
 };
 
+/// File-based logger
 class LogFILE: public Log
 {
 public:
+	/// File used to put logs in
 	FILE *log;
+	/// Local?
 	bool local;
+	/// Constructor
 	LogFILE(const char *path)
 	{
 		log=fopen(path,"w");
 		local=log!=NULL?true:false;
 	}
+	/// Constructor
 	LogFILE(FILE *target=stderr)
 		:log(target),local(false)
 	{}
@@ -142,6 +164,7 @@ public:
 			log=NULL;
 		}
 	}
+	/// Writes a line
 	virtual void sendLine(const char *text)
 	{
 		fprintf(log,"%s\n",text);
@@ -162,7 +185,10 @@ public:
 	}
 };
 #endif
+
 typedef Log * LogPtr;
+
+} // namespace frosttools
 
 #ifdef __FUNCTION__
 #define __FUNCTION_NAME__ __FUNCTION__
@@ -170,6 +196,7 @@ typedef Log * LogPtr;
 #define __FUNCTION_NAME__ ("<unknown>")
 #endif
 
-#define LogScope(log,level) Log::Scoped __logFunction((log),__FUNCTION_NAME__,(level))
+#define LogScope(log,level) frosttools::Log::Scoped __logFunction((log),__FUNCTION_NAME__,(level))
 #define LogFunction(log) LogScope(log,0)
 #endif
+

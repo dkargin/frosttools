@@ -1,14 +1,22 @@
 #ifndef _IO_BUFFER_H_
 #define _IO_BUFFER_H_
 #pragma once
+
+namespace frostoolls
+{
+
+/// Contains several helpers for safe IO operations.
+/// Seems to be deprecated
+
 /**
 	exception for buffer reading process. is throwed in xread/xwrite functions
 **/
 struct XRead
 {
-	int read;	// bytes read
-	int asked;	// bytes asked
-	XRead(int r,int a):read(r),asked(a){}
+	int read;	///< bytes read
+	int asked;	///< bytes asked
+	/// Constructor
+	XRead(int r,int a):read(r),asked(a) {}
 };
 
 /** 
@@ -18,6 +26,7 @@ struct XRead
 ///////////////////////////////////////////////////////////////////////////////////
 // streambuf io
 ///////////////////////////////////////////////////////////////////////////////////
+/// read data from stream
 inline bool xread(std::streambuf &stream,void *data,int size)
 {
 	int count=stream.sgetn((char*)data,size);
@@ -25,11 +34,13 @@ inline bool xread(std::streambuf &stream,void *data,int size)
 		throw(XRead(count,size));
 	return count==size;
 }
+/// write data to stream
 inline bool xwrite(std::streambuf &stream,const void *data,int size)
 {
 	stream.sputn((const char*)data,size);
 	return true;
 }
+/// check if end of file has occured
 inline bool xeof(std::streambuf &stream)
 {
 	int s=stream.in_avail();
@@ -55,43 +66,52 @@ inline bool xeof(std::ios &stream)
 {
 	return stream.eof();
 }
-//////////////////////////////////////////////////////////////////////////////////
-// Buffer IO
-//////////////////////////////////////////////////////////////////////////////////
+
+/// Buffer IO
 class IOBuffer
 {	
-	char * buffer;
-	int bufferSize;
-	typedef char * BufferPtr;
-	BufferPtr begin,end;	// cover actual data.
-	BufferPtr current;		// locked inside (begin,end)
+	char * buffer;	///< allocated buffer data
+	int bufferSize;	///< allocated buffer size
+	typedef char * BufferPtr;	///< buffer pointer type
+	BufferPtr begin,end;	///< cover actual data.
+	BufferPtr current;		///< locked inside (begin,end)
+
 	bool bRead,bLocked;
 public:
 	enum
 	{
 		minSize=256
 	};
-	typedef int position;
+
+	/// Current buffer position
+	int position;
+
+	/// Constructor
 	IOBuffer(bool in,int max=minSize)
 		:bRead(in),bLocked(false),current(0),begin(0),buffer(NULL),bufferSize(0)
 	{
 		if(!bRead)resize(max);
 	}
+	/// place current position to start
 	void rewind()
 	{
 		current=begin;
 	}
+	/// get current size
 	int size()const
 	{
 		return current-begin;
 	}
+	/// get size left
 	int left()const
 	{
 		return end-current;
 	}
+	/// write data to the buffer
 	int write(const void *data,int size)
 	{
-		if(!out())_xwrite();
+		if(!out())
+			_xwrite();
 		if(current+size>buffer+bufferSize)
 			resize(bufferSize+size);
 
@@ -100,14 +120,18 @@ public:
 		current+=size;
 		return size;
 	}
+	/// write data to the buffer
 	int write(const IOBuffer &buffer)
 	{
 		return write(buffer.begin,buffer.size());
 	}
+
+	/// check if we reached end of buffer
 	bool eof()
 	{
 		return end==current;
 	}	
+	/// read data from the buffer
 	int read(void *data,int size)
 	{
 		if(!in())_xread();
@@ -120,22 +144,28 @@ public:
 		else
 			throw(std::exception("IOBuffer eof"));
 	}
+
+	/// get data before current position (some sort of 'putback')
 	template<class Type> Type& getBefore(int position)
 	{
 		if(begin+position>end)
 			throw(std::exception("IOBuffer eof"));
 		return *reinterpret_cast<Type*>(begin+position-sizeof(Type));
 	}
+
+	/// get data after current position
 	template<class Type> Type& getAfter(int position)
 	{
 		if(begin+position+sizeof(Type)>end)
 			throw(std::exception("IOBuffer eof"));
 		return *reinterpret_cast<Type*>(begin+position);
 	}
+	/// get current position
 	position pos()const
 	{
 		return (position)(current-begin);
 	}
+	/// set current position
 	void pos(position p)
 	{
 		if(p>=0 && p<=end-begin)
@@ -144,11 +174,13 @@ public:
 			_xlen(p,0);
 
 	}
+	/// write generic to the buffer
 	template<class Type> int write(const Type &t)	// returns position
 	{
 		write(&t,sizeof(Type));
 		return current-sizeof(Type)-begin;
 	}
+	/// read generic from the buffer
 	template<class Type> int read(Type &t)
 	{
 		int count=read(&t,sizeof(Type));
@@ -156,6 +188,7 @@ public:
 			throw(XRead(count,sizeof(Type)));
 		return count;
 	}
+	/// Switch modes
 	bool flip()
 	{
 		if(!bLocked)
@@ -169,10 +202,12 @@ public:
 		}
 		return bRead;
 	}
+	/// check if buffer works in 'Read' mode
 	bool in()const
 	{
 		return bRead;
 	}
+	/// check if buffer works in 'Write' mode
 	bool out()const
 	{
 		return !bRead;
@@ -185,6 +220,7 @@ public:
 	//	,current(buffer.current)
 	//{}
 	
+	/// read data from the buffer
 	IOBuffer readBuffer(int length)
 	{
 		if(current>=end || current+length>end)_xlen(current-begin,length);
@@ -207,7 +243,7 @@ public:
 		}
 	}
 protected:
-	// construct buffer pointing to region of other buffer
+	/// construct buffer pointing to region of other buffer
 	IOBuffer(IOBuffer &buffer,int start,int length)
 		:bRead(true),bLocked(true),buffer(NULL),bufferSize(NULL)
 	{
@@ -215,14 +251,15 @@ protected:
 		current=begin;
 		end=begin+length;
 	}
-	int calcSize(int newsize)
+	/// calculate appropriate size
+	static int calcSize(int newsize)
 	{
 		int result=1;
 		while(result<newsize)
 			result*=2;
 		return result;
 	}
-	// resize data buffer, and init pointers
+	/// resize data buffer, and init pointers
 	void resize(int newsize=minSize)
 	{
 		newsize=calcSize(newsize);
@@ -236,22 +273,27 @@ protected:
 		end=begin+bufferSize;
 		current=begin+offs;
 	}
+	/// throw memory exception
 	void _xmem()
 	{
 		throw(std::exception("memory error"));
 	}
+	/// throw 'locked' exception
 	void _xlocked()
 	{
 		throw(std::exception("buffer is locked"));
 	}
+	/// throw 'len' exception
 	void _xlen(int pos,int len)
 	{
 		throw(std::exception("buffer overflow"));
 	}
+	/// throw 'read only' exception
 	void _xread()
 	{
 		throw(std::exception("read only"));
 	}
+	/// throw 'write only' exception
 	void _xwrite()
 	{
 		throw(std::exception("write only"));
@@ -326,4 +368,6 @@ protected:
 
 typedef IOBuffer MsgBuffer;
 typedef IOBuffer MsgBufferImpl;
+
+} // namespace frosttools
 #endif

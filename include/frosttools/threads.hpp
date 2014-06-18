@@ -4,20 +4,32 @@
 #include <stdlib.h>
 #include <assert.h>
 
-namespace Threading
+namespace frosttools
+{
+
+/// \addtogroup Threading
+/// Contains cross-platform tools for working with thread synchronization
+/// @{
+namespace threading
 {
 	//! Base class for any lockable construct
 	class BaseLockable
 	{
 	public:
-		virtual void lock() = 0;
-		virtual void unlock() = 0;
+		virtual ~BaseLockable() {}
+		/// Lock object
+		virtual bool lock() = 0;
+		/// Unlock object
+		virtual bool unlock() = 0;
 	};
 
-	//! Local helper
+	//! Local helper to wrap thread functions.
+	/**
+	 * Not so safe
+	 */
 	struct _thread_helper
 	{
-		//! Wraps function with 1 argument
+		/// Wraps function with 1 argument
 		template<class Arg0> struct FnWrapper1
 		{
 			typedef void (*fnptr)(Arg0 );
@@ -34,6 +46,7 @@ namespace Threading
 				return result;
 			}
 
+			/// actual thread function, that calls stored function pointer
 			static void * run(void *data)
 			{
 				wrap_type * f = (wrap_type*)data;
@@ -88,10 +101,13 @@ namespace Threading
 
 	template<class Function> struct FunctionWrapper
 	{
+		/// Function pointer
 		Function * func;
 
+		/// Defines wrapper type
 		typedef FunctionWrapper<Function> wrap_type;
 
+		/// Create wrapper
 		static wrap_type * create(Function &fn)
 		{
 			wrap_type * result = new wrap_type;
@@ -99,6 +115,7 @@ namespace Threading
 			return result;
 		}
 
+		/// Runs wrapped functor
 		static void * run(void * data)
 		{
 			wrap_type * f = (wrap_type*)data;
@@ -115,7 +132,9 @@ namespace Threading
 		cvNoTimeout,
 		cvTimeout,
 	};
-}
+}	// namespace threading
+
+} // namespace frosttools
 
 #ifdef _MSC_VER
 #include "win32/threads_impl.hpp"
@@ -123,13 +142,19 @@ namespace Threading
 #include "linux/threads_impl.hpp"
 #endif
 
-namespace Threading
+namespace frosttools
 {
+namespace threading
+{
+	/// Scoped locker
 	template<class Lockable = BaseLockable>
 	class ScopedLock
 	{
 	public:
+		/// reference to locking object
 		Lockable & mutex;
+
+		/// Constructor
 		ScopedLock(Lockable &mutex)
 			:mutex(mutex)
 		{
@@ -145,23 +170,34 @@ namespace Threading
 	class SimpleMutex : public BaseLockable
 	{
 	public:
-		int counter;
+		int counter;	///< Lock counter
+
 		SimpleMutex()
 		{
 			counter = 0;
 		}
+
+		/// Check if mutex is locked
 		bool locked()const
 		{
 			return counter > 0;
 		}
-		void lock()
+
+		/// Lock object
+		bool lock()
 		{
 			counter++;
+			return true;
 		}
-		void unlock()
+
+		/// Unlock object
+		bool unlock()
 		{
 			counter--;
+			return false;
 		}
 	};
 };
+/// @}
+} // namespace frosttools
 #endif

@@ -1,4 +1,7 @@
 #pragma once
+
+/// Defines conversions between ORGE, PhysX and frosttools linear math
+
 #ifdef OGRE_COMPILER
 inline vec3 conv(Ogre::Vector3 v)
 {

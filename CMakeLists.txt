@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 #FrostTools static library
 PROJECT(FrostTools)
 
-set(FROSTTOOLS_MAJOR_VERSION 0)
-set(FROSTTOOLS_MINOR_VERSION 9)
+set(FROSTTOOLS_MAJOR_VERSION 1)
+set(FROSTTOOLS_MINOR_VERSION 0)
 set(FROSTTOOLS_PATCH_VERSION 0)
 set(FROSTTOOLS_VERSION ${FROSTTOOLS_MAJOR_VERSION}.${FROSTTOOLS_MINOR_VERSION}.${FROSTTOOLS_PATCH_VERSION})
 
@@ -41,7 +41,7 @@ if(BUILD_DOCUMENTATION)
 		message(FATAL_ERROR "Doxygen should be installed to build the documentation")
 	endif(NOT DOXYGEN_FOUND)
 	configure_file(Doxyfile.in ${PROJECT_BINARY_DIR}/Doxyfile @ONLY IMMEDIATE)
-  add_custom_target (Docs ALL 
+	add_custom_target (Docs ALL 
 		COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/Doxyfile
 		SOURCES ${PROJECT_BINARY_DIR}/Doxyfile)
 endif(BUILD_DOCUMENTATION)

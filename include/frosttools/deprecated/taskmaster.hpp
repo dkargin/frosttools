@@ -27,7 +27,7 @@ namespace Threading
 		{
 			TaskMaster * master;
 			size_t i;
-			Threading::thread thread;
+			Threading::Thread thread;
 
 			// Get next task from queue and process it
 			bool processTask()

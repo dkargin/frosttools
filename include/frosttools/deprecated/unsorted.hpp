@@ -1,3 +1,8 @@
+#ifndef FROSTTOOLS_UNSORTED_HPP
+#define FROSTTOOLS_UNSORTED_HPP
+
+namespace frosttools
+{
 
 template<class Type>
 struct CompareLess: public std::binary_function<Type,Type,bool>
@@ -63,79 +68,37 @@ public:
 		return distanceTable[x][y];
 	}
 };
-////////////////////////////////////////////////////////////////
-// Generic reference counter. Not tested. Not used
-////////////////////////////////////////////////////////////////
-//
-//class RefCounted
-//{
-//public:
-//#ifndef InterlockedIncrement
-//	static inline long InterlockedIncrement(long *val)
-//	{
-//		*val=*val+1;
-//		return *val;
-//	}
-//#endif
-//#ifndef InterlockedDecrement
-//	static inline long InterlockedDecrement(long *val)
-//	{
-//		*val=*val-1;
-//		return *val;
-//	}
-//#endif
-//	inline RefCounted()
-//	: _cRef(0)
-//	{}
-//
-//	inline ~RefCounted()
-//	{ assert(_cRef == 0); }
-//
-//	inline long zddRef()
-//	{ return InterlockedIncrement(&_cRef) ; }
-//
-//	inline long release()
-//	{
-//		InterlockedDecrement(&_cRef) ;
-//		if (_cRef == 0)
-//		{
-//			delete this;
-//			return 0;
-//		}
-//		return _cRef ;
-//	}
-//	inline long  counter() const
-//	{
-//		return _cRef;
-//	}
-//private:
-//	long _cRef;
-//};
 
-
+/// Simple unsafe singleton
 template <typename T> class Singleton
 {
 protected:
 
+	/// actual singleton
 	static T* ms_Singleton;
 
 public:
+	/// Constructor
 	inline Singleton( void )
 	{
 		assert( !ms_Singleton );
 		ms_Singleton = static_cast< T* >( this );
 	}
+
+	/// Destructor
 	virtual ~Singleton( void )
 	{
 		assert( ms_Singleton );
 		ms_Singleton = 0;
 	}
+	/// Get singleton reference
 	inline static T& getSingleton( void )
 	{
 		assert( ms_Singleton );
 		return ( *ms_Singleton );
 	}
 
+	/// Get singleton pointer
 	inline static T* getSingletonPtr( void )
 	{
 		return ms_Singleton;
@@ -162,10 +125,12 @@ public:
 		count=_count;
 		matrix.resize(_count*_count);
 	}
+
 	ItemDef & operator()(int x,int y)
 	{
 		return matrix[x+y*count];
 	};
+
 	void reset()
 	{
 		for(int i=0;i<matrix.size();i++)
@@ -201,6 +166,7 @@ public:
 				}
 			}
 	}
+
 	int findNearest(int x)
 	{
 		float min=1.0e+16;
@@ -218,6 +184,7 @@ public:
 		}
 		return imin;
 	}
+
 	void getMinMax()
 	{
 		float valMax=matrix[0].value;
@@ -238,6 +205,7 @@ public:
 			}
 		}
 	}
+
 	void randomise()
 	{
 		for(int y=0;y<count;y++)
@@ -248,37 +216,38 @@ public:
 				//(*this)(y,x).value=val;
 			}
 	}
+
 	float relativeEquality(int i,int k,int l)
 	{
 		return 1.0f-fabs(equality(i,k)-equality(i,l));
 	}
+
 	float equality(int i,int j)
 	{
 		return 1.0f-(*this)(i,j).value/matrix[iMax].value;
 	}
 };
 
-
-
-//////////////////////////////////////////////////////////////////////////////
-// Binary heap implementation
-//////////////////////////////////////////////////////////////////////////////
+/// Binary heap, projected to raw array
 template <class NodeType,class Comparator = CompareLessEqual<NodeType> >
 class BinaryHeap
 {
-	NodeType **array;
+	NodeType **array;			///< Heap contents
 	typedef NodeType *PNode;
 	typedef unsigned int WORD;
-	int arraySize;
-	int arraySizeMax;
-	Comparator compare;
+	int arraySize;				///< Current heap size
+	int arraySizeMax;			///< Maximum allocated size
+	Comparator compare;		///< comparator
 public:
+	/// Default constructor
 	BinaryHeap()
 	{
 		arraySize=0;
 		arraySizeMax=0;
 		array=NULL;
 	}
+
+	/// Construct binary heap with specified size
 	BinaryHeap(int size)
 	{
 		arraySizeMax=size;
@@ -286,48 +255,54 @@ public:
 		arraySize=0;
 	}
 
+	/// get best node
 	virtual NodeType * bestNode()
 	{
 		if(array)return *array;
 	}
+	/// add node to binary heap
 	virtual void addNode(NodeType *node)
 	{
-		if(node==NULL)return;
-	if(arraySize==arraySizeMax)return;
+		if(node==NULL)
+			return;
+		if(arraySize==arraySizeMax)
+			return;
 
-	unsigned int v=arraySize;
-	unsigned int u=v;
-	NodeType *tmp;
-	bool flag=false;
+		unsigned int v=arraySize;
+		unsigned int u=v;
+		NodeType *tmp;
+		bool flag=false;
 
-	/*if(node->containerID<size && array[node->containerID]==node)//node is already in container
-	{
-		v=node->containerID;
-		u=v;
-		flag=true;
-	}
-	else
-		node->containerID=v;*/
-	array[v]=node;
-	while(v)
-	{
-		u=v/2;
-		if(compare(*array[v],*array[u]))
+		/*if(node->containerID<size && array[node->containerID]==node)//node is already in container
 		{
-			tmp=array[u];
-			array[u]=array[v];
-			array[v]=tmp;
-			//fix ID's
-			//array[u]->containerID=u;
-			//array[v]->containerID=v;
-			v=u;
+			v=node->containerID;
+			u=v;
+			flag=true;
 		}
 		else
-			break;
+			node->containerID=v;*/
+		array[v]=node;
+		while(v)
+		{
+			u=v/2;
+			if(compare(*array[v],*array[u]))
+			{
+				tmp=array[u];
+				array[u]=array[v];
+				array[v]=tmp;
+				//fix ID's
+				//array[u]->containerID=u;
+				//array[v]->containerID=v;
+				v=u;
+			}
+			else
+				break;
+		}
+
+		if(!flag)
+			arraySize++;
 	}
-	if(!flag)
-		arraySize++;
-	}
+	/// remove node from binary heap
 	virtual void removeNode(NodeType *node)
 	{
 		long i=-1;
@@ -390,14 +365,17 @@ public:
 				break;
 		}
 	}
+	/// get element at specified index
 	virtual NodeType* operator[](int i)
 	{
 		return array[i];
 	}
+	/// clear binary heap
 	virtual void flush()
 	{
 		arraySize=0;
 	}
+	/// Destructor
 	~BinaryHeap()
 	{
 		if(array)
@@ -407,3 +385,5 @@ public:
 		arraySize=0;
 	}
 };
+}	// namespace frosttools
+#endif

@@ -4,12 +4,18 @@
 #include <assert.h>
 #include <memory.h>
 
-
+namespace frosttools
+{
+/// Empty deleter
 template<class Type> inline void DeleterEmpty(Type* ptr){}
+
+/// Basic deleter
 template<class Type> inline void DeleterBasic(Type* ptr)
 {
 	delete ptr;
 }
+
+/// Deleter using 'release' method
 template<class Type> inline void Releaser(Type* ptr)
 {
 	ptr->release();
@@ -78,19 +84,25 @@ public:
 //template<class Type> class WeakPtr;
 template<class Type, class RefBase> class SharedPtr;
 
-// This info is shared between object instance and all pointers to this object
+/// This info is shared between object instance and all pointers to this object
 template<class _Type> struct BaseObjectInfo
 {
+	/// Defines target type
     typedef _Type target_type;
+    /// Defines object info for target type
     typedef BaseObjectInfo<_Type> my_type;
+    /// Pointer to actual data
     _Type * data;
+    /// Data reference counter
     int refCounter;
+    /// ObjectInfo reference counter
     int ptrCounter;
 
 #ifdef _SHARED_PROTOTYPE
     bool instance;
     int flags;
 #endif
+    /// Default constructor
     BaseObjectInfo() : data( NULL ), refCounter(0), ptrCounter(0)
     {
 #ifdef _SHARED_PROTOTYPE
@@ -99,6 +111,7 @@ template<class _Type> struct BaseObjectInfo
 #endif
     }
 
+    /// Check if there are any data references
     bool alive() const
     {
         return data != NULL && refCounter != 0;
@@ -109,6 +122,7 @@ template<class _Type> struct BaseObjectInfo
         assert(ptrCounter == 0);
     }
 #endif
+    /// add data reference
     static void addReference(target_type * data)
     {
         assert(data != NULL);
@@ -116,6 +130,8 @@ template<class _Type> struct BaseObjectInfo
         assert(info != NULL);
 		info->refCounter++;
     }
+    /// Recrement data reference
+    /// Releases object if reference counter is zero
     static bool removeReference(target_type * data)
     {
         assert(data);
@@ -130,6 +146,7 @@ template<class _Type> struct BaseObjectInfo
         }
         return false;
     }
+    /// releases object. Calls default deallocator
     static void releaseObject(target_type * data)
     {/*
         assert(data);
@@ -143,6 +160,7 @@ template<class _Type> struct BaseObjectInfo
         delete data;
     }
 
+    /// Allocates BaseObjectInfo
     static BaseObjectInfo<target_type> * allocate()
     {
 #ifdef BASE_OBJECT_INFO_STATIC
@@ -157,6 +175,7 @@ template<class _Type> struct BaseObjectInfo
 #endif
     }
 
+    /// Deallocates ObjectInfo
     static bool releaseInfo(BaseObjectInfo<target_type> * info)
     {
         info->ptrCounter--;
@@ -173,11 +192,14 @@ template<class _Type> struct BaseObjectInfo
         return true;
     }
 };
-///////////////////////////////////////////////////////////////////////////////////
-// Base for any object to be referenced by "shared" model
-// 1. You can obtain shared pointer from raw pointer to object
-// 2. Can handle "static" object allocation by overloading "new" operator
-//	( need to decrease reference manually after allocation)
+
+///\brief Implements intrusive reference counter
+/* Base for any object to be referenced by "shared" model
+ * 1. You can obtain shared pointer from raw pointer to object
+ * 2. Can handle "static" object allocation by overloading "new" operator
+ *	( need to decrease reference manually after allocation)
+ *
+ */
 ///////////////////////////////////////////////////////////////////////////////////
 class Referenced
 {
@@ -188,10 +210,13 @@ public:
 	template<class Stub> friend class Instance;
 	template<class Stub> friend struct BaseObjectInfo;
 protected:
+	/// Defines shared data type
 	typedef BaseObjectInfo<Referenced> ObjectInfo;
 
+	/// pointer to shared data
 	ObjectInfo * objectInfo;
 
+	/// Default constructor
 	Referenced() : objectInfo(NULL)
 	{
 		objectInfo = ObjectInfo::allocate();
@@ -200,6 +225,7 @@ protected:
 		objectInfo->ptrCounter = 1;
 	}
 
+	/// Destructor
 	virtual ~Referenced()
 	{
 		//_CrtCheckMemory();
@@ -207,34 +233,45 @@ protected:
 		ObjectInfo::releaseInfo(objectInfo);
 	}
 public:
+	/// Access shared data
 	template< class Type > BaseObjectInfo<Type> * getObjectInfo()
 	{
 		return (BaseObjectInfo<Type>*)this->objectInfo;
 	}
 };
 
+/// Shared pointer
 template<class Type, class RefBase = Referenced>
 class SharedPtr
 {
 public:
+	/// Defines target value type
 	typedef Type value_type;
+	/// Defines shared pointer type
 	typedef SharedPtr<Type, RefBase> my_type;
+	/// Defines target value pointer type
 	typedef value_type * ptr_type;
+	/// Defines base class for intrusive referencing (shared_from_this construct)
 	typedef RefBase _RefBase;
+	/// Defines type for shared info
 	typedef BaseObjectInfo<Type> ObjectInfo;
 
+	/// Default constructor
 	SharedPtr() : objectInfo(NULL) {}
 
+	/// Construct using raw pointer
 	SharedPtr(ptr_type ptr) : objectInfo(NULL)
 	{
 		bind(ptr);
 	}
 
+	/// Copy constructor
 	SharedPtr(const SharedPtr &ptr)	: objectInfo( NULL )
 	{
 		bind(ptr);
 	}
 
+	/// Destructor
 	~SharedPtr()
 	{
 		bind(NULL);
@@ -260,18 +297,21 @@ public:
 		return get() == ptr.get();
 	}
 	*/
+	/// Assignment operator
 	my_type & operator = (const value_type * ptr)
 	{
 		bind((value_type*)ptr);
 		return (*this);
 	}
 
+	/// Assignment operator
 	my_type & operator = (const my_type & ptr)
 	{
 		bind( ptr.get() );
 		return *this;
 	}
 
+	/// Dereferencing operator
 	ptr_type operator -> () const
 	{
 		ptr_type result = get();
@@ -279,11 +319,13 @@ public:
 		return result;
 	}
 
+	/// Cast to pointer type. Might be dangerous
 	operator ptr_type() const
 	{
 		return get();
 	}
 
+	/// Get raw pointer. Dangerous one
 	ptr_type get() const
 	{
 		if(objectInfo && objectInfo->alive())
@@ -293,6 +335,7 @@ public:
 		return NULL;
 	}
 protected:
+	/// Binds to raw object
 	void bind(ptr_type ptr)
 	{
 		if( objectInfo != NULL )
@@ -314,30 +357,41 @@ protected:
 			objectInfo->refCounter++;
 		}
 	}
+	/// pointer to shared data
 	ObjectInfo * objectInfo;
 };
 
+/// Weak pointer
 template<class Type, class RefBase = Referenced>
 class WeakPtr
 {
 public:
+	/// Defines value type
 	typedef Type value_type;
+	/// Defines pointer own type
 	typedef WeakPtr<Type, RefBase> my_type;
+	/// Defines raw pointer type
 	typedef value_type * ptr_type;
+	/// Defines shared data type
 	typedef BaseObjectInfo<Type> ObjectInfo;
 
+	/// Default constructor
 	WeakPtr() : objectInfo(NULL) {}
 
+	/// Constructor
+	/// Construct using raw pointer
 	WeakPtr(ptr_type  ptr) : objectInfo(NULL)
 	{
 		bind(ptr);
 	}
 
+	/// Copy constructor
 	WeakPtr(const WeakPtr &ptr)	: objectInfo( NULL )
 	{
 		bind(ptr);
 	}
 
+	/// Destructor
 	~WeakPtr()
 	{
 		bind(NULL);
@@ -363,12 +417,14 @@ public:
 		return get() == ptr.get();
 	}
 	*/
+	/// Assignment operator
 	my_type & operator = (const value_type * ptr)
 	{
 		bind((value_type*)ptr);
 		return (*this);
 	}
 
+	/// Dereferencing operator
 	ptr_type operator -> () const
 	{
 		ptr_type result = get();
@@ -376,11 +432,14 @@ public:
 		return result;
 	}
 
+	/// Cast to pointer type
+	/// Returns raw pointer. Dangerous
 	operator ptr_type() const
 	{
 		return get();
 	}
 
+	/// Get raw pointer
 	ptr_type get() const
 	{
 		if(objectInfo && objectInfo->alive())
@@ -390,6 +449,7 @@ public:
 		return NULL;
 	}
 protected:
+	/// Bind to raw pointer
 	void bind(ptr_type ptr)
 	{
 		if( objectInfo != NULL )
@@ -403,17 +463,20 @@ protected:
 			objectInfo->ptrCounter++;
 		}
 	}
+	/// pointer to shared data
 	ObjectInfo * objectInfo;
 };
 
-// When we do not want to use dynamic allocation, but going to use shared model
+/// When we do not want to use dynamic allocation, but going to use shared model
 template<class Type>
 class Instance
 {
 public:
+	/// Defines instance type
 	typedef Instance<Type> my_type;
+	/// Instance
 	Type instance;
-	//WeakPtr<Type> testPtr;
+	/// Default constructor
 	Instance()
 	{
 		bind();
@@ -426,26 +489,33 @@ private:
 	const my_type & operator = (const my_type & ) const;
 public:
 	~Instance()	{}
+	/// Constructor
 	template<class Arg0> Instance(Arg0 arg0) : instance(arg0)
 	{
 		bind();
 	}
+	/// Constructor
 	template<class Arg0, class Arg1> Instance(Arg0 arg0, Arg1 arg1) : instance(arg0,arg1)
 	{
 		bind();
 	}
+
+	/// Const dereferencing operator
 	const Type * operator -> () const
 	{
 		return &instance;
 	}
+	/// Dereferencing
 	Type * operator -> ()
 	{
 		return &instance;
 	}
+	/// Cast to const raw pointer
 	operator const Type *() const
 	{
 		return &instance;
 	}
+	/// Cast to raw pointer
 	operator Type *()
 	{
 		return &instance;
@@ -520,4 +590,6 @@ struct AutoPtrTest
 	}
 };
 #endif
+
+}
 #endif

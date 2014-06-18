@@ -18,7 +18,8 @@
 #include <assert.h>
 
 
-
+namespace frosttools
+{
 const size_t DEFAULT_BUFLEN = 0xffff;
 
 const char * Network::Exception::what() const throw()
@@ -374,7 +375,7 @@ int Peer::send(size_t peerId, const void * data, size_t size)
 			}
 			//network.getLog()->line(0,"General net: ERROR sending to invalid connection\n");
 		} else if (bytesData != size) {
-			printf("bytesData != size !! %d %d \n", bytesData, size);
+			printf("bytesData != size !! %d %d \n", bytesData, (int)size);
 		}
 		//else
 		//	network.getLog()->line(0,"Sent %d bytes of data\n", bytesData);
@@ -806,6 +807,7 @@ void Peer::update(timeval &timeout)
 	}
 }
 
+} // namespace frosttools
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* mkaddr.c
 * The mkaddr() Subroutine using inet_aton
@@ -825,6 +827,9 @@ void Peer::update(timeval &timeout)
 #include <arpa/inet.h>
 #include <netdb.h>
 #endif
+
+namespace frosttools
+{
 /*
 * Create an AF_INET Address:
 *
@@ -1066,7 +1071,7 @@ void run_broadcast(Network & network, BroadcasterData * br)
 	while (true)
 	{
 		broadcastServices(br->services, socket, broadcast_address);
-		Threading::sleep(br->timeout);
+		threading::sleep(br->timeout);
 	}
 }
 
@@ -1125,3 +1130,5 @@ void run_broadcast_once(Network::SOCKET &socket, BroadcasterData *br, sockaddr_i
 		//Threading::Thread::sleep(br->timeout);
 	}
 }
+
+} // namespace frosttools
