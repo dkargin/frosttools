@@ -11,12 +11,16 @@
 namespace frosttools
 {
 
+class NullPluginBase {};
+typedef NullPluginBase NullClass;
 /// Base class for plugin
 template <class _C> class _Plugin
 {
 public:
 	/// Defines core manager type
 	typedef _C Core;
+
+	virtual ~_Plugin() {}
 
 	/// Get plugin name
 	virtual const char *getName()=0;

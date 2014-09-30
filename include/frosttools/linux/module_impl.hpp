@@ -32,18 +32,18 @@ class SysModule
 			throw Exception(errorMessage);*/
 	}
 public:
-	/*
+
 	struct Exception
 	{
-		tstring message;
-		Exception(const tstring &msg):message(msg){}
+		std::string message;
+		Exception(const std::string &msg):message(msg){}
 		Exception(const Exception &ex):message(ex.message){}
-		const tstring::value_type * getMessage()
+		const std::string::value_type * getMessage()
 		{
 			return message.c_str();
 		}
 	};
-	*/
+
 	SysModule(const char * path)
 		:hLib(NULL), lastErrorCode(0)
 	{
