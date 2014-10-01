@@ -7,6 +7,7 @@
 #include "linux/time_impl.hpp"
 #endif
 
+#include <cstdlib>
 #include <vector>	// for timeline
 
 namespace frosttools
@@ -47,7 +48,7 @@ public:
 	/// Constructor
 	TimeManager();
 	/// Destructor
-	~TimeManager();
+	virtual ~TimeManager();
 
 	/// remove all pending actions
 	void clear();

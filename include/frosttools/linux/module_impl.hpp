@@ -1,6 +1,7 @@
 #ifndef _MODULE_IMPL_HPP_
 #define _MODULE_IMPL_HPP_
 
+#include <stdio.h>
 #include <string>
 #include <dlfcn.h>
 
