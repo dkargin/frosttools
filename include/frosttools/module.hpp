@@ -1,6 +1,7 @@
 #ifndef _MODULE_HPP_
 #define _MODULE_HPP_
 
+#include <list>
 /// include platform-specific variants
 #ifdef WIN32
 #include "win32/module_impl.hpp"
