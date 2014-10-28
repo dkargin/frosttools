@@ -124,7 +124,7 @@ bool SocketError(int result)
 }
 
 Network::Network(Log * log)
-	:/*result(NULL), */log(log)
+	:/*result(NULL), */log(log ? log : &defaultLog)
 {
 	LogFunction(*log);
 #ifdef _MSC_VER
@@ -701,7 +701,7 @@ void Peer::processRecieving( size_t i )
 
 	if(s.bytesRecieved > 0 && listener)
 	{
-		int processed = listener->onRecieve( this, i, s.buffer, s.bytesRecieved);
+		int processed = listener->onReceive( this, i, s.buffer, s.bytesRecieved);
 		int unreceivedData = s.bytesRecieved - processed;
 		memmove(s.buffer, s.buffer + processed, unreceivedData);
 		s.bytesRecieved = unreceivedData;
@@ -971,164 +971,4 @@ int mkaddr(void *addr, int *addrlen, const char *str_addr, const char *protocol)
 	free(inp_addr);
 	return 0;
 }
-
-const char msgSignature[]="SeDi";
-
-ServiceDesc::ServiceDesc()
-{
-	/// TODO: dinosaur can bite here
-	memset(this, sizeof(ServiceDesc), 0);
-	memcpy(this->signature, msgSignature, 4);
-}
-
-ServiceDesc::ServiceDesc(const ServiceDesc &desc)
-{
-	memcpy(this, &desc, sizeof(desc));
-}
-
-
-BroadcasterData::BroadcasterData()
-{
-	broadcastAddress = "192.168.1.255:9097";
-	timeout = 1000;
-}
-
-void BroadcasterData::addService(const ServiceDesc & desc)
-{
-	services.push_back(desc);
-}
-
-void sendServiceDesc(const ServiceDesc & desc, Network::SOCKET socket, sockaddr_in & address)
-{
-	int packetLength = sizeof(ServiceDesc);
-	int addrLength = sizeof(sockaddr_in);
-	int err = sendto(socket, (const char*)&desc, packetLength,0, (sockaddr*)&address, addrLength);
-	if(err < 0)
-	{
-		err = errno;
-		//char errorBuff[255];
-		//strerror_r(err, errorBuff, sizeof(errorBuff));
-		printf("Failed to send service descriptor, err = %d, %s\n", err, strerror(err));
-	}
-}
-
-void broadcastServices(BroadcasterData::Services & services, Network::SOCKET socket, sockaddr_in & address)
-{
-	for(BroadcasterData::Services::iterator it = services.begin(); it != services.end(); ++it)
-	{
-		ServiceDesc & desc = *it;
-		sendServiceDesc(desc, socket, address);
-	}
-}
-
-void run_broadcast(Network & network, BroadcasterData * br)
-{
-	Network::SOCKET socket = network.createSocket(Network::SocketUDP);
-	if (socket == INVALID_SOCKET) {
-		printf("Cannot create broadcaster\n");
-		exit(0);
-	}
-
-	char sv_addr[128] = "127.0.0:*";
-
-	sockaddr_in broadcast_address, server_address;
-	memset((char*) &broadcast_address, sizeof(broadcast_address), 0);
-
-	int len_bc = sizeof broadcast_address;
-	int z = mkaddr(&broadcast_address, &len_bc, br->broadcastAddress.c_str(), "udp"); /* UDP protocol */
-	if(z == -1)
-	{
-		printf("failed to init bc_addr\n");
-	}
-
-	int len_srvr = sizeof server_address;
-	z = mkaddr(&server_address, &len_srvr, sv_addr, "udp"); /* UDP protocol */
-
-	if(z == -1)
-	{
-		printf("failed to init sv_addr\n");
-	}
-
-	int option = 1;
-	if ((z = setsockopt(socket, SOL_SOCKET, SO_REUSEADDR,
-		(char*)&option, sizeof option)) == -1) {
-			printf("Cannot set SO_REUSEADDR=1\n");
-			exit(0);
-	}
-	option = 1;
-	if ((z = setsockopt(socket, SOL_SOCKET, SO_BROADCAST,
-		(char*)&option, sizeof option)) == -1) {
-			printf("Cannot set broadcasting mode\n");
-			exit(0);
-	}
-
-	if (bind(socket, (sockaddr*) &broadcast_address,
-		sizeof(broadcast_address)) == -1) {
-			printf("Cannot bind broadcaster\n");
-			exit(0);
-	}
-
-	while (true)
-	{
-		broadcastServices(br->services, socket, broadcast_address);
-		threading::sleep(br->timeout);
-	}
-}
-
-Network::SOCKET init_broadcast(Network &network, BroadcasterData *br, sockaddr_in &broadcast_address)
-{
-	Network::SOCKET socket = network.createSocket(Network::SocketUDP);
-	if (socket == INVALID_SOCKET) {
-		printf("Cannot create broadcaster\n");
-		return INVALID_SOCKET; //exit(0);
-	}
-
-	char sv_addr[128] = "127.0.0:*";
-
-	//sockaddr_in broadcast_address, server_address;
-	memset((char*) &broadcast_address, sizeof(broadcast_address), 0);
-
-	int len_bc = sizeof broadcast_address;
-	int z = mkaddr(&broadcast_address, &len_bc, br->broadcastAddress.c_str(), "udp"); /* UDP protocol */
-	if(z == -1)
-	{
-		printf("failed to init bc_addr\n");
-	}
-
-	/*int len_srvr = sizeof server_address;
-	z = mkaddr(&server_address, &len_srvr, sv_addr, "udp"); //* UDP protocol * /
-	if(z == -1)
-	{
-		printf("failed to init sv_addr\n");
-	}*/
-
-	int option = 1;
-	if ((z = setsockopt(socket, SOL_SOCKET, SO_REUSEADDR,
-		(char*)&option, sizeof option)) == -1) {
-			printf("Cannot set SO_REUSEADDR=1\n");
-			return INVALID_SOCKET; //exit(0);
-	}
-	option = 1;
-	if ((z = setsockopt(socket, SOL_SOCKET, SO_BROADCAST,
-		(char*)&option, sizeof option)) == -1) {
-			printf("Cannot set broadcasting mode\n");
-			return INVALID_SOCKET; //exit(0);
-	}
-
-	if (bind(socket, (sockaddr*) &broadcast_address,
-		sizeof(broadcast_address)) == -1) {
-			printf("Cannot bind broadcaster\n");
-			return INVALID_SOCKET; //exit(0);
-	}
-	return socket;
-}
-
-void run_broadcast_once(Network::SOCKET &socket, BroadcasterData *br, sockaddr_in broadcast_address) {
-	//while (true)
-	{
-		broadcastServices(br->services, socket, broadcast_address);
-		//Threading::Thread::sleep(br->timeout);
-	}
-}
-
 } // namespace frosttools
