@@ -15,6 +15,8 @@
 
 #include <frosttools/connection.h>
 
+namespace frosttools
+{
 enum {
 	CanRead = 1,
 	CanWrite = 2,
@@ -371,3 +373,4 @@ int Connection::update_network() {
 	return netState;
 }
 
+}

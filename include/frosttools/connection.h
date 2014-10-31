@@ -29,6 +29,8 @@
 #endif
 */
 
+namespace frosttools
+{
 /// Connection
 class Connection
 {
@@ -119,5 +121,7 @@ protected:
 	/// Handle data receiving
 	int handleReceiving();
 };
+
+}
 
 #endif

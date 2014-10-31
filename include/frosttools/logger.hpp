@@ -23,6 +23,8 @@ public:
 	    fill = ' ';
 	}
 
+	virtual ~Log() {}
+
 	/// Scope for logger
 	class Scoped
 	{
@@ -156,6 +158,7 @@ public:
 	LogFILE(FILE *target=stderr)
 		:log(target),local(false)
 	{}
+
 	~LogFILE()
 	{
 		if(local)
@@ -168,6 +171,15 @@ public:
 	virtual void sendLine(const char *text)
 	{
 		fprintf(log,"%s\n",text);
+	}
+};
+
+/// This log implementation does not write any data
+class LogNull : public Log
+{
+public:
+	virtual void sendLine(const char *text)
+	{
 	}
 };
 
