@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package>
+  <name>frosttools</name>
+  <version>1.0.0</version>
+  <description>FrostTools is a bunch of template libraries, like math or simple contaolers.</description>
+  <maintainer email="dv_frost@mail.ru">Dmitry Kargin</maintainer>
+  <license>BSD</license>
+<!--
+  <url type="website">http://ompl.kavrakilab.org</url>
+  <url type="bugtracker">https://bitbucket.org/ompl/ompl/issues</url>
+  <url type="repository">https://bitbucket.org/ompl/ompl/</url>
+-->
+  <author>Dmitry Kargin</author>
+
+  <buildtool_depend>cmake</buildtool_depend>
+
+  <build_depend>cmake</build_depend>
+<!--
+  <build_depend>boost</build_depend>
+
+  <run_depend>boost</run_depend>
+-->
+  <export>
+    <build_type>cmake</build_type>
+  </export>
+</package>
