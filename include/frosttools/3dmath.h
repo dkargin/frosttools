@@ -814,7 +814,10 @@ public:
 	/// Get inverted transform
 	inline pose_type invert() const
 	{
-		return pose_type(-position, -orientation);
+		pose_type result;
+		result.orientation = -orientation;
+		result.position = result.transformVec(-position);
+		return result;
 	}
 };
 

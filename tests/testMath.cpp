@@ -198,12 +198,48 @@ struct SomeObject: public Base<Real>
 
 template<class Real>struct Static4:public Static<Real,4>{};
 
+void testPose2()
+{
+	Pose2 pose[] =
+	{
+			Pose2(-0.0668709055,-3.64316249, -1.31782949),
+			Pose2(11,6,1),
+			Pose2(14,10,M_PI/2),
+			Pose2(1,0,M_PI),
+			Pose2(10,10,M_PI/2),
+	};
+
+	/// p1 = p0 * delta
+	/// p0.inv * p0 * delta = p0.inv * p1
+	Pose2 results[] =
+	{
+			pose[0].invert(),
+			pose[0].invert() * pose[0],
+			pose[0] * pose[0].invert(),
+
+			pose[0] * pose[1].invert(),
+			pose[0].invert() * pose[1],
+			pose[2] * pose[0].invert(),
+			pose[3] * pose[0],
+			pose[0].invert() * pose[4],
+	};
+
+	for(int i = 0; i < sizeof(results)/sizeof(Pose2); i++)
+	{
+		printf("Test %d: {%f;%f;%f}\n", i, results[i].position[0],
+				results[i].position[0],
+				results[i].getAngle());
+	}
+}
+
 void testMath()
 {
 	SomeObject<Static4,float> matrix;
 	const float minError=0.001;
-	testMatrixNM();
-	testMatrixInversion();
+
+	testPose2();
+	//testMatrixNM();
+	//testMatrixInversion();
 	//testMatrix4r();
 	//testMatrix4c();
 	//printf("Aiming test\n");
@@ -214,7 +250,7 @@ void testMath()
 	//	printf("-test failed\n");	
 	//if(testAiming(Edge(vec3(0,100,0),vec3(20,100,0)),vec3(0,0,0),30)>minError)
 	//	printf("-test failed\n");
-	system("pause");
+
 }
 }
 int main()
