@@ -15,4 +15,4 @@ if(NOT TARGET frosttools AND NOT FrostTools_BINARY_DIR)
 endif()
  
 # These are IMPORTED targets created by FooBarTargets.cmake
-set(FROSTTOOLS_LIBRARIES frosttools)
+set(FROSTTOOLS_LIBRARIES frosttools pthread)

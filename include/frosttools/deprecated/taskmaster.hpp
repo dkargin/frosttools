@@ -4,7 +4,9 @@
 #include <frosttools/threads.hpp>
 #include <queue>
 
-namespace Threading
+namespace frosttools
+{
+namespace threading
 {
 	// Contains thread pool and task queue. Tasks are distributed among free threads.
 	// The class itself is not thread safe. Prevent calling TaskMaster methods from tasks to prevent deadlocks
@@ -27,7 +29,7 @@ namespace Threading
 		{
 			TaskMaster * master;
 			size_t i;
-			Threading::Thread thread;
+			Thread thread;
 
 			// Get next task from queue and process it
 			bool processTask()
@@ -55,7 +57,7 @@ namespace Threading
 				{
 					Task task;
 
-					Threading::ScopedLock<Threading::mutex> lock(master->taskQueueGuard);
+					ScopedLock<Mutex> lock(master->taskQueueGuard);
 
 					TaskMaster::State state = master->getTask(task);
 
@@ -71,7 +73,7 @@ namespace Threading
 						task();
 						master->taskQueueGuard.lock();
 						master->workersActive--;
-						master->taskDone.notify_one();
+						master->taskDone.notifyOne();
 					}
 					else if(state == TaskMaster::WaitDeep)
 					{
@@ -128,7 +130,7 @@ namespace Threading
 			taskQueueGuard.unlock();
 
 			// notify all workers
-			sleepBarrier.notify_all();	
+			sleepBarrier.notifyAll();
 
 			// wait for all threads to stop
 			for(unsigned int i = 0; i < workerMax; i++)
@@ -153,7 +155,7 @@ namespace Threading
 		{
 			taskQueueGuard.lock();		
 			tasks.push(task);
-			sleepBarrier.notify_one();
+			sleepBarrier.notifyOne();
 			taskQueueGuard.unlock();		
 		}
 	private:	
@@ -177,12 +179,13 @@ namespace Threading
 		WorkerData * workerData;
 		size_t workerMax;	
 
-		Threading::mutex taskQueueGuard;
-		Threading::ConditionVariable sleepBarrier, taskDone;
+		Mutex taskQueueGuard;
+		ConditionVariable sleepBarrier, taskDone;
 
 		// Tasks active in this moment
 		bool killAll;
 		size_t workersActive;	// TODO: inc/dec using atomics?
 	};
+}
 }
 #endif
