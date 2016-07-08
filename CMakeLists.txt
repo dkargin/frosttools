@@ -4,7 +4,7 @@ PROJECT(FrostTools)
 
 set(FROSTTOOLS_MAJOR_VERSION 1)
 set(FROSTTOOLS_MINOR_VERSION 0)
-set(FROSTTOOLS_PATCH_VERSION 1)
+set(FROSTTOOLS_PATCH_VERSION 2)
 set(FROSTTOOLS_VERSION ${FROSTTOOLS_MAJOR_VERSION}.${FROSTTOOLS_MINOR_VERSION}.${FROSTTOOLS_PATCH_VERSION})
 
 if(WIN32 AND NOT CYGWIN)
@@ -75,8 +75,8 @@ install(FILES
 
 # Install the export set for use with the install-tree
 install(EXPORT FrostToolsTargets DESTINATION "${INSTALL_CMAKE_DIR}")
-install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.h" COMPONENT dev)
-install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.hpp" COMPONENT dev)
+install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.hpp")
 
 # uninstall target
 configure_file(
