@@ -50,11 +50,11 @@ endif(BUILD_DOCUMENTATION)
 # The interesting stuff goes here
 # ===============================
  
-# Add all targets to the build-tree export set
-export(TARGETS frosttools FILE "${PROJECT_BINARY_DIR}/FrostToolsTargets.cmake") 
-# Export the package for use from the build-tree
-# (this registers the build-tree with a global CMake-registry)
-export(PACKAGE FrostTools)
+## Add all targets to the build-tree export set
+#export(TARGETS frosttools FILE "${PROJECT_BINARY_DIR}/FrostToolsTargets.cmake") 
+## Export the package for use from the build-tree
+## (this registers the build-tree with a global CMake-registry)
+#export(PACKAGE FrostTools)
  
 # Create the FrostToolsConfig.cmake and FrostToolsConfigVersion files
 file(RELATIVE_PATH REL_INCLUDE_DIR "${INSTALL_CMAKE_DIR}" "${INSTALL_INCLUDE_DIR}")
@@ -74,7 +74,7 @@ install(FILES
   DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
 
 # Install the export set for use with the install-tree
-install(EXPORT FrostToolsTargets DESTINATION "${INSTALL_CMAKE_DIR}")
+#install(EXPORT FrostToolsTargets DESTINATION "${INSTALL_CMAKE_DIR}")
 install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.hpp")
 
@@ -84,8 +84,7 @@ configure_file(
     "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
     IMMEDIATE @ONLY)
 
-add_custom_target(uninstall
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
 # CPack installation
 set(CPACK_PACKAGE_NAME "frosttools")
