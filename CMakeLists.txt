@@ -74,9 +74,9 @@ install(FILES
   DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
 
 # Install the export set for use with the install-tree
-install(EXPORT FrostToolsTargets DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
-install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.h")
-install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.hpp")
+install(EXPORT FrostToolsTargets DESTINATION "${INSTALL_CMAKE_DIR}")
+install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.h" COMPONENT dev)
+install(DIRECTORY include/frosttools DESTINATION include FILES_MATCHING PATTERN "*.hpp" COMPONENT dev)
 
 # uninstall target
 configure_file(
