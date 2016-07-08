@@ -3,8 +3,6 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ")
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-
 set(FROSTTOOLS_HEADERS 
 	include/frosttools/lockfree.hpp 
 	include/logger.hpp 
@@ -20,7 +18,6 @@ ADD_LIBRARY(frosttools SHARED network.cpp)
 install(TARGETS frosttools
   # IMPORTANT: Add the FrostTools library to the "export-set"
   EXPORT FrostToolsTargets
-  RUNTIME DESTINATION "${INSTALL_BIN_DIR}" COMPONENT bin
-  LIBRARY DESTINATION "${INSTALL_LIB_DIR}" COMPONENT lib
-  PUBLIC_HEADER DESTINATION "${INSTALL_INCLUDE_DIR}"
-  COMPONENT dev)
+  RUNTIME DESTINATION "${INSTALL_BIN_DIR}"
+  LIBRARY DESTINATION "${INSTALL_LIB_DIR}"
+  PUBLIC_HEADER DESTINATION "${INSTALL_INCLUDE_DIR}")
