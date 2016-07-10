@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 2.6)
-#FrostTools static library
 PROJECT(FrostTools)
 
 set(FROSTTOOLS_MAJOR_VERSION 1)
 set(FROSTTOOLS_MINOR_VERSION 0)
-set(FROSTTOOLS_PATCH_VERSION 2)
+set(FROSTTOOLS_PATCH_VERSION 3)
 set(FROSTTOOLS_VERSION ${FROSTTOOLS_MAJOR_VERSION}.${FROSTTOOLS_MINOR_VERSION}.${FROSTTOOLS_PATCH_VERSION})
 
 if(WIN32 AND NOT CYGWIN)
@@ -13,6 +12,7 @@ else()
   set(DEF_INSTALL_CMAKE_DIR lib/cmake/FrostTools)
 endif()
 
+# Does it work good for yocto?
 set(INSTALL_LIB_DIR lib)# CACHE PATH "Installation directory for libraries")
 set(INSTALL_BIN_DIR bin)# CACHE PATH "Installation directory for executables")
 set(INSTALL_INCLUDE_DIR include)# CACHE PATH "Installation directory for header files")
@@ -71,7 +71,7 @@ configure_file(FrostToolsConfigVersion.cmake.in "${PROJECT_BINARY_DIR}/FrostTool
 install(FILES
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/FrostToolsConfig.cmake"
   "${PROJECT_BINARY_DIR}/FrostToolsConfigVersion.cmake"
-  DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
+  DESTINATION "${INSTALL_CMAKE_DIR}")
 
 # Install the export set for use with the install-tree
 #install(EXPORT FrostToolsTargets DESTINATION "${INSTALL_CMAKE_DIR}")
@@ -86,6 +86,7 @@ configure_file(
 
 add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
+if(USE_CPACK)
 # CPack installation
 set(CPACK_PACKAGE_NAME "frosttools")
 set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
@@ -106,7 +107,6 @@ set(CPACK_COMPONENT_SAMPLES_DISPLAY_NAME "Examples")
 
 # for debian
 SET(CPACK_DEBIAN_PACKAGE_NAME "libfrosttools-dev")
-#SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libprotobuf-dev")
 SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Dmitry Kargin dv_frost@mail.ru")
 SET(CPACK_DEBIAN_PACKAGE_PROVIDES "libfrosttools-dev")
 SET(CPACK_DEBIAN_PACKAGE_REPLACES "libfrosttools-dev")
@@ -115,4 +115,4 @@ SET(CPACK_DEBIAN_PACKAGE_REPLACES "libfrosttools-dev")
 set(CPACK_NSIS_MODIFY_PATH ON)
 set(CPACK_NSIS_DISPLAY_NAME "FrostTools development library")
 include(CPack)
-
+endif(USE_CPACK)
